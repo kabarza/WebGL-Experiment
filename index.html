@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGL Flow Field Effect</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .tp-dfwv { z-index: 1000 !important; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script id="vs" type="x-shader/x-vertex">
+    attribute vec2 a_pos;
+    varying vec2 vUv;
+    void main() {
+      vUv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }
+  </script>
+
+  <script id="fs" type="x-shader/x-fragment">
+    precision highp float;
+
+    varying vec2 vUv;
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    uniform vec2 u_mouse;
+
+    // Noise Fill
+    uniform float u_noiseScale;
+    uniform float u_noiseSpeed;
+    uniform float u_noiseOctaves;
+
+    // Flow Field / Domain Warp
+    uniform float u_warpStrength;
+    uniform float u_warpScale;
+    uniform float u_warpSpeed;
+    uniform float u_warpDepth;
+
+    // Circle
+    uniform float u_circleRadius;
+    uniform float u_circleSoft;
+    uniform vec2  u_circlePos;
+
+    // Camera / View
+    uniform float u_rotation;
+    uniform float u_zoom;
+
+    // Mouse
+    uniform float u_mouseStr;
+
+    // Colors
+    uniform vec3 u_col1;
+    uniform vec3 u_col2;
+    uniform vec3 u_col3;
+    uniform vec3 u_col4;
+    uniform float u_saturation;
+    uniform float u_brightness;
+    uniform float u_contrast;
+    uniform float u_blendWidth;
+    uniform float u_colorShift;
+    uniform float u_highlightStr;
+    uniform vec3  u_highlightColor;
+
+    // Grain
+    uniform float u_grainAmt;
+    uniform float u_grainScale;
+    uniform float u_grainSpeed;
+
+    // Background
+    uniform vec3 u_bgColor;
+
+    // ========== Simplex 3D Noise ==========
+    vec4 permute(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+    vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314*r; }
+
+    float snoise(vec3 v){
+      const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+      const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+      vec3 i = floor(v + dot(v, C.yyy));
+      vec3 x0 = v - i + dot(i, C.xxx);
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min(g, l.zxy);
+      vec3 i2 = max(g, l.zxy);
+      vec3 x1 = x0 - i1 + C.xxx;
+      vec3 x2 = x0 - i2 + C.yyy;
+      vec3 x3 = x0 - D.yyy;
+      i = mod(i, 289.0);
+      vec4 p = permute(permute(permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0))
+              + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+              + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+      float n_ = 1.0/7.0;
+      vec3 ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_);
+      vec4 x = x_ * ns.x + ns.yyyy;
+      vec4 y = y_ * ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4(x.xy, y.xy);
+      vec4 b1 = vec4(x.zw, y.zw);
+      vec4 s0 = floor(b0)*2.0+1.0;
+      vec4 s1 = floor(b1)*2.0+1.0;
+      vec4 sh = -step(h, vec4(0.0));
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+      vec3 p0 = vec3(a0.xy,h.x);
+      vec3 p1 = vec3(a0.zw,h.y);
+      vec3 p2 = vec3(a1.xy,h.z);
+      vec3 p3 = vec3(a1.zw,h.w);
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+      vec4 m = max(0.6 - vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot(m*m, vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }
+
+    // FBM
+    float fbm(vec3 p) {
+      float val = 0.0, amp = 0.55, freq = 1.0;
+      int oct = int(u_noiseOctaves);
+      for (int i = 0; i < 6; i++) {
+        if (i >= oct) break;
+        val += amp * snoise(p * freq);
+        freq *= 1.9;
+        amp *= 0.48;
+      }
+      return val;
+    }
+
+    // ========== Better hash for grain (Dave Hoskins) ==========
+    // No visible parallel-line patterns
+    float hash21(vec2 p) {
+      vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.x + p3.y) * p3.z);
+    }
+
+    float hash31(vec3 p) {
+      p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+      p += dot(p, p.yxz + 33.33);
+      return fract((p.x + p.y) * p.z);
+    }
+
+    // 2D rotation
+    vec2 rot2d(vec2 p, float a) {
+      float c = cos(a), s = sin(a);
+      return vec2(p.x*c - p.y*s, p.x*s + p.y*c);
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      float aspect = u_resolution.x / u_resolution.y;
+      vec2 st = vec2(uv.x * aspect, uv.y);
+      float t = u_time;
+
+      // Camera: rotation + zoom applied to coordinates
+      vec2 center = vec2(aspect * 0.5, 0.5);
+      vec2 centered = st - center;
+      centered = rot2d(centered, u_rotation);
+      centered /= u_zoom;
+      st = centered + center;
+
+      // Mouse offset
+      vec2 mOff = (u_mouse - 0.5) * u_mouseStr;
+      mOff.x *= aspect;
+
+      // ==========================================
+      // NOISE + FLOW FIELD (domain warping)
+      // ==========================================
+      vec2 p = st * u_noiseScale + mOff;
+      float ft = t * u_warpSpeed;
+
+      // Domain warping — levels controlled by u_warpDepth
+      float q1 = fbm(vec3(p * u_warpScale, ft * 0.6));
+      float q2 = fbm(vec3((p + vec2(5.2, 1.3)) * u_warpScale, ft * 0.55 + 10.0));
+
+      vec2 wP = p;
+      if (u_warpDepth >= 1.0) {
+        wP = p + u_warpStrength * vec2(q1, q2);
+      }
+
+      float r1 = fbm(vec3((wP + vec2(1.7, 9.2)) * u_warpScale, ft * 0.45));
+      float r2 = fbm(vec3((wP + vec2(8.3, 2.8)) * u_warpScale, ft * 0.5));
+
+      if (u_warpDepth >= 2.0) {
+        wP = p + u_warpStrength * vec2(r1, r2);
+      }
+
+      if (u_warpDepth >= 3.0) {
+        float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
+        float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
+        wP = p + u_warpStrength * vec2(s1, s2);
+      }
+
+      // Final noise at warped position
+      float noiseT = t * u_noiseSpeed;
+      float n1 = fbm(vec3(wP, noiseT));
+      float n2 = fbm(vec3(wP + vec2(3.7, 1.1), noiseT * 0.9 + 5.0));
+
+      // Extra channels from warp intermediaries
+      float n3 = (q1 + q2) * 0.5;
+      float n4 = (r1 + r2) * 0.5;
+
+      // ==========================================
+      // CIRCLE MASK
+      // ==========================================
+      vec2 ctr = vec2(u_circlePos.x * aspect, u_circlePos.y);
+      float dist = length(st - ctr);
+      float circle = 1.0 - smoothstep(
+        u_circleRadius - u_circleSoft,
+        u_circleRadius + u_circleSoft,
+        dist
+      );
+
+      // ==========================================
+      // COLOR MAPPING — sin-based, guaranteed no hard edges ever
+      // ==========================================
+      // WHY sin(): unlike clamp() (which saturates) or fract() (which snaps),
+      // sin() is C∞ smooth and periodic — it can NEVER produce a discontinuity
+      // regardless of input value or elapsed time.
+      const float TAU = 6.28318530718;
+
+      // Slow time-based hue shift — uses sin so cycling never creates a crease
+      float timeShift = u_colorShift * t * 0.012;
+
+      // Map noise through sin — output always in [0,1], always smooth
+      // u_blendWidth controls how much of the sin curve we use:
+      //   low = stays near 0.5 (muted, mostly one color)
+      //   high = sweeps full [0,1] range (uses all colors)
+      float v1 = sin(n1 * TAU * u_blendWidth * 0.5 + timeShift) * 0.5 + 0.5;
+      float v2 = sin(n2 * TAU * u_blendWidth * 0.5 + timeShift * 0.8 + 1.5708) * 0.5 + 0.5;
+      float v3 = sin(n3 * TAU * u_blendWidth * 0.4 + timeShift * 0.5) * 0.5 + 0.5;
+      float v4 = sin(n4 * TAU * u_blendWidth * 0.4 + 0.785) * 0.5 + 0.5;
+
+      // Pure gradient blend
+      vec3 mixA = mix(u_col1, u_col2, v1);
+      vec3 mixB = mix(u_col3, u_col4, v1);
+      vec3 color = mix(mixA, mixB, v2);
+
+      // Organic variation from warp fields
+      vec3 accent = mix(u_col2, u_col3, 0.5);
+      color = mix(color, accent, v3 * 0.15);
+
+      // ==========================================
+      // HIGHLIGHTS where waves/folds meet
+      // ==========================================
+      float fold = abs(n1 - n2);
+      fold = pow(fold, 0.6);
+      // Also detect sharp gradient areas
+      float foldQ = abs(q1 - q2);
+      foldQ = pow(foldQ, 0.7);
+      float totalFold = max(fold, foldQ);
+
+      color = mix(color, u_highlightColor, totalFold * u_highlightStr);
+
+      // ==========================================
+      // Apply circle mask
+      // ==========================================
+      color = mix(u_bgColor, color, circle);
+
+      // ==========================================
+      // Post-processing
+      // ==========================================
+      float luma = dot(color, vec3(0.299, 0.587, 0.114));
+      color = mix(vec3(luma), color, u_saturation);
+      color *= u_brightness;
+      color = (color - 0.5) * u_contrast + 0.5;
+
+      // ==========================================
+      // GRAIN — truly random, no visible patterns
+      // Uses Dave Hoskins hash with multi-axis jitter
+      // ==========================================
+      float grainT = floor(u_time * u_grainSpeed);
+      vec2 gUV = vUv * u_resolution / u_grainScale;
+
+      // Three uncorrelated hashes blended together
+      float g1 = hash21(gUV + grainT * 17.13);
+      float g2 = hash31(vec3(gUV * 1.37, grainT * 23.71));
+      float g3 = hash21(gUV.yx * 0.97 + grainT * 31.57 + 100.0);
+
+      // Blend for even distribution (removes any residual patterns)
+      float grain = ((g1 + g2 + g3) / 3.0 - 0.5) * u_grainAmt;
+      color += grain;
+
+      color = clamp(color, 0.0, 1.0);
+      gl_FragColor = vec4(color, 1.0);
+    }
+  </script>
+
+  <script type="module">
+    // ==========================================
+    // Load Tweakpane + CameraKit plugin
+    // ==========================================
+    let Pane, CamerakitPlugin;
+    try {
+      const tp = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
+      Pane = tp.Pane;
+    } catch(e) {
+      try {
+        const tp = await import('https://esm.sh/tweakpane@4.0.5');
+        Pane = tp.Pane;
+      } catch(e2) { console.error('Tweakpane load failed', e2); }
+    }
+
+    try {
+      const ck = await import('https://cdn.jsdelivr.net/npm/@tweakpane/plugin-camerakit@0.3.0/dist/tweakpane-plugin-camerakit.js');
+      CamerakitPlugin = ck.default || ck;
+    } catch(e) {
+      try {
+        const ck = await import('https://esm.sh/@tweakpane/plugin-camerakit@0.3.0');
+        CamerakitPlugin = ck.default || ck;
+      } catch(e2) { console.warn('CameraKit plugin load failed', e2); }
+    }
+
+    // ==========================================
+    // WebGL
+    // ==========================================
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+    if (!gl) throw new Error('No WebGL');
+
+    function mkShader(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
+        return null;
+      }
+      return s;
+    }
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, document.getElementById('vs').textContent));
+    gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, document.getElementById('fs').textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, 'a_pos');
+
+    // Uniform locations
+    const U = {};
+    [
+      'u_time','u_resolution','u_mouse',
+      'u_noiseScale','u_noiseSpeed','u_noiseOctaves',
+      'u_warpStrength','u_warpScale','u_warpSpeed','u_warpDepth',
+      'u_circleRadius','u_circleSoft','u_circlePos',
+      'u_rotation','u_zoom',
+      'u_mouseStr','u_grainAmt','u_grainScale','u_grainSpeed','u_bgColor',
+      'u_col1','u_col2','u_col3','u_col4',
+      'u_saturation','u_brightness','u_contrast',
+      'u_blendWidth','u_colorShift',
+      'u_highlightStr','u_highlightColor'
+    ].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+
+    // ==========================================
+    // Parameters
+    // ==========================================
+    const hex2rgb = h => [
+      parseInt(h.slice(1,3),16)/255,
+      parseInt(h.slice(3,5),16)/255,
+      parseInt(h.slice(5,7),16)/255
+    ];
+
+    const P = {
+      bgColor: '#0d0d10',
+
+      // Low scale = large smooth blobs. Low octaves = no fine detail.
+      noiseScale: 0.40,
+      noiseSpeed: 0.04,
+      noiseOctaves: 2,
+
+      // Low warp strength is critical — high values push coords into
+      // high-frequency noise zones, creating creases over time.
+      warpStrength: 0.30,
+      warpScale: 0.55,
+      warpSpeed: 0.04,
+      warpDepth: 2,
+
+      circleRadius: 0.85,
+      circleSoftness: 0.35,
+      circleCenter: { x: 0.5, y: 0.5 },
+
+      rotation: 0,
+      zoom: 1.0,
+
+      color1: '#1a6b42',
+      color2: '#e84a9c',
+      color3: '#c88aeb',
+      color4: '#2d7a4f',
+      // blendWidth < 0.7 keeps sin() in its smooth middle range
+      blendWidth: 0.55,
+      colorShift: 0.4,
+      saturation: 1.3,
+      brightness: 1.0,
+      contrast: 1.0,
+
+      highlightStr: 0.25,
+      highlightColor: '#d4a0e8',
+
+      grainAmount: 0.10,
+      grainScale: 2.0,
+      grainSpeed: 12.0,
+
+      mouseStrength: 0.12,
+      speed: 1.0,
+      paused: false,
+    };
+
+    // ==========================================
+    // Mouse
+    // ==========================================
+    let mouse = { x: 0.5, y: 0.5 };
+    let target = { x: 0.5, y: 0.5 };
+    document.addEventListener('mousemove', e => {
+      target.x = e.clientX / innerWidth;
+      target.y = 1.0 - e.clientY / innerHeight;
+    });
+
+    // ==========================================
+    // Resize
+    // ==========================================
+    function resize() {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    addEventListener('resize', resize);
+    resize();
+
+    // ==========================================
+    // Tweakpane GUI
+    // ==========================================
+    if (Pane) {
+      const pane = new Pane({ title: 'Flow Field Controls', expanded: true });
+
+      // Register camera kit plugin if loaded
+      if (CamerakitPlugin) {
+        pane.registerPlugin(CamerakitPlugin);
+      }
+
+      // --- Background ---
+      const fBg = pane.addFolder({ title: 'Background', expanded: false });
+      fBg.addBinding(P, 'bgColor', { label: 'Color' });
+
+      // --- Noise Fill ---
+      const fNoise = pane.addFolder({ title: 'Noise Fill', expanded: false });
+      fNoise.addBinding(P, 'noiseScale', { label: 'Scale' });
+      fNoise.addBinding(P, 'noiseSpeed', { label: 'Speed' });
+      fNoise.addBinding(P, 'noiseOctaves', { label: 'Octaves', step: 1 });
+
+      // --- Flow Field ---
+      const fFlow = pane.addFolder({ title: 'Flow Field', expanded: false });
+      fFlow.addBinding(P, 'warpStrength', { label: 'Strength' });
+      fFlow.addBinding(P, 'warpScale', { label: 'Scale' });
+      fFlow.addBinding(P, 'warpSpeed', { label: 'Speed' });
+      fFlow.addBinding(P, 'warpDepth', { label: 'Depth', step: 1 });
+
+      // --- Circle Mask ---
+      const fCircle = pane.addFolder({ title: 'Circle Mask', expanded: false });
+      fCircle.addBinding(P, 'circleRadius', { label: 'Radius' });
+      fCircle.addBinding(P, 'circleSoftness', { label: 'Softness' });
+      fCircle.addBinding(P, 'circleCenter', { label: 'Center', x: {}, y: {} });
+
+      // --- Camera / View ---
+      const fCam = pane.addFolder({ title: 'Camera', expanded: false });
+      if (CamerakitPlugin) {
+        fCam.addBinding(P, 'rotation', {
+          view: 'cameraring',
+          label: 'Rotation',
+        });
+        fCam.addBinding(P, 'zoom', {
+          view: 'camerawheel',
+          label: 'Zoom',
+        });
+      } else {
+        // Fallback if plugin didn't load
+        fCam.addBinding(P, 'rotation', { label: 'Rotation' });
+        fCam.addBinding(P, 'zoom', { label: 'Zoom' });
+      }
+
+      // --- Colors ---
+      const fCol = pane.addFolder({ title: 'Colors', expanded: false });
+      fCol.addBinding(P, 'color1', { label: 'Color 1' });
+      fCol.addBinding(P, 'color2', { label: 'Color 2' });
+      fCol.addBinding(P, 'color3', { label: 'Color 3' });
+      fCol.addBinding(P, 'color4', { label: 'Color 4' });
+      fCol.addBinding(P, 'blendWidth', { label: 'Blend Width' });
+      fCol.addBinding(P, 'colorShift', { label: 'Color Cycle' });
+      fCol.addBinding(P, 'saturation', { label: 'Saturation' });
+      fCol.addBinding(P, 'brightness', { label: 'Brightness' });
+      fCol.addBinding(P, 'contrast', { label: 'Contrast' });
+
+      // --- Highlights ---
+      const fHi = pane.addFolder({ title: 'Wave Highlights', expanded: false });
+      fHi.addBinding(P, 'highlightStr', { label: 'Strength' });
+      fHi.addBinding(P, 'highlightColor', { label: 'Color' });
+
+      // --- Grain ---
+      const fGrain = pane.addFolder({ title: 'Grain', expanded: false });
+      fGrain.addBinding(P, 'grainAmount', { label: 'Amount' });
+      fGrain.addBinding(P, 'grainScale', { label: 'Scale' });
+      fGrain.addBinding(P, 'grainSpeed', { label: 'Anim Speed' });
+
+      // --- Mouse ---
+      const fMouse = pane.addFolder({ title: 'Mouse', expanded: false });
+      fMouse.addBinding(P, 'mouseStrength', { label: 'Influence' });
+
+      // --- Animation ---
+      const fAnim = pane.addFolder({ title: 'Animation', expanded: false });
+      fAnim.addBinding(P, 'speed', { label: 'Speed' });
+      fAnim.addBinding(P, 'paused', { label: 'Paused' });
+    }
+
+    // ==========================================
+    // Render loop
+    // ==========================================
+    let accTime = 0, lastT = performance.now();
+
+    function render() {
+      const now = performance.now();
+      const dt = (now - lastT) / 1000;
+      lastT = now;
+      if (!P.paused) accTime += dt * P.speed;
+
+      mouse.x += (target.x - mouse.x) * 0.04;
+      mouse.y += (target.y - mouse.y) * 0.04;
+
+      gl.useProgram(prog);
+
+      gl.uniform1f(U.u_time, accTime);
+      gl.uniform2f(U.u_resolution, canvas.width, canvas.height);
+      gl.uniform2f(U.u_mouse, mouse.x, mouse.y);
+
+      gl.uniform1f(U.u_noiseScale, P.noiseScale);
+      gl.uniform1f(U.u_noiseSpeed, P.noiseSpeed);
+      gl.uniform1f(U.u_noiseOctaves, P.noiseOctaves);
+
+      gl.uniform1f(U.u_warpStrength, P.warpStrength);
+      gl.uniform1f(U.u_warpScale, P.warpScale);
+      gl.uniform1f(U.u_warpSpeed, P.warpSpeed);
+      gl.uniform1f(U.u_warpDepth, P.warpDepth);
+
+      gl.uniform1f(U.u_circleRadius, P.circleRadius);
+      gl.uniform1f(U.u_circleSoft, P.circleSoftness);
+      gl.uniform2f(U.u_circlePos, P.circleCenter.x, P.circleCenter.y);
+
+      gl.uniform1f(U.u_rotation, P.rotation);
+      gl.uniform1f(U.u_zoom, P.zoom);
+
+      const c1 = hex2rgb(P.color1), c2 = hex2rgb(P.color2);
+      const c3 = hex2rgb(P.color3), c4 = hex2rgb(P.color4);
+      gl.uniform3f(U.u_col1, ...c1);
+      gl.uniform3f(U.u_col2, ...c2);
+      gl.uniform3f(U.u_col3, ...c3);
+      gl.uniform3f(U.u_col4, ...c4);
+      gl.uniform1f(U.u_saturation, P.saturation);
+      gl.uniform1f(U.u_brightness, P.brightness);
+      gl.uniform1f(U.u_contrast, P.contrast);
+      gl.uniform1f(U.u_blendWidth, P.blendWidth);
+      gl.uniform1f(U.u_colorShift, P.colorShift);
+
+      gl.uniform1f(U.u_highlightStr, P.highlightStr);
+      const hc = hex2rgb(P.highlightColor);
+      gl.uniform3f(U.u_highlightColor, ...hc);
+
+      gl.uniform1f(U.u_grainAmt, P.grainAmount);
+      gl.uniform1f(U.u_grainScale, P.grainScale);
+      gl.uniform1f(U.u_grainSpeed, P.grainSpeed);
+
+      gl.uniform1f(U.u_mouseStr, P.mouseStrength);
+
+      const bg = hex2rgb(P.bgColor);
+      gl.uniform3f(U.u_bgColor, ...bg);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
