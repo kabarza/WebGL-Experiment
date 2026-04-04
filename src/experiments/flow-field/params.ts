@@ -4,28 +4,28 @@ export const controls: ExperimentControls = {
   defaults: {
     bgColor: '#0d0d10',
 
-    noiseScale: 0.40,
+    noiseScale: 0.73,
     noiseSpeed: 0.04,
     noiseOctaves: 2,
 
-    warpStrength: 0.30,
-    warpScale: 0.55,
+    warpStrength: 0.71,
+    warpScale: 0.85,
     warpSpeed: 0.04,
     warpDepth: 2,
 
-    circleRadius: 0.85,
-    circleSoftness: 0.35,
+    circleRadius: 1.37,
+    circleSoftness: 0.22,
     circleCenter: { x: 0.5, y: 0.5 },
 
-    rotation: 0,
-    zoom: 1.0,
+    rotation: -0.17,
+    zoom: 0.55,
 
     color1: '#d4a030',
     color2: '#8c5a1c',
     color3: '#381630',
     color4: '#7b4cc0',
     blendWidth: 0.55,
-    colorShift: 0.4,
+    colorShift: 0.82,
     saturation: 1.3,
     brightness: 1.0,
     contrast: 1.0,
@@ -33,9 +33,9 @@ export const controls: ExperimentControls = {
     highlightStr: 0.25,
     highlightColor: '#d4a0e8',
 
-    grainAmount: 0.10,
-    grainScale: 2.0,
-    grainSpeed: 12.0,
+    grainAmount: 0.089,
+    grainScale: 10,
+    grainSpeed: 22,
 
     mouseStrength: 0.12,
     speed: 1.0,
@@ -47,23 +47,23 @@ export const controls: ExperimentControls = {
       bgColor: '#0d0d10',
     },
     'Noise Fill': {
-      noiseScale: [0.40, 0.01, 5, 0.01],
+      noiseScale: [0.73, 0.01, 5, 0.01],
       noiseSpeed: [0.04, 0, 1, 0.001],
       noiseOctaves: [2, 1, 6, 1],
     },
     'Flow Field': {
-      warpStrength: [0.30, 0, 3, 0.01],
-      warpScale: [0.55, 0.01, 3, 0.01],
+      warpStrength: [0.71, 0, 3, 0.01],
+      warpScale: [0.85, 0.01, 3, 0.01],
       warpSpeed: [0.04, 0, 0.5, 0.001],
       warpDepth: [2, 0, 3, 1],
     },
     'Circle Mask': {
-      circleRadius: [0.85, 0, 3, 0.01],
-      circleSoftness: [0.35, 0, 2, 0.01],
+      circleRadius: [1.37, 0, 3, 0.01],
+      circleSoftness: [0.22, 0, 2, 0.01],
     },
     Camera: {
-      rotation: [0, -Math.PI, Math.PI, 0.01],
-      zoom: [1.0, 0.1, 5, 0.01],
+      rotation: [-0.17, -Math.PI, Math.PI, 0.01],
+      zoom: [0.55, 0.1, 5, 0.01],
     },
     Colors: {
       color1: '#d4a030',
@@ -71,7 +71,7 @@ export const controls: ExperimentControls = {
       color3: '#381630',
       color4: '#7b4cc0',
       blendWidth: [0.55, 0, 2, 0.01],
-      colorShift: [0.4, 0, 3, 0.01],
+      colorShift: [0.82, 0, 3, 0.01],
       saturation: [1.3, 0, 3, 0.01],
       brightness: [1.0, 0, 3, 0.01],
       contrast: [1.0, 0, 3, 0.01],
@@ -81,9 +81,9 @@ export const controls: ExperimentControls = {
       highlightColor: '#d4a0e8',
     },
     Grain: {
-      grainAmount: [0.10, 0, 0.5, 0.001],
-      grainScale: [2.0, 0.5, 10, 0.1],
-      grainSpeed: [12.0, 0, 60, 0.5],
+      grainAmount: [0.089, 0, 0.5, 0.001],
+      grainScale: [10, 0.5, 10, 0.1],
+      grainSpeed: [22, 0, 60, 0.5],
     },
     Mouse: {
       mouseStrength: [0.12, 0, 1, 0.01],

@@ -48,6 +48,7 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
 
   // Bridge hooks
   const params = useExperimentParams(
+    experiment?.meta.title ?? 'Controls',
     experiment?.controls.dialConfig,
     experiment?.controls.defaults ?? {},
     overrides,

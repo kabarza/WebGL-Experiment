@@ -53,13 +53,14 @@ function flattenDialValues(nested: Record<string, unknown>): Record<string, unkn
 }
 
 export function useExperimentParams(
+  title: string,
   dialConfig: DialConfig | undefined,
   defaults: Record<string, unknown>,
   overrides?: Record<string, unknown>,
 ): Record<string, unknown> {
   const schema = dialConfig ? dialConfigToDialKitSchema(dialConfig) : {};
 
-  const dialValues = useDialKit('Controls', schema) as Record<string, unknown>;
+  const dialValues = useDialKit(title, schema) as Record<string, unknown>;
 
   // Stable mutable ref — the experiment reads this every frame
   const paramsRef = useRef<Record<string, unknown>>({ ...defaults });
