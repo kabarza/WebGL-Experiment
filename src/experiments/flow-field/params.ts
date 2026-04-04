@@ -4,13 +4,13 @@ export const controls: ExperimentControls = {
   defaults: {
     bgColor: '#0d0d10',
 
-    noiseScale: 0.73,
-    noiseSpeed: 0.04,
-    noiseOctaves: 2,
+    noiseScale: 0.55,
+    noiseSpeed: 0.037,
+    noiseOctaves: 1,
 
-    warpStrength: 0.71,
-    warpScale: 0.85,
-    warpSpeed: 0.04,
+    warpStrength: 1.86,
+    warpScale: 0.58,
+    warpSpeed: 0.454,
     warpDepth: 2,
 
     circleRadius: 1.37,
@@ -20,7 +20,7 @@ export const controls: ExperimentControls = {
     rotation: -0.17,
     zoom: 0.55,
 
-    color1: '#d4a030',
+    color1: '#492d7b',
     color2: '#8c5a1c',
     color3: '#381630',
     color4: '#7b4cc0',
@@ -38,12 +38,12 @@ export const controls: ExperimentControls = {
     grainSpeed: 22,
 
     mouseEnabled: true,
-    mouseStrength: 0.57,
+    mouseStrength: 0.22,
     mouseRadius: 0.49,
     mouseSoftness: 0.39,
     mouseTrailSmoothing: 0.067,
     mouseTrailStr: 0.53,
-    speed: 1.0,
+    speed: 0.16,
     paused: false,
   },
 
@@ -52,14 +52,14 @@ export const controls: ExperimentControls = {
       bgColor: '#0d0d10',
     },
     'Noise Fill': {
-      noiseScale: [0.73, 0.01, 5, 0.01],
-      noiseSpeed: [0.04, 0, 1, 0.001],
-      noiseOctaves: [2, 1, 6, 1],
+      noiseScale: [0.55, 0.01, 5, 0.01],
+      noiseSpeed: [0.037, 0, 1, 0.001],
+      noiseOctaves: [1, 1, 6, 1],
     },
     'Flow Field': {
-      warpStrength: [0.71, 0, 3, 0.01],
-      warpScale: [0.85, 0.01, 3, 0.01],
-      warpSpeed: [0.04, 0, 0.5, 0.001],
+      warpStrength: [1.86, 0, 3, 0.01],
+      warpScale: [0.58, 0.01, 3, 0.01],
+      warpSpeed: [0.454, 0, 0.5, 0.001],
       warpDepth: [2, 0, 3, 1],
     },
     'Circle Mask': {
@@ -71,7 +71,7 @@ export const controls: ExperimentControls = {
       zoom: [0.55, 0.1, 5, 0.01],
     },
     Colors: {
-      color1: '#d4a030',
+      color1: '#492d7b',
       color2: '#8c5a1c',
       color3: '#381630',
       color4: '#7b4cc0',
@@ -92,14 +92,14 @@ export const controls: ExperimentControls = {
     },
     Mouse: {
       mouseEnabled: true,
-      mouseStrength: [0.57, 0, 1, 0.01],
+      mouseStrength: [0.22, 0, 1, 0.01],
       mouseRadius: [0.49, 0.01, 1.5, 0.01],
       mouseSoftness: [0.39, 0.01, 0.5, 0.01],
       mouseTrailSmoothing: [0.067, 0.001, 0.1, 0.001],
       mouseTrailStr: [0.53, 0, 1, 0.01],
     },
     Animation: {
-      speed: [1.0, 0, 5, 0.01],
+      speed: [0.16, 0, 5, 0.01],
       paused: false,
     },
   },
