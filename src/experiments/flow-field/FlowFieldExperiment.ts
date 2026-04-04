@@ -23,7 +23,13 @@ import vertGLSL from '../../shaders/glsl/fullscreen-quad.vert';
 const UNIFORM_FIELDS: UniformField[] = [
   { name: 'time', type: 'f32' },
   { name: 'resolution', type: 'vec2f' },
-  { name: 'mouse', type: 'vec2f' },
+  { name: 'mousePos', type: 'vec2f' },
+  { name: 'mouseTrailPos', type: 'vec2f' },
+  { name: 'mouseVel', type: 'f32' },
+  { name: 'mouseStr', type: 'f32' },
+  { name: 'mouseRadius', type: 'f32' },
+  { name: 'mouseSoftness', type: 'f32' },
+  { name: 'mouseTrailStr', type: 'f32' },
   { name: 'noiseScale', type: 'f32' },
   { name: 'noiseSpeed', type: 'f32' },
   { name: 'noiseOctaves', type: 'f32' },
@@ -36,7 +42,6 @@ const UNIFORM_FIELDS: UniformField[] = [
   { name: 'circlePos', type: 'vec2f' },
   { name: 'rotation', type: 'f32' },
   { name: 'zoom', type: 'f32' },
-  { name: 'mouseStr', type: 'f32' },
   { name: 'col1', type: 'vec3f' },
   { name: 'col2', type: 'vec3f' },
   { name: 'col3', type: 'vec3f' },
@@ -94,11 +99,33 @@ async function initWebGPU(ctx: ExperimentContext): Promise<ExperimentInstance> {
   let width = canvas.width;
   let height = canvas.height;
 
+  // Mouse trail state (persistent between frames)
+  let trailX = 0.5;
+  let trailY = 0.5;
+  let smoothVel = 0;
+
   function updateUniforms(time: number): void {
     const P = params;
+
+    // Update trail position (lags behind actual mouse)
+    const trailSmoothing = P.mouseTrailSmoothing as number;
+    trailX += (input.mouse.x - trailX) * trailSmoothing;
+    trailY += (input.mouse.y - trailY) * trailSmoothing;
+
+    // Smoothed velocity magnitude
+    const rawVel = Math.sqrt(input.velocity.x ** 2 + input.velocity.y ** 2);
+    smoothVel += (Math.min(rawVel * 80, 1.0) - smoothVel) * 0.1;
+
     uniforms.set('time', time);
     uniforms.set('resolution', [width, height]);
-    uniforms.set('mouse', [input.mouse.x, input.mouse.y]);
+    const mouseOn = P.mouseEnabled as boolean;
+    uniforms.set('mousePos', [input.mouse.x, input.mouse.y]);
+    uniforms.set('mouseTrailPos', [trailX, trailY]);
+    uniforms.set('mouseVel', mouseOn ? smoothVel : 0);
+    uniforms.set('mouseStr', mouseOn ? (P.mouseStrength as number) : 0);
+    uniforms.set('mouseRadius', P.mouseRadius as number);
+    uniforms.set('mouseSoftness', P.mouseSoftness as number);
+    uniforms.set('mouseTrailStr', mouseOn ? (P.mouseTrailStr as number) : 0);
     uniforms.set('noiseScale', P.noiseScale as number);
     uniforms.set('noiseSpeed', P.noiseSpeed as number);
     uniforms.set('noiseOctaves', P.noiseOctaves as number);
@@ -112,7 +139,6 @@ async function initWebGPU(ctx: ExperimentContext): Promise<ExperimentInstance> {
     uniforms.set('circlePos', [cc.x, cc.y]);
     uniforms.set('rotation', P.rotation as number);
     uniforms.set('zoom', P.zoom as number);
-    uniforms.set('mouseStr', P.mouseStrength as number);
     uniforms.set('col1', hex2rgb(P.color1 as string));
     uniforms.set('col2', hex2rgb(P.color2 as string));
     uniforms.set('col3', hex2rgb(P.color3 as string));
@@ -203,12 +229,14 @@ async function initWebGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> 
   // Uniform locations
   const U: Record<string, WebGLUniformLocation | null> = {};
   const uniformNames = [
-    'u_time', 'u_resolution', 'u_mouse',
+    'u_time', 'u_resolution',
+    'u_mousePos', 'u_mouseTrailPos', 'u_mouseVel',
+    'u_mouseStr', 'u_mouseRadius', 'u_mouseSoftness', 'u_mouseTrailStr',
     'u_noiseScale', 'u_noiseSpeed', 'u_noiseOctaves',
     'u_warpStrength', 'u_warpScale', 'u_warpSpeed', 'u_warpDepth',
     'u_circleRadius', 'u_circleSoft', 'u_circlePos',
     'u_rotation', 'u_zoom',
-    'u_mouseStr', 'u_grainAmt', 'u_grainScale', 'u_grainSpeed', 'u_bgColor',
+    'u_grainAmt', 'u_grainScale', 'u_grainSpeed', 'u_bgColor',
     'u_col1', 'u_col2', 'u_col3', 'u_col4',
     'u_saturation', 'u_brightness', 'u_contrast',
     'u_blendWidth', 'u_colorShift',
@@ -218,14 +246,35 @@ async function initWebGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> 
     U[n] = gl.getUniformLocation(prog, n);
   }
 
+  // Mouse trail state (persistent between frames)
+  let trailX = 0.5;
+  let trailY = 0.5;
+  let smoothVel = 0;
+
   return {
     render(time: number, _deltaTime: number) {
       const P = params;
       gl.useProgram(prog);
 
+      // Update trail position (lags behind actual mouse)
+      const trailSmoothing = P.mouseTrailSmoothing as number;
+      trailX += (input.mouse.x - trailX) * trailSmoothing;
+      trailY += (input.mouse.y - trailY) * trailSmoothing;
+
+      // Smoothed velocity magnitude
+      const rawVel = Math.sqrt(input.velocity.x ** 2 + input.velocity.y ** 2);
+      smoothVel += (Math.min(rawVel * 80, 1.0) - smoothVel) * 0.1;
+
       gl.uniform1f(U.u_time, time);
       gl.uniform2f(U.u_resolution, canvas.width, canvas.height);
-      gl.uniform2f(U.u_mouse, input.mouse.x, input.mouse.y);
+      const mouseOn = P.mouseEnabled as boolean;
+      gl.uniform2f(U.u_mousePos, input.mouse.x, input.mouse.y);
+      gl.uniform2f(U.u_mouseTrailPos, trailX, trailY);
+      gl.uniform1f(U.u_mouseVel, mouseOn ? smoothVel : 0);
+      gl.uniform1f(U.u_mouseStr, mouseOn ? (P.mouseStrength as number) : 0);
+      gl.uniform1f(U.u_mouseRadius, P.mouseRadius as number);
+      gl.uniform1f(U.u_mouseSoftness, P.mouseSoftness as number);
+      gl.uniform1f(U.u_mouseTrailStr, mouseOn ? (P.mouseTrailStr as number) : 0);
 
       gl.uniform1f(U.u_noiseScale, P.noiseScale as number);
       gl.uniform1f(U.u_noiseSpeed, P.noiseSpeed as number);
@@ -240,7 +289,6 @@ async function initWebGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> 
       gl.uniform2f(U.u_circlePos, cc.x, cc.y);
       gl.uniform1f(U.u_rotation, P.rotation as number);
       gl.uniform1f(U.u_zoom, P.zoom as number);
-      gl.uniform1f(U.u_mouseStr, P.mouseStrength as number);
 
       const c1 = hex2rgb(P.color1 as string);
       const c2 = hex2rgb(P.color2 as string);

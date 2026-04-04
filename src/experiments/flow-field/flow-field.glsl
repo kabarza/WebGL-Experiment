@@ -3,7 +3,15 @@ precision highp float;
 varying vec2 vUv;
 uniform float u_time;
 uniform vec2 u_resolution;
-uniform vec2 u_mouse;
+
+// Mouse interaction
+uniform vec2 u_mousePos;
+uniform vec2 u_mouseTrailPos;
+uniform float u_mouseVel;
+uniform float u_mouseStr;
+uniform float u_mouseRadius;
+uniform float u_mouseSoftness;
+uniform float u_mouseTrailStr;
 
 // Noise Fill
 uniform float u_noiseScale;
@@ -24,9 +32,6 @@ uniform vec2  u_circlePos;
 // Camera / View
 uniform float u_rotation;
 uniform float u_zoom;
-
-// Mouse
-uniform float u_mouseStr;
 
 // Colors
 uniform vec3 u_col1;
@@ -141,12 +146,29 @@ void main() {
   centered /= u_zoom;
   st = centered + center;
 
-  // Mouse offset
-  vec2 mOff = (u_mouse - 0.5) * u_mouseStr;
-  mOff.x *= aspect;
+  // ── Mouse interaction ──
+  vec2 cursorPos = vec2(u_mousePos.x * aspect, u_mousePos.y);
+  vec2 trailMPos = vec2(u_mouseTrailPos.x * aspect, u_mouseTrailPos.y);
+
+  float mDist = length(st - cursorPos);
+  float mInfluence = 1.0 - smoothstep(
+    u_mouseRadius - u_mouseSoftness,
+    u_mouseRadius + u_mouseSoftness,
+    mDist
+  );
+
+  float tDist = length(st - trailMPos);
+  float trailR = u_mouseRadius * 0.7;
+  float tInfluence = (1.0 - smoothstep(
+    trailR - u_mouseSoftness * 0.8,
+    trailR + u_mouseSoftness * 0.8,
+    tDist
+  )) * u_mouseTrailStr;
+
+  float mouseProx = max(mInfluence, tInfluence);
 
   // Noise + flow field (domain warping)
-  vec2 p = st * u_noiseScale + mOff;
+  vec2 p = st * u_noiseScale;
   float ft = t * u_warpSpeed;
 
   float q1 = fbm(vec3(p * u_warpScale, ft * 0.6));
@@ -168,6 +190,15 @@ void main() {
     float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
     float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
     wP = p + u_warpStrength * vec2(s1, s2);
+  }
+
+  // Mouse: inject noise-driven warp near cursor (no radial vectors)
+  if (u_mouseStr > 0.0) {
+    float mTime = t * 0.2 + 42.0;
+    float mw1 = snoise(vec3(st * u_warpScale * 1.3 + vec2(17.3, 5.7), mTime));
+    float mw2 = snoise(vec3(st * u_warpScale * 1.3 + vec2(3.1, 14.2), mTime * 0.9 + 35.0));
+    wP += vec2(mw1, mw2) * mouseProx * u_mouseStr;
+    wP += (cursorPos - trailMPos) * mInfluence * u_mouseVel * 0.5;
   }
 
   float noiseT = t * u_noiseSpeed;

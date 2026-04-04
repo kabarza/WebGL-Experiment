@@ -2,7 +2,7 @@
 // Version Store — localStorage-backed parameter snapshots
 // ============================================================
 
-const STORAGE_PREFIX = 'tempo-versions';
+const STORAGE_PREFIX = 'webgl-versions';
 
 export interface Version {
   id: string;

@@ -7,11 +7,11 @@ import fragGLSL from './flow-field.glsl';
 import vertGLSL from '../../shaders/glsl/fullscreen-quad.vert';
 
 // Baked params — injected at export build time via define
-declare const __TEMPO_BAKED_PARAMS__: Record<string, unknown>;
+declare const __BAKED_PARAMS__: Record<string, unknown>;
 
 const BAKED_PARAMS: Record<string, unknown> =
-  typeof __TEMPO_BAKED_PARAMS__ !== 'undefined'
-    ? __TEMPO_BAKED_PARAMS__
+  typeof __BAKED_PARAMS__ !== 'undefined'
+    ? __BAKED_PARAMS__
     : {
         // Fallback defaults
         bgColor: '#0d0d10',
@@ -50,7 +50,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
 }
 
 (function () {
-  const wrapper = document.querySelector('[data-tempo-experiment="flow-field"]');
+  const wrapper = document.querySelector('[data-webgl-experiment="flow-field"]');
   if (!wrapper) return;
   const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement | null;
   if (!canvas) return;
@@ -61,7 +61,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     premultipliedAlpha: false,
   });
   if (!gl) {
-    console.error('Tempo: WebGL2 not available');
+    console.error('WebGL2 not available');
     return;
   }
 
@@ -71,7 +71,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
   gl.attachShader(prog, mkShader(gl, gl.FRAGMENT_SHADER, fragGLSL));
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    console.error('Tempo: Program link error:', gl.getProgramInfoLog(prog));
+    console.error('WebGL: Program link error:', gl.getProgramInfoLog(prog));
     return;
   }
 

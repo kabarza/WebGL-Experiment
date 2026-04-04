@@ -7,7 +7,13 @@
 struct Uniforms {
   time: f32,
   resolution: vec2f,
-  mouse: vec2f,
+  mousePos: vec2f,
+  mouseTrailPos: vec2f,
+  mouseVel: f32,
+  mouseStr: f32,
+  mouseRadius: f32,
+  mouseSoftness: f32,
+  mouseTrailStr: f32,
 
   noiseScale: f32,
   noiseSpeed: f32,
@@ -24,8 +30,6 @@ struct Uniforms {
 
   rotation: f32,
   zoom: f32,
-
-  mouseStr: f32,
 
   col1: vec3f,
   col2: vec3f,
@@ -61,12 +65,29 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   centered /= u.zoom;
   st = centered + center;
 
-  // Mouse offset
-  var mOff = (u.mouse - 0.5) * u.mouseStr;
-  mOff.x *= aspect;
+  // ── Mouse interaction ──
+  let cursorPos = vec2f(u.mousePos.x * aspect, u.mousePos.y);
+  let trailMPos = vec2f(u.mouseTrailPos.x * aspect, u.mouseTrailPos.y);
+
+  let mDist = length(st - cursorPos);
+  let mInfluence = 1.0 - smoothstep(
+    u.mouseRadius - u.mouseSoftness,
+    u.mouseRadius + u.mouseSoftness,
+    mDist
+  );
+
+  let tDist_m = length(st - trailMPos);
+  let trailR = u.mouseRadius * 0.7;
+  let tInfluence = (1.0 - smoothstep(
+    trailR - u.mouseSoftness * 0.8,
+    trailR + u.mouseSoftness * 0.8,
+    tDist_m
+  )) * u.mouseTrailStr;
+
+  let mouseProx = max(mInfluence, tInfluence);
 
   // Noise + flow field (domain warping)
-  var p = st * u.noiseScale + mOff;
+  var p = st * u.noiseScale;
   let ft = t * u.warpSpeed;
   let octaves = i32(u.noiseOctaves);
 
@@ -89,6 +110,15 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
     let s1 = fbm(vec3f((wP + vec2f(3.1, 7.7)) * u.warpScale, ft * 0.4), octaves);
     let s2 = fbm(vec3f((wP + vec2f(6.5, 4.2)) * u.warpScale, ft * 0.42), octaves);
     wP = p + u.warpStrength * vec2f(s1, s2);
+  }
+
+  // Mouse: inject noise-driven warp near cursor (no radial vectors)
+  if (u.mouseStr > 0.0) {
+    let mTime = t * 0.2 + 42.0;
+    let mw1 = fbm(vec3f(st * u.warpScale * 1.3 + vec2f(17.3, 5.7), mTime), 1);
+    let mw2 = fbm(vec3f(st * u.warpScale * 1.3 + vec2f(3.1, 14.2), mTime * 0.9 + 35.0), 1);
+    wP += vec2f(mw1, mw2) * mouseProx * u.mouseStr;
+    wP += (cursorPos - trailMPos) * mInfluence * u.mouseVel * 0.5;
   }
 
   // Final noise at warped position

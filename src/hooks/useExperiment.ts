@@ -106,7 +106,7 @@ export function useExperiment(
             thumbnailCaptured = true;
             try {
               const dataUrl = canvas.toDataURL('image/webp', 0.8);
-              localStorage.setItem(`tempo-thumb/${experiment!.meta.slug}`, dataUrl);
+              localStorage.setItem(`webgl-thumb/${experiment!.meta.slug}`, dataUrl);
             } catch {
               // Canvas may be tainted or toDataURL unsupported
             }

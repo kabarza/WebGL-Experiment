@@ -6,11 +6,11 @@
 import fragGLSL from './shader.glsl';
 import vertGLSL from '../../shaders/glsl/fullscreen-quad.vert';
 
-declare const __TEMPO_BAKED_PARAMS__: Record<string, unknown>;
+declare const __BAKED_PARAMS__: Record<string, unknown>;
 
 const BAKED_PARAMS: Record<string, unknown> =
-  typeof __TEMPO_BAKED_PARAMS__ !== 'undefined'
-    ? __TEMPO_BAKED_PARAMS__
+  typeof __BAKED_PARAMS__ !== 'undefined'
+    ? __BAKED_PARAMS__
     : { bgColor: '#0a0a0a' };
 
 function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
@@ -27,20 +27,20 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
 }
 
 (function () {
-  const wrapper = document.querySelector('[data-tempo-experiment="__SLUG__"]');
+  const wrapper = document.querySelector('[data-webgl-experiment="__SLUG__"]');
   if (!wrapper) return;
   const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement | null;
   if (!canvas) return;
 
   const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
-  if (!gl) { console.error('Tempo: WebGL2 not available'); return; }
+  if (!gl) { console.error('WebGL2 not available'); return; }
 
   const prog = gl.createProgram()!;
   gl.attachShader(prog, mkShader(gl, gl.VERTEX_SHADER, vertGLSL));
   gl.attachShader(prog, mkShader(gl, gl.FRAGMENT_SHADER, fragGLSL));
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    console.error('Tempo: link error:', gl.getProgramInfoLog(prog));
+    console.error('WebGL: link error:', gl.getProgramInfoLog(prog));
     return;
   }
 

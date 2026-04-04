@@ -1,8 +1,8 @@
-# Tempo — WebGL Experiment Lifecycle Platform
+# WebGL Experiment Lifecycle Platform
 
-## What Is Tempo
+## What Is This
 
-Tempo is a lifecycle tool for WebGL/WebGPU experiments: **Create > Tweak > Share > Iterate > Export**. A React app shell provides the designer workspace (gallery, DialKit controls, versioning, sharing, export UI). A vanilla WebGL/WebGPU engine renders experiments to a canvas — this is the exportable product. Two layers, clean boundary.
+A lifecycle tool for WebGL/WebGPU experiments: **Create > Tweak > Share > Iterate > Export**. A React app shell provides the designer workspace (gallery, DialKit controls, versioning, sharing, export UI). A vanilla WebGL/WebGPU engine renders experiments to a canvas — this is the exportable product. Two layers, clean boundary.
 
 ---
 
@@ -26,7 +26,7 @@ Tempo is a lifecycle tool for WebGL/WebGPU experiments: **Create > Tweak > Share
           | Webflow Export (vanilla only, no React)
           v
 +--------------------------------------+
-|  <div data-tempo-experiment="slug">  |
+|  <div data-webgl-experiment="slug">  |
 |    <canvas></canvas>                 |
 |    <script src="..."></script>       |
 |  </div>                              |
@@ -64,7 +64,7 @@ Two React hooks connect the layers:
 ## Project Structure
 
 ```
-tempo-WebGL-Experiment/
+WebGL-Experiment/
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -363,7 +363,7 @@ Drop a new folder in `experiments/`, it appears in the gallery. No manual regist
 
 - [x] **Vercel config** — `vercel.json` with rewrites, CORS + immutable cache headers for `/exports/`.
 - [x] **Build output structure** — Main app at `/`, export bundles at `/exports/{slug}-v{n}.js`.
-- [x] **Environment config** — `webflow-export.ts` reads `VITE_BASE_URL` env var, falls back to `https://tempo.vercel.app`. Build script also reads `VITE_BASE_URL`.
+- [x] **Environment config** — `webflow-export.ts` reads `VITE_BASE_URL` env var, falls back to `https://webgl-experiments.vercel.app`. Build script also reads `VITE_BASE_URL`.
 - [ ] **Connect repo to Vercel** — Manual step: link the repo in Vercel dashboard and push to trigger first deploy.
 
 ---

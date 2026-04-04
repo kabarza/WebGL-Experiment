@@ -37,7 +37,12 @@ export const controls: ExperimentControls = {
     grainScale: 10,
     grainSpeed: 22,
 
-    mouseStrength: 0.12,
+    mouseEnabled: true,
+    mouseStrength: 0.57,
+    mouseRadius: 0.49,
+    mouseSoftness: 0.39,
+    mouseTrailSmoothing: 0.067,
+    mouseTrailStr: 0.53,
     speed: 1.0,
     paused: false,
   },
@@ -86,7 +91,12 @@ export const controls: ExperimentControls = {
       grainSpeed: [22, 0, 60, 0.5],
     },
     Mouse: {
-      mouseStrength: [0.12, 0, 1, 0.01],
+      mouseEnabled: true,
+      mouseStrength: [0.57, 0, 1, 0.01],
+      mouseRadius: [0.49, 0.01, 1.5, 0.01],
+      mouseSoftness: [0.39, 0.01, 0.5, 0.01],
+      mouseTrailSmoothing: [0.067, 0.001, 0.1, 0.001],
+      mouseTrailStr: [0.53, 0, 1, 0.01],
     },
     Animation: {
       speed: [1.0, 0, 5, 0.01],

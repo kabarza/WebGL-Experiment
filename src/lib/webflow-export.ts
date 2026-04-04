@@ -2,7 +2,7 @@
 // Webflow Export — HTML generation + bundle URL helpers
 // ============================================================
 
-const BASE_URL = import.meta.env?.VITE_BASE_URL || 'https://tempo.vercel.app';
+const BASE_URL = import.meta.env?.VITE_BASE_URL || 'https://webgl-experiments.vercel.app';
 
 export interface ExportOptions {
   slug: string;
@@ -34,7 +34,7 @@ export function generateExportHTML(options: ExportOptions): string {
       : `position:relative;width:${fixedWidth ?? 800}px;height:${fixedHeight ?? 600}px;`;
 
   return [
-    `<div data-tempo-experiment="${slug}" style="${wrapperStyle}">`,
+    `<div data-webgl-experiment="${slug}" style="${wrapperStyle}">`,
     `  <canvas style="display:block;width:100%;height:100%;"></canvas>`,
     `  <script src="${bundleUrl}"></script>`,
     `</div>`,
@@ -52,7 +52,7 @@ export function generateInlineScript(
   const paramsJSON = JSON.stringify(params, null, 2);
 
   return `(function() {
-  var wrapper = document.querySelector('[data-tempo-experiment="${slug}"]');
+  var wrapper = document.querySelector('[data-webgl-experiment="${slug}"]');
   if (!wrapper) return;
   var canvas = wrapper.querySelector('canvas');
   if (!canvas) return;
@@ -61,6 +61,6 @@ export function generateInlineScript(
 
   // WebGL2 init — this is a placeholder.
   // The real implementation is in the built standalone entry.
-  console.log('Tempo: ${slug} loaded with params', params);
+  console.log('WebGL: ${slug} loaded with params', params);
 })();`;
 }

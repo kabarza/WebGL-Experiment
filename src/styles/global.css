@@ -42,14 +42,19 @@ html, body {
   margin-top: 0;
 }
 
-/* Remove trailing border and tighten panel bottom edge */
+/* Remove trailing border and inner padding after the last folder */
 .dialkit-folder:not(.dialkit-folder-root):last-of-type {
   border-bottom: none;
   margin-bottom: 0;
 }
 
+.dialkit-folder:not(.dialkit-folder-root):last-of-type > .dialkit-folder-content > .dialkit-folder-inner {
+  padding-bottom: 0;
+}
+
+/* Tighten panel bottom edge (matches patched +12 in DialKit JS) */
 .dialkit-panel-inner {
-  padding-bottom: 4px;
+  padding-bottom: 0;
 }
 
 

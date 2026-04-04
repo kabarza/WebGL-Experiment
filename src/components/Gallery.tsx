@@ -16,7 +16,7 @@ export function Gallery() {
       transition={{ duration: 0.12, ease: 'easeOut' }}
     >
       <header className="gallery-header">
-        <h1 className="gallery-title">Tempo</h1>
+        <h1 className="gallery-title">Experiments</h1>
         <p className="gallery-subtitle">WebGPU Experiment Showcase</p>
       </header>
       <div className="gallery-grid">

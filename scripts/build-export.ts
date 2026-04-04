@@ -91,13 +91,13 @@ await build({
     },
   ],
   define: {
-    __TEMPO_BAKED_PARAMS__: JSON.stringify(bakedParams),
+    __BAKED_PARAMS__: JSON.stringify(bakedParams),
   },
   build: {
     lib: {
       entry,
       formats: ['iife'],
-      name: `Tempo${experiment.split('-').map((w: string) => w[0].toUpperCase() + w.slice(1)).join('')}`,
+      name: `Experiment${experiment.split('-').map((w: string) => w[0].toUpperCase() + w.slice(1)).join('')}`,
       fileName: () => `${outName}.js`,
     },
     outDir: resolve(root, 'dist/exports'),
@@ -111,6 +111,6 @@ await build({
   },
 });
 
-const baseUrl = process.env.VITE_BASE_URL || 'https://tempo.vercel.app';
+const baseUrl = process.env.VITE_BASE_URL || 'https://webgl-experiments.vercel.app';
 console.log(`\nDone! Bundle: dist/exports/${outName}.js`);
 console.log(`Deploy URL: ${baseUrl}/exports/${outName}.js`);

@@ -39,7 +39,7 @@ export function buildExportPlan(
   return {
     styles: [
       {
-        name: 'tempo-experiment-wrapper',
+        name: 'webgl-experiment-wrapper',
         properties: {
           position: 'relative',
           width: '100%',
@@ -47,7 +47,7 @@ export function buildExportPlan(
         },
       },
       {
-        name: 'tempo-experiment-canvas',
+        name: 'webgl-experiment-canvas',
         properties: {
           display: 'block',
           width: '100%',
@@ -58,13 +58,13 @@ export function buildExportPlan(
     elements: [
       {
         tag: 'div',
-        style: 'tempo-experiment-wrapper',
+        style: 'webgl-experiment-wrapper',
         children: [
           {
             tag: 'canvas',
-            style: 'tempo-experiment-canvas',
+            style: 'webgl-experiment-canvas',
             attributes: {
-              'data-tempo-experiment': slug,
+              'data-webgl-experiment': slug,
             },
           },
           {
@@ -76,7 +76,7 @@ export function buildExportPlan(
         ],
       },
     ],
-    componentName: `Tempo: ${slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')}`,
+    componentName: `Experiment: ${slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')}`,
   };
 }
 

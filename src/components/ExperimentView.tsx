@@ -101,10 +101,10 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
   // Set document title
   useEffect(() => {
     document.title = experiment
-      ? `${experiment.meta.title} — Tempo`
-      : 'Tempo';
+      ? `${experiment.meta.title} — WebGL Experiments`
+      : 'WebGL Experiments';
     return () => {
-      document.title = 'Tempo — WebGPU Experiments';
+      document.title = 'WebGL Experiments';
     };
   }, [experiment]);
 

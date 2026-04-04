@@ -1,5 +1,5 @@
 {
-  "name": "tempo-webgpu-experiments",
+  "name": "webgl-experiments",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "build:export": "tsx scripts/build-export.ts",
-    "new-experiment": "tsx scripts/new-experiment.ts"
+    "new-experiment": "tsx scripts/new-experiment.ts",
+    "postinstall": "sh scripts/patch-dialkit.sh"
   },
   "dependencies": {
     "dialkit": "^1.1.0",

@@ -7,7 +7,7 @@ import type { ExperimentMeta } from '../core/Experiment.ts';
 
 function getCachedThumbnail(slug: string): string | null {
   try {
-    return localStorage.getItem(`tempo-thumb/${slug}`);
+    return localStorage.getItem(`webgl-thumb/${slug}`);
   } catch {
     return null;
   }
