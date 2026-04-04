@@ -3,10 +3,10 @@
 // ============================================================
 
 import './styles/reset.css';
+import 'dialkit/styles.css';
 import './styles/global.css';
 import './gallery/gallery.css';
 import './styles/components.css';
-import 'dialkit/styles.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
