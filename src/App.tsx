@@ -1,5 +1,5 @@
 // ============================================================
-// App — Root component with hash-based routing
+// App — Root component with History API routing
 // ============================================================
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,12 +15,12 @@ interface Route {
 }
 
 function parseRoute(): Route {
-  const hash = window.location.hash.slice(1) || '/';
-  const match = hash.match(/^\/experiment\/([^?]+)(?:\?(.*))?$/);
+  const path = window.location.pathname;
+  const match = path.match(/^\/experiment\/([^?]+)$/);
 
   if (match) {
     const slug = match[1];
-    const searchParams = new URLSearchParams(match[2] || '');
+    const searchParams = new URLSearchParams(window.location.search);
     return {
       type: 'experiment',
       slug,
@@ -36,12 +36,13 @@ export function App() {
 
   useEffect(() => {
     const handler = () => setRoute(parseRoute());
-    window.addEventListener('hashchange', handler);
-    return () => window.removeEventListener('hashchange', handler);
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
   }, []);
 
   const navigateToGallery = useCallback(() => {
-    window.location.hash = '/';
+    history.pushState(null, '', '/');
+    setRoute({ type: 'gallery' });
   }, []);
 
   return (

@@ -54,6 +54,5 @@ export function decodeParams(encoded: string): Record<string, unknown> | null {
  */
 export function buildShareUrl(slug: string, params: Record<string, unknown>): string {
   const encoded = encodeParams(params);
-  const base = window.location.origin + window.location.pathname;
-  return `${base}#/experiment/${slug}?v=${encoded}`;
+  return `${window.location.origin}/experiment/${slug}?v=${encoded}`;
 }

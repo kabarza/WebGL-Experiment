@@ -31,9 +31,9 @@ html, body {
 
 /* ── DialKit overrides ─────────────────────────────── */
 
-/* Tighten gap between panel header and first folder */
+/* Match header→first-folder gap to the inter-folder gap (just the 1px border) */
 .dialkit-panel-header {
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 /* Remove double border: panel header bottom + first folder top */
@@ -42,10 +42,14 @@ html, body {
   margin-top: 0;
 }
 
-/* Remove trailing border after the last folder */
+/* Remove trailing border and tighten panel bottom edge */
 .dialkit-folder:not(.dialkit-folder-root):last-of-type {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+.dialkit-panel-inner {
+  padding-bottom: 4px;
 }
 
 

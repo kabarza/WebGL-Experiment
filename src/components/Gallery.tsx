@@ -25,7 +25,8 @@ export function Gallery() {
             key={exp.meta.slug}
             meta={exp.meta}
             onClick={() => {
-              window.location.hash = `/experiment/${exp.meta.slug}`;
+              history.pushState(null, '', `/experiment/${exp.meta.slug}`);
+              window.dispatchEvent(new PopStateEvent('popstate'));
             }}
           />
         ))}
