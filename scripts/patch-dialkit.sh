@@ -3,3 +3,7 @@
 # The hardcoded +24 assumes 12px bottom padding. We use 0px, so +12.
 sed -i '' 's/contentHeight + 24/contentHeight + 12/g' node_modules/dialkit/dist/index.js 2>/dev/null || \
 sed -i 's/contentHeight + 24/contentHeight + 12/g' node_modules/dialkit/dist/index.js
+
+# Force paddingBottom: 0 on root folder-inner so the 10px default isn't measured into contentHeight.
+sed -i '' 's/jsx("div", { className: "dialkit-folder-inner", children })/jsx("div", { className: "dialkit-folder-inner", style: isRoot ? { paddingBottom: 0 } : void 0, children })/' node_modules/dialkit/dist/index.js 2>/dev/null || \
+sed -i 's/jsx("div", { className: "dialkit-folder-inner", children })/jsx("div", { className: "dialkit-folder-inner", style: isRoot ? { paddingBottom: 0 } : void 0, children })/' node_modules/dialkit/dist/index.js

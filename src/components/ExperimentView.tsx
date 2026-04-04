@@ -9,6 +9,7 @@ import { useExperiment } from '../hooks/useExperiment.ts';
 import { useExperimentParams } from '../hooks/useExperimentParams.ts';
 import { ShareButton } from './ShareButton.tsx';
 import { ExportPanel } from './ExportPanel.tsx';
+import { FpsCounter } from './FpsCounter.tsx';
 import { VersionStore, type Version } from '../lib/versions.ts';
 import { decodeParams } from '../lib/sharing.ts';
 
@@ -169,6 +170,8 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
                   <path d="M3 11v2h10v-2" />
                 </svg>
               </button>
+              <div className="dock-divider" />
+              <FpsCounter />
             </nav>
           </div>
         )}

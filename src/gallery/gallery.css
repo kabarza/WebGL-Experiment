@@ -200,6 +200,13 @@
   color: rgba(255, 255, 255, 0.95);
 }
 
+.dock-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 2px;
+}
+
 /* ── Loading / Error States ───────────────────────── */
 
 .loading-screen,

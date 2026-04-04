@@ -48,10 +48,6 @@ html, body {
   margin-bottom: 0;
 }
 
-.dialkit-folder:not(.dialkit-folder-root):last-of-type > .dialkit-folder-content > .dialkit-folder-inner {
-  padding-bottom: 0;
-}
-
 /* Tighten panel bottom edge (matches patched +12 in DialKit JS) */
 .dialkit-panel-inner {
   padding-bottom: 0;
