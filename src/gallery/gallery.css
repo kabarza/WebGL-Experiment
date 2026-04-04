@@ -1,0 +1,260 @@
+/* ============================================================
+   Gallery — dark minimal grid
+   ============================================================ */
+
+.gallery {
+  width: 100%;
+  min-height: 100vh;
+  padding: 64px 48px;
+  overflow-y: auto;
+  position: absolute;
+  inset: 0;
+}
+
+.gallery-header {
+  margin-bottom: 56px;
+  text-align: left;
+}
+
+.gallery-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.gallery-subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* ── Card ─────────────────────────────────────────── */
+
+.experiment-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-medium),
+    box-shadow var(--transition-medium);
+  outline: none;
+}
+
+.experiment-card:hover,
+.experiment-card:focus-visible {
+  transform: scale(1.02);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.experiment-card:focus-visible {
+  outline: 2px solid var(--border-hover);
+  outline-offset: 2px;
+}
+
+.experiment-card:active {
+  transform: scale(0.99);
+}
+
+/* ── Thumbnail ────────────────────────────────────── */
+
+.card-thumbnail {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.card-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-medium);
+}
+
+.experiment-card:hover .card-thumbnail img {
+  transform: scale(1.05);
+}
+
+.card-thumbnail--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.card-thumbnail--placeholder span {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+/* ── Body ─────────────────────────────────────────── */
+
+.card-body {
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.card-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Experiment View ─────────────────────────────── */
+
+.experiment-view {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Experiment Chrome ────────────────────────────── */
+
+.experiment-chrome {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 101;
+}
+
+.chrome-dock {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dock-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dock-btn:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dock-btn--active {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ── Loading / Error States ───────────────────────── */
+
+.loading-screen,
+.error-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  z-index: 200;
+}
+
+.loading-screen p,
+.error-screen p {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.error-screen p {
+  color: #ff6b6b;
+}
+
+.error-screen .error-detail {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.error-screen button {
+  margin-top: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 8px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .gallery {
+    padding: 32px 20px;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-header {
+    margin-bottom: 32px;
+  }
+}
