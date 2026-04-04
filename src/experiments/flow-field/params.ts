@@ -35,7 +35,7 @@ export const controls: ExperimentControls = {
 
     grainAmount: 0.089,
     grainScale: 10,
-    grainSpeed: 22,
+    grainSpeed: 60,
 
     mouseEnabled: true,
     mouseStrength: 0.22,
@@ -88,7 +88,7 @@ export const controls: ExperimentControls = {
     Grain: {
       grainAmount: [0.089, 0, 0.5, 0.001],
       grainScale: [10, 0.5, 10, 0.1],
-      grainSpeed: [22, 0, 60, 0.5],
+      grainSpeed: [60, 0, 60, 0.5],
     },
     Mouse: {
       mouseEnabled: true,
