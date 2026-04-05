@@ -117,6 +117,7 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
       return generateExport({
         params: currentParams,
         dialConfig: experiment.controls.dialConfig,
+        slug,
         experimentTitle: experiment.meta.title,
       });
     },

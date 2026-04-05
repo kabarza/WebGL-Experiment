@@ -51,10 +51,16 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
 }
 
 (function () {
-  const wrapper = document.querySelector('[data-webgl-experiment="flow-field"]')
-    || document.querySelector('[data-flow-tempo]');
-  if (!wrapper) return;
-  const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement | null;
+  // Find canvas via data-flow-flow-field, then resolve wrapper
+  let canvas = document.querySelector('canvas[data-flow-flow-field]') as HTMLCanvasElement | null;
+  let wrapper: Element | null = canvas ? canvas.parentElement : null;
+
+  // Fallback: legacy selectors
+  if (!canvas) {
+    wrapper = document.querySelector('[data-webgl-experiment="flow-field"]')
+      || document.querySelector('[data-flow-tempo]');
+    canvas = wrapper?.querySelector('canvas') as HTMLCanvasElement | null;
+  }
   if (!canvas) return;
 
   // ── Params: data attributes override BAKED_PARAMS ──
@@ -62,7 +68,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
   for (const key in BAKED_PARAMS) {
     P[key] = BAKED_PARAMS[key];
     const kebab = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-    const attr = wrapper.getAttribute('data-flow-ft-' + kebab);
+    const attr = wrapper?.getAttribute('data-flow-ft-' + kebab) ?? null;
     if (attr !== null) {
       if (typeof BAKED_PARAMS[key] === 'number') {
         P[key] = Number(attr);

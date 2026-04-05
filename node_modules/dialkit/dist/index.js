@@ -2140,7 +2140,7 @@ function PresetManager({ panelId, presets, activePresetId, onAdd }) {
 
 
 // src/components/UBControl.tsx
-import { useState as useStateUB, useRef as useRefUB, useCallback as useCallbackUB } from "react";
+import { useState as useStateUB, useRef as useRefUB, useCallback as useCallbackUB, useEffect as useEffectUB } from "react";
 import { motion as motionUB, useMotionValue as useMotionValueUB, useTransform as useTransformUB, animate as animateUB } from "motion/react";
 import { jsx as jsxUB, jsxs as jsxsUB } from "react/jsx-runtime";
 
@@ -2149,6 +2149,7 @@ var UB_CLICK_THRESHOLD = 3;
 var UB_DEAD_ZONE = 32;
 var UB_MAX_CURSOR_RANGE = 200;
 var UB_MAX_STRETCH = 8;
+var UB_AUTO_SCROLL_MAX_SPEED = 100; // cap for auto-scroll speed multiplier
 
 function UBControl({ variant, label, value, step, onChange }) {
   const dec = (s) => { const t = s.toString(), d = t.indexOf('.'); return d === -1 ? 0 : t.length - d - 1; };
@@ -2160,6 +2161,8 @@ function UBControl({ variant, label, value, step, onChange }) {
   const [hovered, setHovered] = useStateUB(false);
   const [dragging, setDragging] = useStateUB(false);
   const [isInteracting, setIsInteracting] = useStateUB(false);
+  const [isValueHovered, setIsValueHovered] = useStateUB(false);
+  const [isValueEditable, setIsValueEditable] = useStateUB(false);
 
   const inputRef = useRefUB(null);
   const wrapperRef = useRefUB(null);
@@ -2171,8 +2174,43 @@ function UBControl({ variant, label, value, step, onChange }) {
   const isClickRef = useRefUB(true);
   const wrapperRectRef = useRefUB(null);
   const scaleRef = useRefUB(1);
+  const hoverTimeoutRef = useRefUB(null);
 
   const isActive = isInteracting || hovered;
+
+  // FIX #4: Value hover-800ms-then-click-to-edit — same as original
+  useEffectUB(() => {
+    if (isValueHovered && !editing && !isValueEditable) {
+      hoverTimeoutRef.current = setTimeout(() => { setIsValueEditable(true); }, 800);
+    } else if (!isValueHovered && !editing) {
+      if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; }
+      setIsValueEditable(false);
+    }
+    return () => { if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current); };
+  }, [isValueHovered, editing, isValueEditable]);
+
+  useEffectUB(() => {
+    if (editing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); }
+  }, [editing]);
+
+  const startEdit = () => { setEditing(true); setInputVal(display); };
+  const submitEdit = () => { const p = parseFloat(inputVal); if (!isNaN(p)) onChange(rnd(p)); setEditing(false); setIsValueHovered(false); setIsValueEditable(false); };
+  const handleValueClick = (e) => {
+    if (isValueEditable) { e.stopPropagation(); e.preventDefault(); setEditing(true); setInputVal(display); }
+  };
+  const mkInput = () => jsxUB("input", { ref: inputRef, type: "text", className: "dialkit-slider-input", value: inputVal, onChange: (e) => setInputVal(e.target.value), onKeyDown: (e) => { if (e.key === 'Enter') submitEdit(); else if (e.key === 'Escape') { setEditing(false); setIsValueHovered(false); } e.stopPropagation(); }, onBlur: submitEdit, onClick: (e) => e.stopPropagation(), onMouseDown: (e) => e.stopPropagation() });
+  // Value span with hover-to-editable pattern — same as original
+  const mkValue = () => jsxUB("span", {
+    ref: valueRef,
+    className: `dialkit-slider-value ${isValueEditable ? 'dialkit-slider-value-editable' : ''}`,
+    onMouseEnter: () => setIsValueHovered(true),
+    onMouseLeave: () => setIsValueHovered(false),
+    onClick: handleValueClick,
+    onMouseDown: (e) => isValueEditable && e.stopPropagation(),
+    onPointerDown: (e) => isValueEditable && e.stopPropagation(),
+    style: { cursor: isValueEditable ? 'text' : 'default' },
+    children: display
+  });
 
   // Rubber band stretch — same as original
   const rubberStretchPx = useMotionValueUB(0);
@@ -2187,14 +2225,13 @@ function UBControl({ variant, label, value, step, onChange }) {
     return sign * UB_MAX_STRETCH * Math.sqrt(Math.min(overflow / UB_MAX_CURSOR_RANGE, 1));
   }, []);
 
-  const startEdit = () => { setEditing(true); setInputVal(display); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); };
-  const submitEdit = () => { const p = parseFloat(inputVal); if (!isNaN(p)) onChange(rnd(p)); setEditing(false); };
-  const mkInput = () => jsxUB("input", { ref: inputRef, type: "text", className: "dialkit-slider-input", value: inputVal, onChange: (e) => setInputVal(e.target.value), onKeyDown: (e) => { if (e.key === 'Enter') submitEdit(); else if (e.key === 'Escape') setEditing(false); e.stopPropagation(); }, onBlur: submitEdit, onClick: (e) => e.stopPropagation(), onMouseDown: (e) => e.stopPropagation() });
-
-  // Handle dodge — same thresholds as original
+  // FIX #5: Handle dodge — same thresholds as original, with fallback defaults
   const computeDodge = (handlePct) => {
     const trackW = wrapperRef.current?.offsetWidth;
-    if (!trackW || trackW <= 0) return false;
+    if (!trackW || trackW <= 0) {
+      // Fallback defaults matching original slider
+      return handlePct < 30 || handlePct > 78;
+    }
     const labelW = labelRef.current?.offsetWidth ?? 0;
     const valueW = valueRef.current?.offsetWidth ?? 0;
     const leftThresh = (10 + labelW + 8) / trackW * 100;
@@ -2226,6 +2263,30 @@ function UBControl({ variant, label, value, step, onChange }) {
     const dodge = computeDodge(handlePct);
     const handleOpacity = !isActive && !alwaysShow ? 0 : dodge ? 0.1 : dragging ? 0.9 : alwaysShow ? 0.3 : 0.5;
 
+    const startAutoScrollLoop = (dir) => {
+      autoRef.current = dir;
+      setAutoDir(dir);
+      let last = performance.now();
+      const loop = (now) => {
+        if (!dragState.current.active || autoRef.current === 0) return;
+        const dt = Math.min((now - last) / 1000, 0.1); last = now;
+        // FIX #3: cap speed
+        const speed = Math.min(autoSpeedRef.current, step * UB_AUTO_SCROLL_MAX_SPEED);
+        valRef.current = rnd(valRef.current + speed * autoRef.current * dt * 60);
+        onChange(valRef.current);
+        frameRef.current = requestAnimationFrame(loop);
+      };
+      frameRef.current = requestAnimationFrame(loop);
+    };
+
+    const stopAutoScroll = () => {
+      if (autoRef.current !== 0) {
+        autoRef.current = 0;
+        setAutoDir(0);
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+
     const onDown = (e) => {
       if (editing) return;
       e.preventDefault();
@@ -2245,9 +2306,8 @@ function UBControl({ variant, label, value, step, onChange }) {
       const hw = rect ? rect.width / 2 : 100;
       dragState.current = { active: true, startX: cx, startVal: value, accDx: hw };
       velRef.current = 0;
-      autoRef.current = 0;
+      stopAutoScroll();
       autoSpeedRef.current = 0;
-      setAutoDir(0);
     };
 
     const onMove = (e) => {
@@ -2269,35 +2329,40 @@ function UBControl({ variant, label, value, step, onChange }) {
         velRef.current = e.movementX;
 
         // Check if cursor is past the track edges — auto-scroll zone
-        const pastEdge = rect && (e.clientX < rect.left || e.clientX > rect.right);
+        const pastLeft = rect && e.clientX < rect.left;
+        const pastRight = rect && e.clientX > rect.right;
+        const pastEdge = pastLeft || pastRight;
 
         if (hasAutoScroll && pastEdge && rect) {
           // Rubber band stretch
-          if (e.clientX < rect.left) rubberStretchPx.jump(computeRubberStretch(e.clientX, -1));
+          if (pastLeft) rubberStretchPx.jump(computeRubberStretch(e.clientX, -1));
           else rubberStretchPx.jump(computeRubberStretch(e.clientX, 1));
 
           // Auto-scroll: direction from which side, speed from how far past
-          const dir = e.clientX < rect.left ? -1 : 1;
+          const dir = pastLeft ? -1 : 1;
           const distPast = dir < 0 ? rect.left - e.clientX : e.clientX - rect.right;
           autoSpeedRef.current = step * Math.pow(distPast / 50, 1.5) * 2;
 
+          // FIX #1: Handle direction change — stop old loop, start new one if direction flipped
           if (autoRef.current === 0) {
-            autoRef.current = dir;
-            setAutoDir(dir);
-            let last = performance.now();
-            const loop = (now) => {
-              if (!dragState.current.active || autoRef.current === 0) return;
-              const dt = Math.min((now - last) / 1000, 0.1); last = now;
-              valRef.current = rnd(valRef.current + autoSpeedRef.current * autoRef.current * dt * 60);
-              onChange(valRef.current);
-              frameRef.current = requestAnimationFrame(loop);
-            };
-            frameRef.current = requestAnimationFrame(loop);
+            startAutoScrollLoop(dir);
+          } else if (autoRef.current !== dir) {
+            // Direction changed (e.g., swept from left edge to right edge)
+            stopAutoScroll();
+            startAutoScrollLoop(dir);
           }
+          // else: same direction, loop already running, just speed updated via autoSpeedRef
         } else {
           // Inside track — normal drag
-          if (rect) rubberStretchPx.jump(0);
-          if (autoRef.current !== 0) { autoRef.current = 0; setAutoDir(0); cancelAnimationFrame(frameRef.current); }
+          // FIX #2: Spring-animate rubber band back instead of jumping to 0
+          if (autoRef.current !== 0) {
+            stopAutoScroll();
+            if (rubberStretchPx.get() !== 0) {
+              animateUB(rubberStretchPx, 0, { type: "spring", visualDuration: 0.35, bounce: 0.15 });
+            }
+          } else if (rect) {
+            rubberStretchPx.jump(0);
+          }
 
           const norm = offset / hw;
           const absNorm = Math.abs(norm);
@@ -2320,9 +2385,7 @@ function UBControl({ variant, label, value, step, onChange }) {
       setIsInteracting(false);
       setDragging(false);
       pointerDownPos.current = null;
-      autoRef.current = 0;
-      setAutoDir(0);
-      cancelAnimationFrame(frameRef.current);
+      stopAutoScroll();
 
       if (hasMomentum && !isClickRef.current) {
         let vel = velRef.current * step * 2;
@@ -2371,7 +2434,7 @@ function UBControl({ variant, label, value, step, onChange }) {
             }
           }),
           jsxUB("span", { ref: labelRef, className: "dialkit-slider-label", children: label }),
-          editing ? mkInput() : jsxUB("span", { ref: valueRef, className: "dialkit-slider-value", onClick: startEdit, onPointerDown: (e) => e.stopPropagation(), onMouseDown: (e) => e.stopPropagation(), children: display })
+          editing ? mkInput() : mkValue()
         ]
       }
     ) });
@@ -2420,7 +2483,7 @@ function UBControl({ variant, label, value, step, onChange }) {
       onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false), children: [
       dragging ? jsxUB("div", { className: "ub-zones__badge", children: speedLabel }) : null,
       jsxUB("span", { ref: labelRef, className: "dialkit-slider-label", children: label }),
-      editing ? mkInput() : jsxUB("span", { ref: valueRef, className: "dialkit-slider-value", onClick: startEdit, onPointerDown: (e) => e.stopPropagation(), children: display })
+      editing ? mkInput() : mkValue()
     ] });
   }
 
@@ -2522,7 +2585,7 @@ function UBControl({ variant, label, value, step, onChange }) {
           ) }),
           jsxUB("div", { className: "ub-tape__hairline" }),
           jsxUB("span", { ref: labelRef, className: "dialkit-slider-label", children: label }),
-          editing ? mkInput() : jsxUB("span", { ref: valueRef, className: "dialkit-slider-value", onClick: startEdit, onPointerDown: (e) => e.stopPropagation(), onMouseDown: (e) => e.stopPropagation(), children: display })
+          editing ? mkInput() : mkValue()
         ]
       }
     ) });
@@ -2532,7 +2595,7 @@ function UBControl({ variant, label, value, step, onChange }) {
 }
 
 // src/components/LiquidToggle.tsx — Liquid-blob boolean toggle
-import { useState as useStateLT, useRef as useRefLT, useCallback as useCallbackLT } from "react";
+import { useRef as useRefLT, useCallback as useCallbackLT } from "react";
 import { jsx as jsxLT, jsxs as jsxsLT } from "react/jsx-runtime";
 var LT_BLOB_DUR = 560;
 var LT_CLEANUP = LT_BLOB_DUR + 40;

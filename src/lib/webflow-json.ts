@@ -9,6 +9,8 @@
 export interface WebflowJSONOptions {
   /** Full inline <script>...</script> string from generateExport() */
   inlineScript: string;
+  /** Experiment slug (e.g. "flow-field") — used for class names and data attributes */
+  slug: string;
   /** Canvas sizing mode */
   sizing: 'responsive' | 'fixed';
   /** Fixed width in px (only used when sizing === 'fixed') */
@@ -19,13 +21,11 @@ export interface WebflowJSONOptions {
 
 /**
  * Generate a random UUID.
- * Uses crypto.randomUUID() with fallback for older browsers.
  */
 function uuid(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  // Fallback: random hex UUID v4
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
@@ -36,40 +36,37 @@ function uuid(): string {
 /**
  * Generate the @webflow/XscpData JSON string for clipboard paste.
  *
- * Creates this component structure in Webflow:
- *   Div Block (wrapper, data-flow-tempo, position:relative + sized)
- *     +-- Canvas (100% x 100%, position:absolute fills wrapper)
- *     +-- HtmlEmbed (<script> with full inline IIFE)
- *
- * The wrapper has a default size (100% width, 100vh height for responsive,
- * or explicit px for fixed). The canvas absolutely fills the wrapper.
- * Users can resize the wrapper in Webflow to control the effect area.
+ * Creates:
+ *   Div Block  (class: "{slug}", e.g. "flow-field")
+ *     +-- Canvas  (class: "canvas-{slug}", data-flow-{slug} attribute)
+ *     +-- HtmlEmbed  (no class, contains the inline IIFE)
  */
 export function generateWebflowJSON(options: WebflowJSONOptions): string {
-  const { inlineScript, sizing, fixedWidth = 800, fixedHeight = 600 } = options;
+  const { inlineScript, slug, sizing, fixedWidth = 800, fixedHeight = 600 } = options;
 
-  // Fresh UUIDs for each copy — internally consistent, Webflow remaps on paste
   const wrapperId = uuid();
   const canvasId = uuid();
   const embedId = uuid();
   const wrapperStyleId = uuid();
   const canvasStyleId = uuid();
 
-  // Wrapper style: provides the bounding box for the canvas
+  // Wrapper: user controls sizing in Webflow, we just set position:relative
   const wrapperStyleLess =
     sizing === 'responsive'
       ? 'position: relative; width: 100%; height: 100vh;'
       : `position: relative; width: ${fixedWidth}px; height: ${fixedHeight}px;`;
 
-  // Canvas style: absolutely positioned to fill the wrapper
-  const canvasStyleLess =
-    'position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%;';
+  const canvasStyleLess = 'position: absolute; left: 0%; top: 0%; right: 0%; bottom: 0%; width: 100%; height: 100%;';
+
+  const wrapperClassName = slug;
+  const canvasClassName = `canvas-${slug}`;
+  const canvasDataAttr = `data-flow-${slug}`;
 
   const json = {
     type: '@webflow/XscpData',
     payload: {
       nodes: [
-        // Wrapper div block
+        // Wrapper div
         {
           _id: wrapperId,
           type: 'Block',
@@ -79,12 +76,18 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
           data: {
             tag: 'div',
             text: false,
-            xattr: [
-              { name: 'data-flow-tempo', value: '' },
-            ],
+            devlink: { runtimeProps: {}, slot: '' },
+            displayName: '',
+            attr: { id: '' },
+            xattr: [],
+            search: { exclude: false },
+            visibility: {
+              conditions: [],
+              keepInHtml: { tag: 'False', val: {} },
+            },
           },
         },
-        // Canvas element (DOM type renders as <canvas> tag)
+        // Canvas
         {
           _id: canvasId,
           type: 'DOM',
@@ -93,10 +96,18 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
           children: [],
           data: {
             tag: 'canvas',
+            attributes: [
+              { name: canvasDataAttr, value: '' },
+            ],
             text: false,
+            slot: '',
+            visibility: {
+              conditions: [],
+              keepInHtml: { tag: 'False', val: {} },
+            },
           },
         },
-        // HtmlEmbed with inline script
+        // HtmlEmbed
         {
           _id: embedId,
           type: 'HtmlEmbed',
@@ -105,12 +116,26 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
           children: [],
           v: inlineScript,
           data: {
+            search: { exclude: true },
             embed: {
               type: 'html',
               meta: {
                 html: inlineScript,
                 div: false,
+                script: true,
+                compilable: false,
+                iframe: false,
               },
+            },
+            insideRTE: false,
+            content: '',
+            devlink: { runtimeProps: {}, slot: '' },
+            displayName: '',
+            attr: { id: '' },
+            xattr: [],
+            visibility: {
+              conditions: [],
+              keepInHtml: { tag: 'False', val: {} },
             },
           },
         },
@@ -120,7 +145,7 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
           _id: wrapperStyleId,
           fake: false,
           type: 'class',
-          name: 'Flow Tempo Wrapper',
+          name: wrapperClassName,
           namespace: '',
           comb: '',
           styleLess: wrapperStyleLess,
@@ -134,7 +159,7 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
           _id: canvasStyleId,
           fake: false,
           type: 'class',
-          name: 'Flow Tempo Canvas',
+          name: canvasClassName,
           namespace: '',
           comb: '',
           styleLess: canvasStyleLess,
@@ -154,11 +179,13 @@ export function generateWebflowJSON(options: WebflowJSONOptions): string {
       },
     },
     meta: {
-      unlinkedSymbolCount: 0,
       droppedLinks: 0,
       dynBindRemovedCount: 0,
       dynListBindRemovedCount: 0,
       paginationRemovedCount: 0,
+      universalBindingsRemovedCount: 0,
+      unlinkedSymbolCount: 0,
+      codeComponentsRemovedCount: 0,
     },
   };
 

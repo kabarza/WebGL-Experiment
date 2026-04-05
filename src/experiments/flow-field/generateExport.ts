@@ -15,6 +15,7 @@ import type { DialConfig } from '../../core/Experiment.ts';
 export interface GenerateExportOptions {
   params: Record<string, unknown>;
   dialConfig: DialConfig;
+  slug?: string;
   experimentTitle?: string;
   version?: string;
 }
@@ -138,6 +139,7 @@ export function generateExport(options: GenerateExportOptions): string {
   const {
     params,
     dialConfig,
+    slug = 'flow-field',
     experimentTitle = 'Flow Field',
     version = 'v1',
   } = options;
@@ -170,20 +172,13 @@ export function generateExport(options: GenerateExportOptions): string {
 
   ${dialConfigBlock}
 
-  // Find wrapper: walk up from script to find [data-flow-tempo]
-  var wrapper = null;
-  var el = document.currentScript;
-  while (el) {
-    el = el.parentElement;
-    if (el && el.hasAttribute && el.hasAttribute("data-flow-tempo")) {
-      wrapper = el;
-      break;
-    }
-  }
-  if (!wrapper) wrapper = document.querySelector("[data-flow-tempo]");
-  if (!wrapper) return;
-  var canvas = wrapper.querySelector("canvas");
+  // Find canvas via data-flow-${slug} — scoped to parent wrapper
+  var wrapper = document.currentScript ? document.currentScript.parentElement : null;
+  if (wrapper) wrapper = wrapper.parentElement; // HtmlEmbed div → wrapper div
+  var canvas = wrapper ? wrapper.querySelector("canvas[data-flow-${slug}]") : null;
+  if (!canvas) canvas = document.querySelector("canvas[data-flow-${slug}]");
   if (!canvas) return;
+  if (!wrapper) wrapper = canvas.parentElement;
 
   // ── Params: data attributes override CONFIG ──
   var P = {};

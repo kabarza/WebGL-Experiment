@@ -64,11 +64,12 @@ export function ExportPanel({
     const inlineScript = generateInlineScript(params);
     return generateWebflowJSON({
       inlineScript,
+      slug,
       sizing,
       fixedWidth,
       fixedHeight,
     });
-  }, [generateInlineScript, params, sizing, fixedWidth, fixedHeight]);
+  }, [generateInlineScript, params, slug, sizing, fixedWidth, fixedHeight]);
 
   const copyToClipboard = useCallback(
     async (text: string, label: string) => {
