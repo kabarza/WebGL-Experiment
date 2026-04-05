@@ -2594,7 +2594,7 @@ function UBControl({ variant, label, value, step, onChange }) {
   return null;
 }
 
-// src/components/ToggleVariant.tsx — Custom toggle variants (ub-t1 … ub-t6)
+// src/components/ToggleVariant.tsx — Custom toggle variants (ub-t1, t6, t11, t12)
 // All share DialKit's segmented Off/On structure with directional liquid-blob animation.
 // Variants differ only in CSS styling. JS is unified.
 import { useRef as useRefTV, useCallback as useCallbackTV, useLayoutEffect as useLayoutEffectTV } from "react";
@@ -2607,9 +2607,9 @@ function ToggleVariant({ variant, label, value, onChange }) {
   var containerRef = useRefTV(null);
   var pillRef = useRefTV(null);
   var cleanupRef = useRefTV(null);
-  var hasAnimated = useRefTV(false);
+  var mounted = useRefTV(false);
 
-  // Position pill on the active button
+  // Position pill on the active button — runs on mount and every toggle
   useLayoutEffectTV(function () {
     var c = containerRef.current;
     if (!c || !pillRef.current) return;
@@ -2617,24 +2617,21 @@ function ToggleVariant({ variant, label, value, onChange }) {
     if (!btn) return;
     pillRef.current.style.left = btn.offsetLeft + "px";
     pillRef.current.style.width = btn.offsetWidth + "px";
+    mounted.current = true;
   }, [checked]);
 
-  var ready = hasAnimated.current;
-  hasAnimated.current = true;
-
-  var handleToggle = useCallbackTV(function (val) {
-    var next = val === "on";
-    if (next === checked) return;
-
+  var handleToggle = useCallbackTV(function () {
+    var next = !checked;
     var pill = pillRef.current;
     var c = containerRef.current;
 
-    if (pill && c && ready) {
+    if (pill && c && mounted.current) {
       if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
         var btns = c.querySelectorAll("button");
         if (btns.length >= 2) {
-          var startBtn = next ? btns[0] : btns[1];
-          var endBtn   = next ? btns[1] : btns[0];
+          // Current pill position = start; destination = the other button
+          var startBtn = checked ? btns[1] : btns[0];
+          var endBtn   = checked ? btns[0] : btns[1];
           var sL = startBtn.offsetLeft;
           var sW = startBtn.offsetWidth;
           var eL = endBtn.offsetLeft;
@@ -2673,7 +2670,7 @@ function ToggleVariant({ variant, label, value, onChange }) {
     }
 
     onChange(next);
-  }, [checked, onChange, ready]);
+  }, [checked, onChange]);
 
   var cls = variant.replace("ub-", "");
 
@@ -2685,8 +2682,8 @@ function ToggleVariant({ variant, label, value, onChange }) {
       "data-checked": String(checked),
       children: [
         jsxTV("div", { ref: pillRef, className: "tv-pill tv-" + cls + "-pill" }),
-        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(!checked), onClick: function () { handleToggle("off"); }, children: "Off" }),
-        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(checked), onClick: function () { handleToggle("on"); }, children: "On" })
+        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(!checked), onClick: handleToggle, children: "Off" }),
+        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(checked), onClick: handleToggle, children: "On" })
       ]
     })
   ] });
@@ -2823,7 +2820,7 @@ Apply these values as the new defaults in the useDialKit call.`;
         );
       case "ub-1": case "ub-2": case "ub-3": case "ub-4": case "ub-5": case "ub-6": case "ub-7": case "ub-8":
         return /* @__PURE__ */ jsx14(UBControl, { variant: control.type, label: control.label, value, step: control.step ?? 1, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
-      case "ub-t1": case "ub-t2": case "ub-t3": case "ub-t4": case "ub-t5": case "ub-t6":
+      case "ub-t1": case "ub-t6": case "ub-t11": case "ub-t12":
         return /* @__PURE__ */ jsx14(ToggleVariant, { variant: control.type, label: control.label, value, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
       default:
         return null;

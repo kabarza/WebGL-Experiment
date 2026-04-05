@@ -12,69 +12,83 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Navigation ────────────────────────────────────── */
+/* ── Chrome dock (reuses .chrome-dock & .dock-btn from gallery.css) */
 
-.article-nav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(10, 10, 10, 0.88);
+.article-chrome {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 101;
+}
+
+/* TOC toggle + divider: visible only when sidebar TOC is hidden */
+.article-toc-divider {
+  display: block;
+}
+
+.article-toc-toggle {
+  display: flex;
+}
+
+/* Active state for the TOC toggle button */
+.article-toc-toggle.dock-btn--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Anchor wrapper — positions dropdown relative to the TOC button */
+.article-toc-anchor {
+  position: relative;
+  display: flex;
+}
+
+/* Ensure dock doesn't clip the dropdown */
+.article-chrome .chrome-dock {
+  overflow: visible;
+}
+
+/* ── TOC dropdown panel ───────────────────────────── */
+
+.article-toc-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  padding: 6px;
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  width: max-content;
 }
 
-.article-nav-inner {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 12px 24px;
+.article-toc-dropdown .article-toc-list {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.article-nav-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.article-toc-dropdown .article-toc-link {
+  padding: 7px 12px 8px;
+  border-left: none;
+  border-radius: 8px;
+  font-size: 12px;
+  width: 100%;
+  color: rgba(255, 255, 255, 0.4);
 }
 
-.article-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 100px;
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 6px 14px 6px 10px;
-  cursor: pointer;
-  transition: all 150ms ease;
-  white-space: nowrap;
+.article-toc-dropdown .article-toc-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.article-nav-btn:hover {
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.article-nav-btn svg {
-  opacity: 0.5;
-  flex-shrink: 0;
-}
-
-.article-nav-btn:hover svg {
-  opacity: 0.8;
-}
-
-.article-nav-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
+.article-toc-dropdown .article-toc-link.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-left-color: transparent;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 /* ── Hero ──────────────────────────────────────────── */
@@ -456,6 +470,12 @@
   .article-toc {
     display: block;
   }
+
+  /* Hide TOC dock button when sidebar is visible */
+  .article-toc-toggle,
+  .article-toc-divider {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -506,17 +526,5 @@
 @media (max-width: 480px) {
   .article-hero h1 {
     font-size: 24px;
-  }
-
-  .article-nav-title {
-    display: none;
-  }
-
-  .article-nav-btn span {
-    display: none;
-  }
-
-  .article-nav-btn {
-    padding: 6px 10px;
   }
 }

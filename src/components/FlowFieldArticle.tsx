@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 /* ── Code block helper ─────────────────────────────── */
 
@@ -514,11 +514,33 @@ interface FlowFieldArticleProps {
 export function FlowFieldArticle({ onBack, onViewExperiment }: FlowFieldArticleProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeSection = useActiveSection(scrollRef);
+  const [tocOpen, setTocOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const scrollTo = useCallback((id: string) => {
     const el = scrollRef.current?.querySelector(`#${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
+
+  const handleCopyLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt('Copy this URL:', window.location.href);
+    }
+  }, []);
+
+  // Close TOC dropdown on outside click
+  useEffect(() => {
+    if (!tocOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.article-chrome')) setTocOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [tocOpen]);
 
   return (
     <motion.div
@@ -529,28 +551,78 @@ export function FlowFieldArticle({ onBack, onViewExperiment }: FlowFieldArticleP
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      {/* ── Navigation ── */}
-      <nav className="article-nav">
-        <div className="article-nav-inner">
-          <div className="article-nav-left">
-            <button className="article-nav-btn" onClick={onBack}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 3L5 8l5 5" />
+      {/* ── Chrome Dock ── */}
+      <div className="article-chrome">
+        <nav className="chrome-dock">
+          <button className="dock-btn" onClick={onBack} title="Back to gallery">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-1px' }}>
+              <path d="M10 3L5 8l5 5" />
+            </svg>
+          </button>
+          <button
+            className={`dock-btn${copied ? ' dock-btn--active' : ''}`}
+            onClick={handleCopyLink}
+            title={copied ? 'Copied!' : 'Copy article link'}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              {copied ? (
+                <path d="M4 8.5l2.5 2.5L12 5" />
+              ) : (
+                <>
+                  <rect x="6" y="6" width="7" height="7" rx="1.5" />
+                  <path d="M10 6V4.5A1.5 1.5 0 008.5 3h-5A1.5 1.5 0 002 4.5v5A1.5 1.5 0 004.5 11H6" />
+                </>
+              )}
+            </svg>
+          </button>
+          {onViewExperiment && (
+            <button className="dock-btn" onClick={onViewExperiment} title="View experiment">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6l4-4 4 4-4 8z" />
+                <path d="M4 6h8" />
               </svg>
-              <span>Gallery</span>
             </button>
-            {onViewExperiment && (
-              <button className="article-nav-btn" onClick={onViewExperiment}>
-                <span>View experiment</span>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </button>
-            )}
+          )}
+          <div className="dock-divider article-toc-divider" />
+          <div className="article-toc-anchor">
+            <button
+              className={`dock-btn article-toc-toggle${tocOpen ? ' dock-btn--active' : ''}`}
+              onClick={() => setTocOpen(v => !v)}
+              title="Table of contents"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3.5h10M3 6.5h6M3 9.5h8M3 12.5h5" />
+              </svg>
+            </button>
+            <AnimatePresence>
+              {tocOpen && (
+                <motion.div
+                  key="toc-dropdown"
+                  className="article-toc-dropdown"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.18, ease: [0.65, 0, 0.35, 1] }}
+                  style={{ transformOrigin: 'top left' }}
+                >
+                  <ul className="article-toc-list">
+                    {TOC_SECTIONS.map(({ id, label }) => (
+                      <li key={id} className="article-toc-item">
+                        <button
+                          className={`article-toc-link${activeSection === id ? ' active' : ''}`}
+                          onClick={() => { scrollTo(id); setTocOpen(false); }}
+                        >
+                          {label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <span className="article-nav-title">Flow Field</span>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* ── Hero ── */}
       <header className="article-hero">

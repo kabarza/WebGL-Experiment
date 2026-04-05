@@ -219,12 +219,13 @@
    based on measured button positions and travel direction.   */
 
 .tv-liquid {
-  animation: tv-blob 540ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: tv-blob 560ms cubic-bezier(0.22, 0.68, 0.35, 1) both;
 }
 
 @keyframes tv-blob {
   0%   { left: var(--tv-sl); width: var(--tv-sw); transform: scaleY(1); }
-  62%  { left: var(--tv-ml); width: var(--tv-mw); transform: scaleY(0.88); }
+  52%  { left: var(--tv-ml); width: var(--tv-mw); transform: scaleY(0.92); }
+  78%  { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1.03); }
   100% { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1); }
 }
 
@@ -234,84 +235,6 @@
    Standard DialKit segmented look. No overrides.
    ════════════════════════════════════════════════════════════════ */
 /* (Base styles only) */
-
-
-/* ════════════════════════════════════════════════════════════════
-   T2 — Elastic Settle
-   Same DialKit look. 4-stop keyframe: the pill overshoots
-   width slightly on landing, then bounces back to normal.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t2-pill.tv-liquid {
-  animation: tv-blob-elastic 600ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-@keyframes tv-blob-elastic {
-  0%   { left: var(--tv-sl); width: var(--tv-sw); transform: scaleY(1); }
-  55%  { left: var(--tv-ml); width: var(--tv-mw); transform: scaleY(0.88); }
-  80%  { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1) scaleX(1.08); }
-  100% { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1) scaleX(1); }
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   T3 — Inset Border
-   1px border + 3px padding around the segmented control.
-   Pill sits inset, smaller. Same liquid animation.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t3 {
-  border: 1px solid var(--dial-border);
-  padding: 3px;
-  border-radius: calc(var(--dial-radius) + 2px);
-}
-.tv-t3-pill {
-  top: 3px; bottom: 3px;
-  border-radius: 5px;
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   T4 — Rounded Inset
-   1px border + 4px padding + fully rounded capsule shape.
-   The pill and buttons have more rounded corners.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t4 {
-  border: 1px solid var(--dial-border);
-  padding: 4px;
-  border-radius: 16px;
-}
-.tv-t4-pill {
-  top: 4px; bottom: 4px;
-  border-radius: 12px;
-}
-.tv-t4-btn {
-  padding: 5px 10px;
-  border-radius: 10px;
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   T5 — Frosted Glass
-   Subtle border on the container. Pill has a glass effect
-   with faint backdrop blur and thin border.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t5 {
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  padding: 3px;
-}
-.tv-t5-pill {
-  top: 3px; bottom: 3px;
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 7px;
-  box-sizing: border-box;
-}
 
 
 /* ════════════════════════════════════════════════════════════════
@@ -333,6 +256,76 @@
 }
 .tv-t6[data-checked="true"] .tv-btn[data-active="true"] {
   color: rgba(255, 195, 130, 0.95);
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   T11 — Jade Refined
+   Border with 2px padding all around. Pill inset equally on
+   every side. Nested radii: inner = outer - padding.
+   ════════════════════════════════════════════════════════════════ */
+
+.tv-t11 {
+  border: 1px solid var(--dial-border);
+  border-radius: 10px;
+  padding: 0;
+  margin-right: -4px;
+}
+.tv-t11-btn {
+  padding: 6px 8px;
+  margin: 2px;
+}
+.tv-t11-pill {
+  top: 2px; bottom: 2px;
+  left: 2px; right: 2px;
+  border-radius: 7px;
+  transition: background 0.35s, box-shadow 0.35s;
+}
+.tv-t11[data-checked="true"] .tv-t11-pill {
+  background: rgba(80, 200, 140, 0.16);
+  box-shadow: 0 0 6px rgba(80, 200, 140, 0.06);
+}
+.tv-t11[data-checked="true"] .tv-btn[data-active="true"] {
+  color: rgba(110, 220, 170, 0.95);
+}
+.tv-t11[data-checked="true"] {
+  border-color: rgba(80, 200, 140, 0.18);
+}
+
+.tv-t11-pill.tv-liquid {
+  animation: tv-blob 580ms cubic-bezier(0.25, 0.75, 0.3, 1) both;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   T12 — Green Accent
+   Exact duplicate of T6 (warm accent) with jade green colors.
+   ════════════════════════════════════════════════════════════════ */
+
+.tv-t12 {
+  border-radius: 10px;
+  padding: 2px;
+}
+.tv-t12-pill {
+  border-radius: 7px;
+  transition: background 0.35s;
+}
+.tv-t12[data-checked="true"] .tv-t12-pill {
+  background: rgba(80, 200, 140, 0.18);
+}
+.tv-t12[data-checked="true"] .tv-btn[data-active="true"] {
+  color: rgba(110, 220, 170, 0.95);
+}
+
+/* Snappy start, gentle landing */
+.tv-t12-pill.tv-liquid {
+  animation: tv-blob-snappy 380ms cubic-bezier(0.5, 0, 0.15, 1) both;
+}
+
+@keyframes tv-blob-snappy {
+  0%   { left: var(--tv-sl); width: var(--tv-sw); }
+  45%  { left: var(--tv-ml); width: var(--tv-mw); }
+  100% { left: var(--tv-el); width: var(--tv-ew); }
 }
 
 

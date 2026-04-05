@@ -118,12 +118,10 @@ export const controls: ExperimentControls = {
       ringB: { type: 'ub-6', default: 100, step: 1 },
     },
     'Toggle Variants': {
-      segStretch:  { type: 'ub-t1', default: false },
-      segElastic:  { type: 'ub-t2', default: true },
-      pillBlob:    { type: 'ub-t3', default: false },
-      pillFill:    { type: 'ub-t4', default: true },
-      glowTrail:   { type: 'ub-t5', default: false },
-      squishLaunch:{ type: 'ub-t6', default: true },
+      cleanLiquid:  { type: 'ub-t1', default: false },
+      warmAccent:   { type: 'ub-t6', default: true },
+      jadeRefined:  { type: 'ub-t11', default: false },
+      greenAccent:  { type: 'ub-t12', default: true },
     },
   },
 
