@@ -24,10 +24,10 @@ uniform float u_warpScale;
 uniform float u_warpSpeed;
 uniform float u_warpDepth;
 
-// Circle
-uniform float u_circleRadius;
-uniform float u_circleSoft;
-uniform vec2  u_circlePos;
+// Vignette
+uniform float u_vignetteRadius;
+uniform float u_vignetteSoft;
+uniform float u_vignetteRound;
 
 // Camera / View
 uniform float u_rotation;
@@ -207,14 +207,12 @@ void main() {
   float n3 = (q1 + q2) * 0.5;
   float n4 = (r1 + r2) * 0.5;
 
-  // Circle mask
-  vec2 ctr = vec2(u_circlePos.x * aspect, u_circlePos.y);
-  float dist = length(st - ctr);
-  float circle = 1.0 - smoothstep(
-    u_circleRadius - u_circleSoft,
-    u_circleRadius + u_circleSoft,
-    dist
-  );
+  // Vignette mask (rounded rectangle SDF, aspect-independent)
+  vec2 vigP = uv * 2.0 - 1.0;
+  float cr = (u_vignetteRound / 100.0) * u_vignetteRadius;
+  vec2 q = abs(vigP) - vec2(u_vignetteRadius) + cr;
+  float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cr;
+  float vignette = 1.0 - smoothstep(-u_vignetteSoft, u_vignetteSoft, d);
 
   // Color mapping — sin-based
   const float TAU = 6.28318530718;
@@ -240,8 +238,8 @@ void main() {
   float totalFold = max(fold, foldQ);
   color = mix(color, u_highlightColor, totalFold * u_highlightStr);
 
-  // Apply circle mask
-  color = mix(u_bgColor, color, circle);
+  // Apply vignette mask
+  color = mix(u_bgColor, color, vignette);
 
   // Post-processing
   float luma = dot(color, vec3(0.299, 0.587, 0.114));

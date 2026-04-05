@@ -11,7 +11,6 @@ export interface ExportOptions {
   sizing: 'responsive' | 'fixed';
   fixedWidth?: number;
   fixedHeight?: number;
-  inline?: boolean; // If true, include inline IIFE instead of script src
 }
 
 /**
@@ -23,6 +22,7 @@ export function getBundleUrl(slug: string, version: number): string {
 
 /**
  * Generate the clipboard HTML for pasting into Webflow Custom Code embed.
+ * Uses the hosted bundle (external script src).
  */
 export function generateExportHTML(options: ExportOptions): string {
   const { slug, version, sizing, fixedWidth, fixedHeight } = options;
@@ -34,7 +34,7 @@ export function generateExportHTML(options: ExportOptions): string {
       : `position:relative;width:${fixedWidth ?? 800}px;height:${fixedHeight ?? 600}px;`;
 
   return [
-    `<div data-webgl-experiment="${slug}" style="${wrapperStyle}">`,
+    `<div data-webgl-experiment="${slug}" data-flow-tempo style="${wrapperStyle}">`,
     `  <canvas style="display:block;width:100%;height:100%;"></canvas>`,
     `  <script src="${bundleUrl}"></script>`,
     `</div>`,
@@ -42,25 +42,27 @@ export function generateExportHTML(options: ExportOptions): string {
 }
 
 /**
- * Generate a baked standalone IIFE source string with params injected.
- * This is for the inline export variant (no external script dependency).
+ * Generate a formatted CONFIG block string from params.
+ * Used by "Copy Config" in DialKit — both in-app and in Webflow.
+ * Colors are output without '#' prefix for Webflow convention.
+ * Only includes primitive values (string, number, boolean) — objects/arrays are skipped.
  */
-export function generateInlineScript(
-  slug: string,
-  params: Record<string, unknown>,
-): string {
-  const paramsJSON = JSON.stringify(params, null, 2);
+export function generateConfigBlock(params: Record<string, unknown>): string {
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string') {
+      const stripped = value.startsWith('#') ? value.slice(1) : value;
+      lines.push(`  ${key}: "${stripped}",`);
+    } else if (typeof value === 'boolean') {
+      lines.push(`  ${key}: ${value},`);
+    } else if (typeof value === 'number') {
+      lines.push(`  ${key}: ${value},`);
+    }
+    // Skip objects, arrays, undefined, functions — they aren't CONFIG values
+  }
 
-  return `(function() {
-  var wrapper = document.querySelector('[data-webgl-experiment="${slug}"]');
-  if (!wrapper) return;
-  var canvas = wrapper.querySelector('canvas');
-  if (!canvas) return;
+  // Always set dialKit to false in copied config
+  lines.push(`  dialKit: false,`);
 
-  var params = ${paramsJSON};
-
-  // WebGL2 init — this is a placeholder.
-  // The real implementation is in the built standalone entry.
-  console.log('WebGL: ${slug} loaded with params', params);
-})();`;
+  return `const CONFIG = {\n${lines.join('\n')}\n};`;
 }

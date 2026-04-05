@@ -333,6 +333,83 @@
   color: var(--text-secondary);
 }
 
+/* ── Export Tabs ────────────────────────────────────── */
+
+.export-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+}
+
+.export-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.export-tab:hover {
+  color: var(--text-secondary);
+}
+
+.export-tab--active {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+.export-tab-content {
+  min-height: 120px;
+}
+
+.export-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.export-json-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.export-json-size {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.export-btn--primary {
+  width: 100%;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.export-btn--primary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* ── Responsive adjustments ─────────────────────────── */
 
 @media (max-width: 640px) {

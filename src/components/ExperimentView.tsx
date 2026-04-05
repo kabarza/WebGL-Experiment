@@ -2,7 +2,7 @@
 // ExperimentView — Canvas + overlay + controls + versioning + sharing
 // ============================================================
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { findExperiment } from '../experiments/registry.ts';
 import { useExperiment } from '../hooks/useExperiment.ts';
@@ -12,6 +12,7 @@ import { ExportPanel } from './ExportPanel.tsx';
 import { FpsCounter } from './FpsCounter.tsx';
 import { VersionStore, type Version } from '../lib/versions.ts';
 import { decodeParams } from '../lib/sharing.ts';
+import { generateExport } from '../experiments/flow-field/generateExport.ts';
 
 interface ExperimentViewProps {
   slug: string;
@@ -109,6 +110,19 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
     };
   }, [experiment]);
 
+  // Generate inline script for Webflow JSON export (flow-field only for now)
+  const getInlineScript = useCallback(
+    (currentParams: Record<string, unknown>) => {
+      if (slug !== 'flow-field' || !experiment) return '';
+      return generateExport({
+        params: currentParams,
+        dialConfig: experiment.controls.dialConfig,
+        experimentTitle: experiment.meta.title,
+      });
+    },
+    [slug, experiment],
+  );
+
   if (!experiment) {
     return (
       <div className="error-screen">
@@ -166,10 +180,25 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
                 title="Export"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 2v8M5 7l3 3 3-3" />
+                  <path d="M8 10V2M5 5l3-3 3 3" />
                   <path d="M3 11v2h10v-2" />
                 </svg>
               </button>
+              {slug === 'flow-field' && (
+                <button
+                  className="dock-btn"
+                  onClick={() => {
+                    history.pushState(null, '', `/experiment/${slug}/article`);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  title="How it works"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 2h10v12H3z" />
+                    <path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" />
+                  </svg>
+                </button>
+              )}
               <div className="dock-divider" />
               <FpsCounter />
             </nav>
@@ -184,6 +213,7 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
             versions={versions}
             activeVersionId={activeVersionId}
             onClose={() => setExportOpen(false)}
+            generateInlineScript={slug === 'flow-field' ? getInlineScript : undefined}
           />
         )}
     </motion.div>

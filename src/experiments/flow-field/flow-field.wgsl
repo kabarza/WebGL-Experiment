@@ -24,9 +24,9 @@ struct Uniforms {
   warpSpeed: f32,
   warpDepth: f32,
 
-  circleRadius: f32,
-  circleSoft: f32,
-  circlePos: vec2f,
+  vignetteRadius: f32,
+  vignetteSoft: f32,
+  vignetteRound: f32,
 
   rotation: f32,
   zoom: f32,
@@ -128,14 +128,12 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let n3 = (q1 + q2) * 0.5;
   let n4 = (r1 + r2) * 0.5;
 
-  // Circle mask
-  let ctr = vec2f(u.circlePos.x * aspect, u.circlePos.y);
-  let dist = length(st - ctr);
-  let circle = 1.0 - smoothstep(
-    u.circleRadius - u.circleSoft,
-    u.circleRadius + u.circleSoft,
-    dist
-  );
+  // Vignette mask (rounded rectangle SDF, aspect-independent)
+  let vigP = uv * 2.0 - 1.0;
+  let cr = (u.vignetteRound / 100.0) * u.vignetteRadius;
+  let q = abs(vigP) - vec2f(u.vignetteRadius) + cr;
+  let d = length(max(q, vec2f(0.0))) + min(max(q.x, q.y), 0.0) - cr;
+  let vignette = 1.0 - smoothstep(-u.vignetteSoft, u.vignetteSoft, d);
 
   // Color mapping — sin-based, always smooth
   let TAU = 6.28318530718;
@@ -162,8 +160,8 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let totalFold = max(fold, foldQ);
   col = mix(col, u.highlightColor, totalFold * u.highlightStr);
 
-  // Apply circle mask
-  col = mix(u.bgColor, col, circle);
+  // Apply vignette mask
+  col = mix(u.bgColor, col, vignette);
 
   // Post-processing
   col = adjustSaturation(col, u.saturation);

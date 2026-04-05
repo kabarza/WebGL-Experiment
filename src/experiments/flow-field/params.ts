@@ -13,9 +13,9 @@ export const controls: ExperimentControls = {
     warpSpeed: 0.454,
     warpDepth: 2,
 
-    circleRadius: 1.37,
-    circleSoftness: 0.22,
-    circleCenter: { x: 0.5, y: 0.5 },
+    vignetteRadius: 0.7,
+    vignetteSoftness: 0.4,
+    vignetteRoundness: 100,
 
     rotation: -0.17,
     zoom: 0.55,
@@ -62,9 +62,10 @@ export const controls: ExperimentControls = {
       warpSpeed: [0.454, 0, 0.5, 0.001],
       warpDepth: [2, 0, 3, 1],
     },
-    'Circle Mask': {
-      circleRadius: [1.37, 0, 3, 0.01],
-      circleSoftness: [0.22, 0, 2, 0.01],
+    Vignette: {
+      vignetteRadius: [0.7, 0, 2, 0.01],
+      vignetteSoftness: [0.4, 0, 1, 0.01],
+      vignetteRoundness: [100, 0, 100, 1],
     },
     Camera: {
       rotation: [-0.17, -Math.PI, Math.PI, 0.01],
@@ -101,6 +102,24 @@ export const controls: ExperimentControls = {
     Animation: {
       speed: [0.16, 0, 5, 0.01],
       paused: false,
+    },
+    'Spring Slider': {
+      springA: { type: 'ub-1', default: 25, step: 0.5 },
+      springB: { type: 'ub-4', default: 50, step: 1 },
+      springC: { type: 'ub-7', default: 0, step: 0.5 },
+      springD: { type: 'ub-8', default: 100, step: 1 },
+    },
+    'Scrub Field': {
+      scrubA: { type: 'ub-2', default: 0.5, step: 0.01 },
+      scrubB: { type: 'ub-5', default: 10, step: 0.1 },
+    },
+    'Ring Slider': {
+      ringA: { type: 'ub-3', default: 200, step: 1 },
+      ringB: { type: 'ub-6', default: 100, step: 1 },
+    },
+    'Liquid Toggle': {
+      liquidA: { type: 'ub-toggle', default: false },
+      liquidB: { type: 'ub-toggle', default: true },
     },
   },
 

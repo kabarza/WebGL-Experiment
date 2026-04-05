@@ -37,9 +37,9 @@ const UNIFORM_FIELDS: UniformField[] = [
   { name: 'warpScale', type: 'f32' },
   { name: 'warpSpeed', type: 'f32' },
   { name: 'warpDepth', type: 'f32' },
-  { name: 'circleRadius', type: 'f32' },
-  { name: 'circleSoft', type: 'f32' },
-  { name: 'circlePos', type: 'vec2f' },
+  { name: 'vignetteRadius', type: 'f32' },
+  { name: 'vignetteSoft', type: 'f32' },
+  { name: 'vignetteRound', type: 'f32' },
   { name: 'rotation', type: 'f32' },
   { name: 'zoom', type: 'f32' },
   { name: 'col1', type: 'vec3f' },
@@ -133,10 +133,9 @@ async function initWebGPU(ctx: ExperimentContext): Promise<ExperimentInstance> {
     uniforms.set('warpScale', P.warpScale as number);
     uniforms.set('warpSpeed', P.warpSpeed as number);
     uniforms.set('warpDepth', P.warpDepth as number);
-    uniforms.set('circleRadius', P.circleRadius as number);
-    uniforms.set('circleSoft', P.circleSoftness as number);
-    const cc = P.circleCenter as { x: number; y: number };
-    uniforms.set('circlePos', [cc.x, cc.y]);
+    uniforms.set('vignetteRadius', P.vignetteRadius as number);
+    uniforms.set('vignetteSoft', P.vignetteSoftness as number);
+    uniforms.set('vignetteRound', P.vignetteRoundness as number);
     uniforms.set('rotation', P.rotation as number);
     uniforms.set('zoom', P.zoom as number);
     uniforms.set('col1', hex2rgb(P.color1 as string));
@@ -234,7 +233,7 @@ async function initWebGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> 
     'u_mouseStr', 'u_mouseRadius', 'u_mouseSoftness', 'u_mouseTrailStr',
     'u_noiseScale', 'u_noiseSpeed', 'u_noiseOctaves',
     'u_warpStrength', 'u_warpScale', 'u_warpSpeed', 'u_warpDepth',
-    'u_circleRadius', 'u_circleSoft', 'u_circlePos',
+    'u_vignetteRadius', 'u_vignetteSoft', 'u_vignetteRound',
     'u_rotation', 'u_zoom',
     'u_grainAmt', 'u_grainScale', 'u_grainSpeed', 'u_bgColor',
     'u_col1', 'u_col2', 'u_col3', 'u_col4',
@@ -283,10 +282,9 @@ async function initWebGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> 
       gl.uniform1f(U.u_warpScale, P.warpScale as number);
       gl.uniform1f(U.u_warpSpeed, P.warpSpeed as number);
       gl.uniform1f(U.u_warpDepth, P.warpDepth as number);
-      gl.uniform1f(U.u_circleRadius, P.circleRadius as number);
-      gl.uniform1f(U.u_circleSoft, P.circleSoftness as number);
-      const cc = P.circleCenter as { x: number; y: number };
-      gl.uniform2f(U.u_circlePos, cc.x, cc.y);
+      gl.uniform1f(U.u_vignetteRadius, P.vignetteRadius as number);
+      gl.uniform1f(U.u_vignetteSoft, P.vignetteSoftness as number);
+      gl.uniform1f(U.u_vignetteRound, P.vignetteRoundness as number);
       gl.uniform1f(U.u_rotation, P.rotation as number);
       gl.uniform1f(U.u_zoom, P.zoom as number);
 

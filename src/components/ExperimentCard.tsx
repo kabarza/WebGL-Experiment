@@ -60,6 +60,21 @@ export function ExperimentCard({ meta, onClick }: ExperimentCardProps) {
             </span>
           ))}
         </div>
+        {meta.slug === 'flow-field' && (
+          <button
+            className="card-article-link"
+            onClick={(e) => {
+              e.stopPropagation();
+              history.pushState(null, '', `/experiment/${meta.slug}/article`);
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+          >
+            How it works
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </button>
+        )}
       </div>
     </article>
   );

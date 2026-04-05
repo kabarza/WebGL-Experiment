@@ -1,0 +1,270 @@
+   UB Experiments — unbounded number inputs
+   Mirrors dialkit-slider states: idle → hover → dragging
+   Handle: 3px × 20px, opacity/scale transitions match original
+   ================================================================ */
+
+/* --- Spring Slider (ub-1, ub-4, ub-7, ub-8) — uses wrapper/track pattern like original slider --- */
+.ub-spring {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--dial-surface);
+  border-radius: var(--dial-radius);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  overflow: hidden;
+  transition: background 0.15s;
+}
+.ub-spring:hover { background: var(--dial-surface-hover); }
+.ub-spring--active { background: var(--dial-surface-hover); cursor: grabbing; }
+
+/* Center notch */
+.ub-spring__notch {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 1px; height: 14px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0);
+  pointer-events: none;
+  transition: background 200ms;
+}
+.ub-spring:hover .ub-spring__notch,
+.ub-spring--active .ub-spring__notch { background: var(--dial-border-hover); }
+
+/* Symmetric dots — same behavior as slider hashmarks */
+.ub-spring__dot {
+  position: absolute;
+  top: 50%;
+  width: 1px; height: 8px;
+  border-radius: 999px;
+  transform: translateX(-50%) translateY(-50%);
+  background: rgba(255,255,255,0);
+  pointer-events: none;
+  transition: background 200ms;
+}
+.ub-spring:hover .ub-spring__dot,
+.ub-spring--active .ub-spring__dot { background: var(--dial-border-hover); }
+
+/* Handle — same CSS as dialkit-slider-handle, animated by motion.div */
+.ub-spring__handle {
+  position: absolute;
+  top: 50%;
+  width: 3px; height: 20px;
+  border-radius: 999px;
+  background: var(--dial-text-primary);
+  pointer-events: none;
+}
+
+/* Value turns white on hover/active — matching slider */
+.ub-spring:hover .dialkit-slider-value,
+.ub-spring--active .dialkit-slider-value { color: var(--dial-text-focus); }
+
+/* --- Scrub Field (ub-2, ub-5) --- */
+.ub-zones {
+  position: relative;
+  height: var(--dial-row-height);
+  background: var(--dial-surface);
+  border-radius: var(--dial-radius);
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+  overflow: visible;
+  transition: background 0.15s;
+}
+.ub-zones:hover { background: var(--dial-surface-hover); }
+.ub-zones--active { background: var(--dial-surface-active); }
+
+/* Value turns white on hover/active */
+.ub-zones:hover .dialkit-slider-value,
+.ub-zones--active .dialkit-slider-value { color: var(--dial-text-focus); }
+
+.ub-zones__badge {
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--dial-dropdown-bg);
+  border: 1px solid var(--dial-border);
+  font-size: 10px; font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+  color: var(--dial-text-label);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* --- Ring Slider (ub-3, ub-6) — uses wrapper/track pattern like original slider --- */
+.ub-tape {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--dial-surface);
+  border-radius: var(--dial-radius);
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: background 0.15s;
+}
+.ub-tape:hover { background: var(--dial-surface-hover); }
+.ub-tape--active { background: var(--dial-surface-hover); cursor: grabbing; }
+
+/* Hashmarks hidden at rest, visible on hover — matching slider */
+.ub-tape .dialkit-slider-hashmark {
+  background: rgba(255,255,255,0);
+  transition: background 200ms;
+}
+.ub-tape:hover .dialkit-slider-hashmark,
+.ub-tape--active .dialkit-slider-hashmark { background: var(--dial-border-hover); }
+
+.ub-tape__tick--major {
+  height: 12px !important;
+}
+.ub-tape:hover .ub-tape__tick--major,
+.ub-tape--active .ub-tape__tick--major {
+  background: rgba(255,255,255,0.22) !important;
+}
+
+/* Center hairline — matches dialkit-slider-handle dimensions */
+.ub-tape__hairline {
+  position: absolute;
+  left: calc(50% - 0.5px); top: 50%;
+  width: 1px; height: 20px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: var(--dial-text-primary);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ub-tape:hover .ub-tape__hairline { opacity: 0.5; }
+.ub-tape--active .ub-tape__hairline { opacity: 0.9; }
+
+/* Ring B: hashmarks always visible even at rest */
+.ub-tape--always-marks .dialkit-slider-hashmark { background: var(--dial-border-hover); }
+.ub-tape--always-marks .ub-tape__hairline { opacity: 0.3; }
+.ub-tape--always-marks:hover .ub-tape__hairline { opacity: 0.5; }
+.ub-tape--always-marks.ub-tape--active .ub-tape__hairline { opacity: 0.9; }
+
+/* Value turns white on hover/active */
+.ub-tape:hover .dialkit-slider-value,
+.ub-tape--active .dialkit-slider-value { color: var(--dial-text-focus); }
+
+/* Tick labels for annotated tape */
+.ub-tape__tick-label {
+  position: absolute;
+  bottom: 14px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px; font-weight: 500;
+  font-family: 'Geist Mono', monospace;
+  color: rgba(255,255,255,0);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: color 200ms;
+}
+.ub-tape:hover .ub-tape__tick-label { color: rgba(255,255,255,0.2); }
+.ub-tape--active .ub-tape__tick-label { color: rgba(255,255,255,0.3); }
+
+/* ================================================================
+   Liquid-Blob Toggle (ub-toggle)
+   Two-layer animation: CSS transition (base slide) + @keyframes (blob)
+   ================================================================ */
+
+.lt-track {
+  /* ── Tunable sizing ── */
+  --lt-w: 36px;
+  --lt-h: 20px;
+  --lt-pad: 2px;
+  --lt-knob: 16px;
+
+  /* ── Timing ── */
+  --lt-slide: 260ms;
+  --lt-blob: 560ms;
+  --lt-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Deformation ── */
+  --lt-stretch: 2;
+  --lt-squash: 0.85;
+
+  /* ── Colors ── */
+  --lt-off-bg:       var(--dial-surface-active);
+  --lt-on-bg:        var(--dial-border-hover);
+  --lt-off-bg-hover: var(--dial-surface-hover);
+  --lt-on-bg-hover:  rgba(255,255,255,0.22);
+  --lt-knob-c:       var(--dial-text-primary);
+
+  /* ── Derived (auto-calc, don't override) ── */
+  --_off:   var(--lt-pad);
+  --_on:    calc(var(--lt-w) - var(--lt-knob) - var(--lt-pad));
+  --_bw:    calc(var(--lt-knob) * var(--lt-stretch));
+  --_bh:    calc(var(--lt-knob) * var(--lt-squash));
+  --_mx:    calc((var(--lt-w) - var(--_bw)) / 2);
+  --_my:    calc((var(--lt-h) - var(--_bh)) / 2);
+  --_br:    calc(var(--_bh) / 2);
+
+  position: relative;
+  width: var(--lt-w);
+  height: var(--lt-h);
+  border-radius: calc(var(--lt-h) / 2);
+  background: var(--lt-off-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.lt-track:hover           { background: var(--lt-off-bg-hover); }
+.lt-track.lt-on           { background: var(--lt-on-bg); }
+.lt-track.lt-on:hover     { background: var(--lt-on-bg-hover); }
+.lt-track:focus-visible   { box-shadow: 0 0 0 2px var(--dial-glass-bg), 0 0 0 4px var(--dial-text-label); }
+
+/* ── Thumb — resting position via transition on left ── */
+.lt-thumb {
+  position: absolute;
+  top: var(--lt-pad);
+  left: var(--_off);
+  width: var(--lt-knob);
+  height: var(--lt-knob);
+  border-radius: calc(var(--lt-knob) / 2);
+  background: var(--lt-knob-c);
+  transition: left var(--lt-slide) var(--lt-ease);
+  pointer-events: none;
+  will-change: left, width, height, border-radius;
+}
+.lt-thumb-on { left: var(--_on); }
+
+/* ── Blob keyframes layer — wins over transition while active ── */
+.lt-anim-on  { animation: lt-blob-on  var(--lt-blob) var(--lt-ease) both; }
+.lt-anim-off { animation: lt-blob-off var(--lt-blob) var(--lt-ease) both; }
+
+@keyframes lt-blob-on {
+  0%   { left: var(--_off); top: var(--lt-pad); width: var(--lt-knob); height: var(--lt-knob); border-radius: calc(var(--lt-knob)/2); }
+  62%  { left: var(--_mx);  top: var(--_my);     width: var(--_bw);     height: var(--_bh);     border-radius: var(--_br); }
+  100% { left: var(--_on);  top: var(--lt-pad); width: var(--lt-knob); height: var(--lt-knob); border-radius: calc(var(--lt-knob)/2); }
+}
+
+@keyframes lt-blob-off {
+  0%   { left: var(--_on);  top: var(--lt-pad); width: var(--lt-knob); height: var(--lt-knob); border-radius: calc(var(--lt-knob)/2); }
+  62%  { left: var(--_mx);  top: var(--_my);     width: var(--_bw);     height: var(--_bh);     border-radius: var(--_br); }
+  100% { left: var(--_off); top: var(--lt-pad); width: var(--lt-knob); height: var(--lt-knob); border-radius: calc(var(--lt-knob)/2); }
+}
+
+/* ── Light theme shadow ── */
+.dialkit-root[data-theme="light"] .lt-thumb {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: light) {
+  .dialkit-root[data-theme="system"] .lt-thumb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.08);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .lt-thumb { transition-duration: 0.01ms !important; }
+  .lt-anim-on, .lt-anim-off { animation: none !important; }
+}

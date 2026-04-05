@@ -1,6 +1,7 @@
 // ============================================================
 // Flow Field — Standalone IIFE entry for Webflow export
 // WebGL2 only (max compatibility), zero React dependencies
+// Supports data-flow-ft-* attribute overrides
 // ============================================================
 
 import fragGLSL from './flow-field.glsl';
@@ -17,8 +18,7 @@ const BAKED_PARAMS: Record<string, unknown> =
         bgColor: '#0d0d10',
         noiseScale: 0.4, noiseSpeed: 0.04, noiseOctaves: 2,
         warpStrength: 0.3, warpScale: 0.55, warpSpeed: 0.04, warpDepth: 2,
-        circleRadius: 0.85, circleSoftness: 0.35,
-        circleCenter: { x: 0.5, y: 0.5 },
+        vignetteRadius: 0.7, vignetteSoftness: 0.4, vignetteRoundness: 100,
         rotation: 0, zoom: 1.0,
         color1: '#1a6b42', color2: '#e84a9c', color3: '#c88aeb', color4: '#2d7a4f',
         blendWidth: 0.55, colorShift: 0.4,
@@ -29,10 +29,11 @@ const BAKED_PARAMS: Record<string, unknown> =
       };
 
 function hex2rgb(h: string): [number, number, number] {
+  if (h.charAt(0) === '#') h = h.slice(1);
   return [
-    parseInt(h.slice(1, 3), 16) / 255,
-    parseInt(h.slice(3, 5), 16) / 255,
-    parseInt(h.slice(5, 7), 16) / 255,
+    parseInt(h.slice(0, 2), 16) / 255,
+    parseInt(h.slice(2, 4), 16) / 255,
+    parseInt(h.slice(4, 6), 16) / 255,
   ];
 }
 
@@ -50,10 +51,28 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
 }
 
 (function () {
-  const wrapper = document.querySelector('[data-webgl-experiment="flow-field"]');
+  const wrapper = document.querySelector('[data-webgl-experiment="flow-field"]')
+    || document.querySelector('[data-flow-tempo]');
   if (!wrapper) return;
   const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement | null;
   if (!canvas) return;
+
+  // ── Params: data attributes override BAKED_PARAMS ──
+  const P: Record<string, unknown> = {};
+  for (const key in BAKED_PARAMS) {
+    P[key] = BAKED_PARAMS[key];
+    const kebab = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+    const attr = wrapper.getAttribute('data-flow-ft-' + kebab);
+    if (attr !== null) {
+      if (typeof BAKED_PARAMS[key] === 'number') {
+        P[key] = Number(attr);
+      } else if (typeof BAKED_PARAMS[key] === 'boolean') {
+        P[key] = attr === 'true';
+      } else {
+        P[key] = attr;
+      }
+    }
+  }
 
   const gl = canvas.getContext('webgl2', {
     antialias: false,
@@ -85,7 +104,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     new Float32Array([-1, -1, 3, -1, -1, 3]),
     gl.STATIC_DRAW,
   );
-  const aPos = gl.getAttribLocation(prog, 'a_position');
+  const aPos = gl.getAttribLocation(prog, 'a_pos');
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
   gl.bindVertexArray(null);
@@ -93,11 +112,12 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
   // Uniform locations
   const U: Record<string, WebGLUniformLocation | null> = {};
   const names = [
-    'u_time', 'u_resolution', 'u_mouse',
+    'u_time', 'u_resolution', 'u_mousePos', 'u_mouseTrailPos', 'u_mouseVel',
     'u_noiseScale', 'u_noiseSpeed', 'u_noiseOctaves',
     'u_warpStrength', 'u_warpScale', 'u_warpSpeed', 'u_warpDepth',
-    'u_circleRadius', 'u_circleSoft', 'u_circlePos',
+    'u_vignetteRadius', 'u_vignetteSoft', 'u_vignetteRound',
     'u_rotation', 'u_zoom', 'u_mouseStr',
+    'u_mouseRadius', 'u_mouseSoftness', 'u_mouseTrailStr',
     'u_grainAmt', 'u_grainScale', 'u_grainSpeed', 'u_bgColor',
     'u_col1', 'u_col2', 'u_col3', 'u_col4',
     'u_saturation', 'u_brightness', 'u_contrast',
@@ -106,10 +126,12 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
   ];
   for (const n of names) U[n] = gl.getUniformLocation(prog, n);
 
-  const P = BAKED_PARAMS;
-
   // Mouse tracking
   let mx = 0.5, my = 0.5;
+  let tmx = 0.5, tmy = 0.5;
+  let mVel = 0;
+  let prevMx = 0.5, prevMy = 0.5;
+
   canvas.addEventListener('pointermove', (e) => {
     const rect = canvas.getBoundingClientRect();
     mx = (e.clientX - rect.left) / rect.width;
@@ -138,11 +160,25 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     lastTime = now;
     accTime += dt;
 
+    // Smooth mouse trail
+    const smoothing = 0.067;
+    tmx += (mx - tmx) * smoothing;
+    tmy += (my - tmy) * smoothing;
+
+    // Mouse velocity
+    const dx = mx - prevMx;
+    const dy = my - prevMy;
+    mVel = mVel * 0.9 + Math.sqrt(dx * dx + dy * dy) * 0.1;
+    prevMx = mx;
+    prevMy = my;
+
     gl!.useProgram(prog);
 
     gl!.uniform1f(U.u_time, accTime);
     gl!.uniform2f(U.u_resolution, canvas!.width, canvas!.height);
-    gl!.uniform2f(U.u_mouse, mx, my);
+    gl!.uniform2f(U.u_mousePos, mx, my);
+    gl!.uniform2f(U.u_mouseTrailPos, tmx, tmy);
+    gl!.uniform1f(U.u_mouseVel, mVel);
 
     gl!.uniform1f(U.u_noiseScale, P.noiseScale as number);
     gl!.uniform1f(U.u_noiseSpeed, P.noiseSpeed as number);
@@ -151,13 +187,15 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     gl!.uniform1f(U.u_warpScale, P.warpScale as number);
     gl!.uniform1f(U.u_warpSpeed, P.warpSpeed as number);
     gl!.uniform1f(U.u_warpDepth, P.warpDepth as number);
-    gl!.uniform1f(U.u_circleRadius, P.circleRadius as number);
-    gl!.uniform1f(U.u_circleSoft, P.circleSoftness as number);
-    const cc = P.circleCenter as { x: number; y: number };
-    gl!.uniform2f(U.u_circlePos, cc.x, cc.y);
+    gl!.uniform1f(U.u_vignetteRadius, P.vignetteRadius as number);
+    gl!.uniform1f(U.u_vignetteSoft, P.vignetteSoftness as number);
+    gl!.uniform1f(U.u_vignetteRound, P.vignetteRoundness as number);
     gl!.uniform1f(U.u_rotation, P.rotation as number);
     gl!.uniform1f(U.u_zoom, P.zoom as number);
     gl!.uniform1f(U.u_mouseStr, P.mouseStrength as number);
+    gl!.uniform1f(U.u_mouseRadius, 0.49);
+    gl!.uniform1f(U.u_mouseSoftness, 0.39);
+    gl!.uniform1f(U.u_mouseTrailStr, 0.53);
 
     const c1 = hex2rgb(P.color1 as string);
     const c2 = hex2rgb(P.color2 as string);

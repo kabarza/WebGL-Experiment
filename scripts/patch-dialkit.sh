@@ -1,9 +1,12 @@
 #!/bin/sh
-# Patch DialKit's inline height calculation:
-# The hardcoded +24 assumes 12px bottom padding. We use 0px, so +12.
-sed -i '' 's/contentHeight + 24/contentHeight + 12/g' node_modules/dialkit/dist/index.js 2>/dev/null || \
-sed -i 's/contentHeight + 24/contentHeight + 12/g' node_modules/dialkit/dist/index.js
+set -e
+DIST="node_modules/dialkit/dist"
+PATCHES="scripts/dialkit-patches"
 
-# Force paddingBottom: 0 on root folder-inner so the 10px default isn't measured into contentHeight.
-sed -i '' 's/jsx("div", { className: "dialkit-folder-inner", children })/jsx("div", { className: "dialkit-folder-inner", style: isRoot ? { paddingBottom: 0 } : void 0, children })/' node_modules/dialkit/dist/index.js 2>/dev/null || \
-sed -i 's/jsx("div", { className: "dialkit-folder-inner", children })/jsx("div", { className: "dialkit-folder-inner", style: isRoot ? { paddingBottom: 0 } : void 0, children })/' node_modules/dialkit/dist/index.js
+# Replace the React bundle with our patched version (includes original patches + UB components)
+cp "$PATCHES/index.js.patched" "$DIST/index.js"
+
+# Append UB CSS
+cat "$PATCHES/ub.css" >> "$DIST/styles.css"
+
+echo "✓ DialKit patched (React bundle + UB CSS)"
