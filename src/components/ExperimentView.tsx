@@ -175,16 +175,6 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
                 </svg>
               </button>
               <ShareButton slug={slug} params={params} />
-              <button
-                className="dock-btn"
-                onClick={() => setExportOpen(true)}
-                title="Export"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 10V2M5 5l3-3 3 3" />
-                  <path d="M3 11v2h10v-2" />
-                </svg>
-              </button>
               {slug === 'flow-field' && (
                 <button
                   className="dock-btn"
@@ -200,6 +190,16 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
                   </svg>
                 </button>
               )}
+              <button
+                className="dock-btn"
+                onClick={() => setExportOpen(true)}
+                title="Export"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 10V2M5 5l3-3 3 3" />
+                  <path d="M3 11v2h10v-2" />
+                </svg>
+              </button>
               <div className="dock-divider" />
               <FpsCounter />
             </nav>

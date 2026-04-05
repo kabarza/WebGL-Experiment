@@ -268,16 +268,8 @@
 .tv-t11 {
   border: 1px solid var(--dial-border);
   border-radius: 10px;
-  padding: 0;
-  margin-right: -4px;
-}
-.tv-t11-btn {
-  padding: 6px 8px;
-  margin: 2px;
 }
 .tv-t11-pill {
-  top: 2px; bottom: 2px;
-  left: 2px; right: 2px;
   border-radius: 7px;
   transition: background 0.35s, box-shadow 0.35s;
 }
