@@ -2594,46 +2594,100 @@ function UBControl({ variant, label, value, step, onChange }) {
   return null;
 }
 
-// src/components/LiquidToggle.tsx — Liquid-blob boolean toggle
-import { useRef as useRefLT, useCallback as useCallbackLT } from "react";
-import { jsx as jsxLT, jsxs as jsxsLT } from "react/jsx-runtime";
-var LT_BLOB_DUR = 560;
-var LT_CLEANUP = LT_BLOB_DUR + 40;
-function LiquidToggle({ label, value, onChange }) {
-  var thumbRef = useRefLT(null);
-  var cleanupRef = useRefLT(null);
+// src/components/ToggleVariant.tsx — Custom toggle variants (ub-t1 … ub-t6)
+// All share DialKit's segmented Off/On structure with directional liquid-blob animation.
+// Variants differ only in CSS styling. JS is unified.
+import { useRef as useRefTV, useCallback as useCallbackTV, useLayoutEffect as useLayoutEffectTV } from "react";
+import { jsx as jsxTV, jsxs as jsxsTV } from "react/jsx-runtime";
+
+var TV_CLEANUP_MS = 580;
+
+function ToggleVariant({ variant, label, value, onChange }) {
   var checked = !!value;
-  var handleClick = useCallbackLT(function () {
-    var next = !checked;
-    var thumb = thumbRef.current;
-    if (thumb) {
-      var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!prefersReduced) {
-        if (cleanupRef.current) clearTimeout(cleanupRef.current);
-        thumb.classList.remove("lt-anim-on", "lt-anim-off");
-        void thumb.offsetWidth;
-        thumb.classList.add(next ? "lt-anim-on" : "lt-anim-off");
-        cleanupRef.current = setTimeout(function () {
-          thumb.classList.remove("lt-anim-on", "lt-anim-off");
-          cleanupRef.current = null;
-        }, LT_CLEANUP);
+  var containerRef = useRefTV(null);
+  var pillRef = useRefTV(null);
+  var cleanupRef = useRefTV(null);
+  var hasAnimated = useRefTV(false);
+
+  // Position pill on the active button
+  useLayoutEffectTV(function () {
+    var c = containerRef.current;
+    if (!c || !pillRef.current) return;
+    var btn = c.querySelector('button[data-active="true"]');
+    if (!btn) return;
+    pillRef.current.style.left = btn.offsetLeft + "px";
+    pillRef.current.style.width = btn.offsetWidth + "px";
+  }, [checked]);
+
+  var ready = hasAnimated.current;
+  hasAnimated.current = true;
+
+  var handleToggle = useCallbackTV(function (val) {
+    var next = val === "on";
+    if (next === checked) return;
+
+    var pill = pillRef.current;
+    var c = containerRef.current;
+
+    if (pill && c && ready) {
+      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+        var btns = c.querySelectorAll("button");
+        if (btns.length >= 2) {
+          var startBtn = next ? btns[0] : btns[1];
+          var endBtn   = next ? btns[1] : btns[0];
+          var sL = startBtn.offsetLeft;
+          var sW = startBtn.offsetWidth;
+          var eL = endBtn.offsetLeft;
+          var eW = endBtn.offsetWidth;
+          var goingRight = eL > sL;
+
+          // Directional stretch: trailing edge barely moves, leading edge races ahead
+          var bias = 0.1;
+          var midL, midR;
+          if (goingRight) {
+            midL = sL + sW * bias;
+            midR = eL + eW * (1 - bias);
+          } else {
+            midL = eL + eW * bias;
+            midR = sL + sW * (1 - bias);
+          }
+          var midW = midR - midL;
+
+          pill.style.setProperty("--tv-sl", sL + "px");
+          pill.style.setProperty("--tv-sw", sW + "px");
+          pill.style.setProperty("--tv-ml", midL + "px");
+          pill.style.setProperty("--tv-mw", midW + "px");
+          pill.style.setProperty("--tv-el", eL + "px");
+          pill.style.setProperty("--tv-ew", eW + "px");
+
+          if (cleanupRef.current) clearTimeout(cleanupRef.current);
+          pill.classList.remove("tv-liquid");
+          void pill.offsetWidth;
+          pill.classList.add("tv-liquid");
+          cleanupRef.current = setTimeout(function () {
+            pill.classList.remove("tv-liquid");
+            cleanupRef.current = null;
+          }, TV_CLEANUP_MS);
+        }
       }
     }
+
     onChange(next);
-  }, [checked, onChange]);
-  return jsxsLT("div", { className: "dialkit-labeled-control", children: [
-    jsxLT("span", { className: "dialkit-labeled-control-label", children: label }),
-    jsxLT("div", {
-      className: "lt-track" + (checked ? " lt-on" : ""),
-      onClick: handleClick,
-      role: "switch",
-      "aria-checked": String(checked),
-      tabIndex: 0,
-      onKeyDown: function (e) { if (e.key === " " || e.key === "Enter") { e.preventDefault(); handleClick(); } },
-      children: jsxLT("div", {
-        className: "lt-thumb" + (checked ? " lt-thumb-on" : ""),
-        ref: thumbRef
-      })
+  }, [checked, onChange, ready]);
+
+  var cls = variant.replace("ub-", "");
+
+  return jsxsTV("div", { className: "dialkit-labeled-control", children: [
+    jsxTV("span", { className: "dialkit-labeled-control-label", children: label }),
+    jsxsTV("div", {
+      className: "tv-seg tv-" + cls,
+      ref: containerRef,
+      "data-checked": String(checked),
+      children: [
+        jsxTV("div", { ref: pillRef, className: "tv-pill tv-" + cls + "-pill" }),
+        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(!checked), onClick: function () { handleToggle("off"); }, children: "Off" }),
+        jsxTV("button", { className: "tv-btn tv-" + cls + "-btn", "data-active": String(checked), onClick: function () { handleToggle("on"); }, children: "On" })
+      ]
     })
   ] });
 }
@@ -2769,8 +2823,8 @@ Apply these values as the new defaults in the useDialKit call.`;
         );
       case "ub-1": case "ub-2": case "ub-3": case "ub-4": case "ub-5": case "ub-6": case "ub-7": case "ub-8":
         return /* @__PURE__ */ jsx14(UBControl, { variant: control.type, label: control.label, value, step: control.step ?? 1, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
-      case "ub-toggle":
-        return /* @__PURE__ */ jsx14(LiquidToggle, { label: control.label, value, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
+      case "ub-t1": case "ub-t2": case "ub-t3": case "ub-t4": case "ub-t5": case "ub-t6":
+        return /* @__PURE__ */ jsx14(ToggleVariant, { variant: control.type, label: control.label, value, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
       default:
         return null;
     }

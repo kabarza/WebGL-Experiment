@@ -2,7 +2,7 @@
 // ExportPanel — Tabbed export modal (Webflow JSON / HTML / MCP)
 // ============================================================
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import type { Experiment } from '../core/Experiment.ts';
 import type { Version } from '../lib/versions.ts';
 import { generateExportHTML, getBundleUrl } from '../lib/webflow-export.ts';
@@ -58,10 +58,15 @@ export function ExportPanel({
   const mcpPlan = buildExportPlan(slug, bundleUrl);
   const mcpInstructions = generateMCPInstructions(mcpPlan);
 
-  // Webflow JSON tab content
-  const webflowJSON = useMemo(() => {
+  /**
+   * Build Webflow JSON fresh from the live (mutated) params object.
+   * Called at click time so it always reads the latest DialKit values.
+   * (params is a stable mutable ref — useMemo would never recompute.)
+   */
+  const buildWebflowJSON = useCallback((): string | null => {
     if (!generateInlineScript) return null;
-    const inlineScript = generateInlineScript(params);
+    // Spread to snapshot the current mutable values
+    const inlineScript = generateInlineScript({ ...params });
     return generateWebflowJSON({
       inlineScript,
       slug,
@@ -208,20 +213,17 @@ export function ExportPanel({
             {/* Tab 1: Webflow JSON */}
             {activeTab === 'webflow-json' && (
               <>
-                {webflowJSON ? (
+                {generateInlineScript ? (
                   <>
                     <p className="export-hint">
                       Click the button below, then paste directly into Webflow Designer (Ctrl/Cmd+V on the canvas). Creates a ready-to-go component with canvas + inline script.
                     </p>
-                    <div className="export-json-summary">
-                      <span>@webflow/XscpData</span>
-                      <span className="export-json-size">
-                        {(webflowJSON.length / 1024).toFixed(1)} KB
-                      </span>
-                    </div>
                     <button
                       className="export-btn export-btn--primary"
-                      onClick={() => copyWebflowJSON(webflowJSON, 'json')}
+                      onClick={() => {
+                        const json = buildWebflowJSON();
+                        if (json) copyWebflowJSON(json, 'json');
+                      }}
                     >
                       {copied === 'json' ? 'Copied to clipboard!' : 'Copy Webflow JSON'}
                     </button>

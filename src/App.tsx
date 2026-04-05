@@ -77,7 +77,7 @@ export function App() {
           />
         ) : null}
       </AnimatePresence>
-      {route.type === 'experiment' && <DialRoot />}
+      {route.type === 'experiment' && <DialRoot productionEnabled />}
     </>
   );
 }

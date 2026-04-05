@@ -117,9 +117,13 @@ export const controls: ExperimentControls = {
       ringA: { type: 'ub-3', default: 200, step: 1 },
       ringB: { type: 'ub-6', default: 100, step: 1 },
     },
-    'Liquid Toggle': {
-      liquidA: { type: 'ub-toggle', default: false },
-      liquidB: { type: 'ub-toggle', default: true },
+    'Toggle Variants': {
+      segStretch:  { type: 'ub-t1', default: false },
+      segElastic:  { type: 'ub-t2', default: true },
+      pillBlob:    { type: 'ub-t3', default: false },
+      pillFill:    { type: 'ub-t4', default: true },
+      glowTrail:   { type: 'ub-t5', default: false },
+      squishLaunch:{ type: 'ub-t6', default: true },
     },
   },
 

@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && tsx scripts/build-dialkit-standalone.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "build:export": "tsx scripts/build-export.ts",
+    "build:dialkit": "tsx scripts/build-dialkit-standalone.ts",
     "new-experiment": "tsx scripts/new-experiment.ts",
     "postinstall": "sh scripts/patch-dialkit.sh"
   },
