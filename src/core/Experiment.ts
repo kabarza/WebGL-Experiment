@@ -9,6 +9,7 @@ export interface ExperimentMeta {
   tags: string[];
   thumbnail?: string;
   date: string; // ISO date for sorting
+  hasArticle?: boolean;
 }
 
 export type DialConfig = Record<string, Record<string, unknown>>;
@@ -54,6 +55,6 @@ export interface ExperimentInstance {
 export interface Experiment {
   meta: ExperimentMeta;
   controls: ExperimentControls;
-  init(ctx: ExperimentContext): Promise<ExperimentInstance>;
+  init?(ctx: ExperimentContext): Promise<ExperimentInstance>;
   initGL?(ctx: ExperimentGLContext): Promise<ExperimentInstance>;
 }

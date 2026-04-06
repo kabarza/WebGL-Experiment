@@ -151,13 +151,17 @@
   inset: 0;
 }
 
-/* ── Experiment Chrome ────────────────────────────── */
+/* ── Chrome Dock Wrapper (persistent across views) ── */
 
-.experiment-chrome {
+.chrome-dock-wrapper {
   position: fixed;
   top: 16px;
   left: 16px;
-  z-index: 101;
+  z-index: 300;
+}
+
+.chrome-dock-wrapper .chrome-dock {
+  overflow: visible;
 }
 
 .chrome-dock {

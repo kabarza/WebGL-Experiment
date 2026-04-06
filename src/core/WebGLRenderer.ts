@@ -48,7 +48,10 @@ export class WebGLRenderer {
   get dpr(): number { return this._dpr; }
 
   dispose(): void {
-    const ext = this.gl.getExtension('WEBGL_lose_context');
-    ext?.loseContext();
+    // Intentionally do NOT call WEBGL_lose_context.loseContext() here.
+    // That permanently poisons the canvas — any subsequent getContext()
+    // returns the same lost context object, breaking React StrictMode's
+    // mount→unmount→remount cycle. The browser cleans up the GL context
+    // automatically when the canvas element is removed from the DOM.
   }
 }

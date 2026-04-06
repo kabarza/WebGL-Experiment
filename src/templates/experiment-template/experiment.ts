@@ -74,7 +74,4 @@ export const __VARNAME__Experiment: Experiment = {
   meta,
   controls,
   initGL: initGL,
-  init: async () => {
-    throw new Error('WebGPU not implemented — use WebGL fallback');
-  },
 };

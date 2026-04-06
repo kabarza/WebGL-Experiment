@@ -2139,19 +2139,41 @@ function PresetManager({ panelId, presets, activePresetId, onAdd }) {
 }
 
 
+
 // src/components/UBControl.tsx
 import { useState as useStateUB, useRef as useRefUB, useCallback as useCallbackUB, useEffect as useEffectUB } from "react";
 import { motion as motionUB, useMotionValue as useMotionValueUB, useTransform as useTransformUB, animate as animateUB } from "motion/react";
 import { jsx as jsxUB, jsxs as jsxsUB } from "react/jsx-runtime";
 
-// Same constants as original Slider
-var UB_CLICK_THRESHOLD = 3;
-var UB_DEAD_ZONE = 32;
-var UB_MAX_CURSOR_RANGE = 200;
-var UB_MAX_STRETCH = 8;
-var UB_AUTO_SCROLL_MAX_SPEED = 100; // cap for auto-scroll speed multiplier
+// Behavioral defaults — can be overridden at runtime via window.__UB_TUNING__
+var UB_DEFAULTS = {
+  // Thresholds
+  clickThreshold: 3,
+  // Rubber band
+  deadZone: 32, maxCursorRange: 200, maxStretch: 8,
+  springDuration: 0.35, springBounce: 0.15,
+  // Auto-scroll zone
+  speedMultiplier: 2, speedExponent: 1.5, speedDivisor: 50, maxSpeed: 100,
+  // Drag physics
+  quadraticExponent: 2, dragScale: 0.5,
+  // Handle opacity states
+  handleRestOpacity: 0.3, handleHoverOpacity: 0.5,
+  handleDragOpacity: 0.9, handleDodgeOpacity: 0.1, handleDodgeScaleY: 0.75,
+  // Handle animation springs
+  scaleXDuration: 0.25, scaleXBounce: 0.15,
+  scaleYDuration: 0.2, scaleYBounce: 0.1,
+  opacityDuration: 0.15,
+  // Edit
+  editHoverDelay: 800,
+  // Toggle
+  bias: 0.1,
+};
 
 function UBControl({ variant, label, value, step, onChange }) {
+  // Merge runtime tuning overrides
+  var T = (typeof window !== 'undefined' && window.__UB_TUNING__) || {};
+  var cfg = { ...UB_DEFAULTS, ...T };
+
   const dec = (s) => { const t = s.toString(), d = t.indexOf('.'); return d === -1 ? 0 : t.length - d - 1; };
   const rnd = (v) => Number.parseFloat((Math.round(v / step) * step).toFixed(dec(step)));
   const display = value.toFixed(dec(step));
@@ -2181,7 +2203,7 @@ function UBControl({ variant, label, value, step, onChange }) {
   // FIX #4: Value hover-800ms-then-click-to-edit — same as original
   useEffectUB(() => {
     if (isValueHovered && !editing && !isValueEditable) {
-      hoverTimeoutRef.current = setTimeout(() => { setIsValueEditable(true); }, 800);
+      hoverTimeoutRef.current = setTimeout(() => { setIsValueEditable(true); }, cfg.editHoverDelay);
     } else if (!isValueHovered && !editing) {
       if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; }
       setIsValueEditable(false);
@@ -2221,8 +2243,8 @@ function UBControl({ variant, label, value, step, onChange }) {
     const rect = wrapperRectRef.current;
     if (!rect) return 0;
     const distancePast = sign < 0 ? rect.left - clientX : clientX - rect.right;
-    const overflow = Math.max(0, distancePast - UB_DEAD_ZONE);
-    return sign * UB_MAX_STRETCH * Math.sqrt(Math.min(overflow / UB_MAX_CURSOR_RANGE, 1));
+    const overflow = Math.max(0, distancePast - cfg.deadZone);
+    return sign * cfg.maxStretch * Math.sqrt(Math.min(overflow / cfg.maxCursorRange, 1));
   }, []);
 
   // FIX #5: Handle dodge — same thresholds as original, with fallback defaults
@@ -2261,7 +2283,7 @@ function UBControl({ variant, label, value, step, onChange }) {
     const trackW = wrapperRef.current?.offsetWidth || 200;
     const handlePct = 50 + (handleX / trackW) * 100;
     const dodge = computeDodge(handlePct);
-    const handleOpacity = !isActive && !alwaysShow ? 0 : dodge ? 0.1 : dragging ? 0.9 : alwaysShow ? 0.3 : 0.5;
+    const handleOpacity = !isActive && !alwaysShow ? 0 : dodge ? cfg.handleDodgeOpacity : dragging ? cfg.handleDragOpacity : alwaysShow ? cfg.handleRestOpacity : cfg.handleHoverOpacity;
 
     const startAutoScrollLoop = (dir) => {
       autoRef.current = dir;
@@ -2271,7 +2293,7 @@ function UBControl({ variant, label, value, step, onChange }) {
         if (!dragState.current.active || autoRef.current === 0) return;
         const dt = Math.min((now - last) / 1000, 0.1); last = now;
         // FIX #3: cap speed
-        const speed = Math.min(autoSpeedRef.current, step * UB_AUTO_SCROLL_MAX_SPEED);
+        const speed = Math.min(autoSpeedRef.current, step * cfg.maxSpeed);
         valRef.current = rnd(valRef.current + speed * autoRef.current * dt * 60);
         onChange(valRef.current);
         frameRef.current = requestAnimationFrame(loop);
@@ -2316,7 +2338,7 @@ function UBControl({ variant, label, value, step, onChange }) {
       const dy = e.clientY - pointerDownPos.current.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (isClickRef.current && distance > UB_CLICK_THRESHOLD) {
+      if (isClickRef.current && distance > cfg.clickThreshold) {
         isClickRef.current = false;
         setDragging(true);
       }
@@ -2341,7 +2363,7 @@ function UBControl({ variant, label, value, step, onChange }) {
           // Auto-scroll: direction from which side, speed from how far past
           const dir = pastLeft ? -1 : 1;
           const distPast = dir < 0 ? rect.left - e.clientX : e.clientX - rect.right;
-          autoSpeedRef.current = step * Math.pow(distPast / 50, 1.5) * 2;
+          autoSpeedRef.current = step * Math.pow(distPast / cfg.speedDivisor, cfg.speedExponent) * cfg.speedMultiplier;
 
           // FIX #1: Handle direction change — stop old loop, start new one if direction flipped
           if (autoRef.current === 0) {
@@ -2358,7 +2380,7 @@ function UBControl({ variant, label, value, step, onChange }) {
           if (autoRef.current !== 0) {
             stopAutoScroll();
             if (rubberStretchPx.get() !== 0) {
-              animateUB(rubberStretchPx, 0, { type: "spring", visualDuration: 0.35, bounce: 0.15 });
+              animateUB(rubberStretchPx, 0, { type: "spring", visualDuration: cfg.springDuration, bounce: cfg.springBounce });
             }
           } else if (rect) {
             rubberStretchPx.jump(0);
@@ -2366,8 +2388,8 @@ function UBControl({ variant, label, value, step, onChange }) {
 
           const norm = offset / hw;
           const absNorm = Math.abs(norm);
-          const accel = Math.sign(norm) * Math.pow(absNorm, 2);
-          const nv = rnd(dragState.current.startVal + accel * step * hw * 0.5);
+          const accel = Math.sign(norm) * Math.pow(absNorm, cfg.quadraticExponent);
+          const nv = rnd(dragState.current.startVal + accel * step * hw * cfg.dragScale);
           onChange(nv); valRef.current = nv;
         }
       }
@@ -2378,7 +2400,7 @@ function UBControl({ variant, label, value, step, onChange }) {
 
       // Rubber band spring back — same as original
       if (rubberStretchPx.get() !== 0) {
-        animateUB(rubberStretchPx, 0, { type: "spring", visualDuration: 0.35, bounce: 0.15 });
+        animateUB(rubberStretchPx, 0, { type: "spring", visualDuration: cfg.springDuration, bounce: cfg.springBounce });
       }
 
       dragState.current.active = false;
@@ -2425,12 +2447,12 @@ function UBControl({ variant, label, value, step, onChange }) {
             animate: {
               opacity: handleOpacity,
               scaleX: isActive || alwaysShow ? 1 : 0.25,
-              scaleY: isActive && dodge ? 0.75 : 1
+              scaleY: isActive && dodge ? cfg.handleDodgeScaleY : 1
             },
             transition: {
-              scaleX: { type: "spring", visualDuration: 0.25, bounce: 0.15 },
-              scaleY: { type: "spring", visualDuration: 0.2, bounce: 0.1 },
-              opacity: { duration: 0.15 }
+              scaleX: { type: "spring", visualDuration: cfg.scaleXDuration, bounce: cfg.scaleXBounce },
+              scaleY: { type: "spring", visualDuration: cfg.scaleYDuration, bounce: cfg.scaleYBounce },
+              opacity: { duration: cfg.opacityDuration }
             }
           }),
           jsxUB("span", { ref: labelRef, className: "dialkit-slider-label", children: label }),
@@ -2531,7 +2553,7 @@ function UBControl({ variant, label, value, step, onChange }) {
       if (!isInteracting || !pointerDownPos.current) return;
       const dx = e.clientX - pointerDownPos.current.x;
       const distance = Math.abs(dx);
-      if (isClickRef.current && distance > UB_CLICK_THRESHOLD) {
+      if (isClickRef.current && distance > cfg.clickThreshold) {
         isClickRef.current = false;
         setDragging(true);
       }
@@ -2595,21 +2617,19 @@ function UBControl({ variant, label, value, step, onChange }) {
 }
 
 // src/components/ToggleVariant.tsx — Custom toggle variants (ub-t1, t6, t11, t12)
-// All share DialKit's segmented Off/On structure with directional liquid-blob animation.
-// Variants differ only in CSS styling. JS is unified.
 import { useRef as useRefTV, useCallback as useCallbackTV, useLayoutEffect as useLayoutEffectTV } from "react";
 import { jsx as jsxTV, jsxs as jsxsTV } from "react/jsx-runtime";
 
 var TV_CLEANUP_MS = 580;
 
 function ToggleVariant({ variant, label, value, onChange }) {
+  var T = (typeof window !== 'undefined' && window.__UB_TUNING__) || {};
   var checked = !!value;
   var containerRef = useRefTV(null);
   var pillRef = useRefTV(null);
   var cleanupRef = useRefTV(null);
   var mounted = useRefTV(false);
 
-  // Position pill on the active button — runs on mount and every toggle
   useLayoutEffectTV(function () {
     var c = containerRef.current;
     if (!c || !pillRef.current) return;
@@ -2629,7 +2649,6 @@ function ToggleVariant({ variant, label, value, onChange }) {
       if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
         var btns = c.querySelectorAll("button");
         if (btns.length >= 2) {
-          // Current pill position = start; destination = the other button
           var startBtn = checked ? btns[1] : btns[0];
           var endBtn   = checked ? btns[0] : btns[1];
           var sL = startBtn.offsetLeft;
@@ -2638,8 +2657,7 @@ function ToggleVariant({ variant, label, value, onChange }) {
           var eW = endBtn.offsetWidth;
           var goingRight = eL > sL;
 
-          // Directional stretch: trailing edge barely moves, leading edge races ahead
-          var bias = 0.1;
+          var bias = T.bias ?? 0.1;
           var midL, midR;
           if (goingRight) {
             midL = sL + sW * bias;

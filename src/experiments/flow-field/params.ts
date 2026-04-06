@@ -103,25 +103,28 @@ export const controls: ExperimentControls = {
       speed: [0.16, 0, 5, 0.01],
       paused: false,
     },
-    'Spring Slider': {
-      springA: { type: 'ub-1', default: 25, step: 0.5 },
-      springB: { type: 'ub-4', default: 50, step: 1 },
-      springC: { type: 'ub-7', default: 0, step: 0.5 },
-      springD: { type: 'ub-8', default: 100, step: 1 },
-    },
-    'Scrub Field': {
-      scrubA: { type: 'ub-2', default: 0.5, step: 0.01 },
-      scrubB: { type: 'ub-5', default: 10, step: 0.1 },
-    },
-    'Ring Slider': {
-      ringA: { type: 'ub-3', default: 200, step: 1 },
-      ringB: { type: 'ub-6', default: 100, step: 1 },
-    },
-    'Toggle Variants': {
-      cleanLiquid:  { type: 'ub-t1', default: false },
-      warmAccent:   { type: 'ub-t6', default: true },
-      jadeRefined:  { type: 'ub-t11', default: false },
-      greenAccent:  { type: 'ub-t12', default: true },
+    'UI Experiment': {
+      'Spring Slider': {
+        springA: { type: 'ub-1', default: 25, step: 0.5 },
+        springB: { type: 'ub-4', default: 50, step: 1 },
+        springC: { type: 'ub-7', default: 0, step: 0.5 },
+        springD: { type: 'ub-8', default: 100, step: 1 },
+      },
+      'Scrub Field': {
+        scrubA: { type: 'ub-2', default: 0.5, step: 0.01 },
+        scrubB: { type: 'ub-5', default: 10, step: 0.1 },
+      },
+      'Ring Slider': {
+        ringA: { type: 'ub-3', default: 200, step: 1 },
+        ringB: { type: 'ub-6', default: 100, step: 1 },
+      },
+      'Toggle Variants': {
+        dialKitDefault: true,
+        cleanLiquid:  { type: 'ub-t1', default: false },
+        warmAccent:   { type: 'ub-t6', default: true },
+        greenAccent:  { type: 'ub-t12', default: false },
+        jadeRefined:  { type: 'ub-t11', default: true },
+      },
     },
   },
 

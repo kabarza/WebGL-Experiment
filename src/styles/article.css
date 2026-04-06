@@ -12,16 +12,7 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Chrome dock (reuses .chrome-dock & .dock-btn from gallery.css) */
-
-.article-chrome {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 101;
-}
-
-/* TOC toggle + divider: visible only when sidebar TOC is hidden */
+/* ── TOC toggle + divider: visible only when sidebar TOC is hidden */
 .article-toc-divider {
   display: block;
 }
@@ -40,11 +31,6 @@
 .article-toc-anchor {
   position: relative;
   display: flex;
-}
-
-/* Ensure dock doesn't clip the dropdown */
-.article-chrome .chrome-dock {
-  overflow: visible;
 }
 
 /* ── TOC dropdown panel ───────────────────────────── */
@@ -438,6 +424,23 @@
 
 .card-article-link:hover svg {
   transform: translateX(2px);
+}
+
+/* ── Empty state (placeholder for new articles) ───── */
+
+.article-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 80px 0 120px;
+}
+
+.article-empty-state p {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 /* ── Summary/ending ────────────────────────────────── */

@@ -50,7 +50,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
   const buf = gl.createBuffer()!;
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(prog, 'a_position');
+  const aPos = gl.getAttribLocation(prog, 'a_pos');
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
   gl.bindVertexArray(null);

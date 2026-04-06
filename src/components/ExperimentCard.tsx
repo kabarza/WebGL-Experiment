@@ -60,7 +60,7 @@ export function ExperimentCard({ meta, onClick }: ExperimentCardProps) {
             </span>
           ))}
         </div>
-        {meta.slug === 'flow-field' && (
+        {meta.hasArticle && (
           <button
             className="card-article-link"
             onClick={(e) => {

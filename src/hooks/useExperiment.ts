@@ -45,24 +45,34 @@ export function useExperiment(
     async function init() {
       input = new InputManager(canvas);
 
-      // Try WebGPU first, then WebGL fallback
+      // Try WebGPU first (only if experiment supports it), then WebGL fallback
       try {
-        const gpuRenderer = new Renderer(canvas);
-        const ok = await gpuRenderer.init();
+        if (experiment!.init) {
+          const gpuRenderer = new Renderer(canvas);
+          const ok = await gpuRenderer.init();
 
-        if (ok) {
-          renderer = gpuRenderer;
-          inst = await experiment!.init({
-            device: gpuRenderer.device,
-            context: gpuRenderer.context,
-            format: gpuRenderer.format,
-            canvas,
-            params: paramsRef.current,
-            input: input.state,
-          });
-        } else if (experiment!.initGL) {
-          console.warn('WebGPU not available, falling back to WebGL');
-          gpuRenderer.dispose();
+          if (ok) {
+            renderer = gpuRenderer;
+            inst = await experiment!.init({
+              device: gpuRenderer.device,
+              context: gpuRenderer.context,
+              format: gpuRenderer.format,
+              canvas,
+              params: paramsRef.current,
+              input: input.state,
+            });
+          } else {
+            gpuRenderer.dispose();
+            // Fall through to WebGL below
+          }
+        }
+
+        if (!inst && experiment!.initGL) {
+          if (!experiment!.init) {
+            console.warn('Experiment is WebGL-only');
+          } else {
+            console.warn('WebGPU not available, falling back to WebGL');
+          }
           const glRenderer = new WebGLRenderer(canvas);
           renderer = glRenderer;
           inst = await experiment!.initGL({
@@ -71,8 +81,10 @@ export function useExperiment(
             params: paramsRef.current,
             input: input.state,
           });
-        } else {
-          throw new Error('WebGPU not available and no WebGL fallback');
+        }
+
+        if (!inst) {
+          throw new Error('No rendering backend available');
         }
       } catch (err) {
         if (!disposed) {

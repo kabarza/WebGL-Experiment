@@ -74,10 +74,11 @@ for (const file of files) {
 }
 
 console.log(`\nScaffolded: src/experiments/${slug}/`);
-console.log(`  meta.ts        — Experiment metadata`);
+console.log(`  meta.ts        — Experiment metadata (hasArticle: true)`);
 console.log(`  params.ts      — DialKit control config`);
 console.log(`  experiment.ts  — WebGL2 experiment shell`);
 console.log(`  shader.glsl    — Fragment shader`);
 console.log(`  index.ts       — Barrel export`);
 console.log(`  standalone.ts  — Webflow export entry`);
-console.log(`\nAuto-discovered by registry.ts — run \`npm run dev\` to see it.`);
+console.log(`\nArticle page available at /experiment/${slug}/article (empty state).`);
+console.log(`Auto-discovered by registry.ts — run \`npm run dev\` to see it.`);

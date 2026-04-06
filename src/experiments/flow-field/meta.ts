@@ -7,4 +7,5 @@ export const meta: ExperimentMeta = {
   tags: ['noise', 'fbm', 'domain-warp', 'glsl'],
   thumbnail: '/thumbnails/flow-field.webp',
   date: '2025-04-03',
+  hasArticle: true,
 };

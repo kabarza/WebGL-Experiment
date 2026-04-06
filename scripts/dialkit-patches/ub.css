@@ -1,182 +1,161 @@
+/* ================================================================
    UB Experiments — unbounded number inputs
-   Mirrors dialkit-slider states: idle → hover → dragging
-   Handle: 3px × 20px, opacity/scale transitions match original
+   Uses CSS custom properties for all visual params (tunable live).
+   Behavioral params are in JS via window.__UB_TUNING__.
    ================================================================ */
 
-/* --- Spring Slider (ub-1, ub-4, ub-7, ub-8) — uses wrapper/track pattern like original slider --- */
+/* --- UB Custom Properties (defaults) --- */
+.dialkit-root {
+  --ub-handle-width: 3px;
+  --ub-handle-height: 20px;
+  --ub-border-radius: var(--dial-radius);
+  --ub-notch-width: 1px;
+  --ub-notch-height: 14px;
+  --ub-dot-width: 1px;
+  --ub-dot-height: 8px;
+  --ub-bg-transition: 0.15s;
+  /* Jade toggle */
+  --ub-jade-padding: 3px;
+  --ub-jade-border-radius: 11px;
+  --ub-jade-border-width: 1px;
+  --ub-jade-pill-radius: 8px;
+  --ub-jade-btn-pad-v: 7px;
+  --ub-jade-btn-pad-h: 11px;
+  --ub-jade-pill-bg: rgba(80, 200, 140, 0.16);
+  --ub-jade-pill-glow: 0 0 6px rgba(80, 200, 140, 0.06);
+  --ub-jade-text-color: rgba(110, 220, 170, 0.95);
+  --ub-jade-border-color: rgba(80, 200, 140, 0.18);
+  --ub-jade-pill-transition: 0.35s;
+  --ub-jade-anim-duration: 580ms;
+  --ub-jade-ease: cubic-bezier(0.25, 0.75, 0.3, 1);
+  /* Warm toggle — matches committed T6 exactly */
+  --ub-warm-padding: 2px;
+  --ub-warm-border-radius: 10px;
+  --ub-warm-pill-radius: 7px;
+  --ub-warm-pill-bg: rgba(255, 170, 80, 0.18);
+  --ub-warm-pill-glow: none;
+  --ub-warm-text-color: rgba(255, 195, 130, 0.95);
+  --ub-warm-pill-transition: 0.35s;
+  --ub-warm-anim-duration: 540ms;
+  --ub-warm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Spring Slider --- */
 .ub-spring {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   background: var(--dial-surface);
-  border-radius: var(--dial-radius);
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
+  border-radius: var(--ub-border-radius);
+  cursor: grab; user-select: none; touch-action: none;
   overflow: hidden;
-  transition: background 0.15s;
+  transition: background var(--ub-bg-transition);
 }
 .ub-spring:hover { background: var(--dial-surface-hover); }
 .ub-spring--active { background: var(--dial-surface-hover); cursor: grabbing; }
 
-/* Center notch */
 .ub-spring__notch {
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 1px; height: 14px;
+  position: absolute; left: 50%; top: 50%;
+  width: var(--ub-notch-width); height: var(--ub-notch-height);
   transform: translate(-50%, -50%);
-  background: rgba(255,255,255,0);
-  pointer-events: none;
+  background: rgba(255,255,255,0); pointer-events: none;
   transition: background 200ms;
 }
 .ub-spring:hover .ub-spring__notch,
 .ub-spring--active .ub-spring__notch { background: var(--dial-border-hover); }
 
-/* Symmetric dots — same behavior as slider hashmarks */
 .ub-spring__dot {
-  position: absolute;
-  top: 50%;
-  width: 1px; height: 8px;
+  position: absolute; top: 50%;
+  width: var(--ub-dot-width); height: var(--ub-dot-height);
   border-radius: 999px;
   transform: translateX(-50%) translateY(-50%);
-  background: rgba(255,255,255,0);
-  pointer-events: none;
+  background: rgba(255,255,255,0); pointer-events: none;
   transition: background 200ms;
 }
 .ub-spring:hover .ub-spring__dot,
 .ub-spring--active .ub-spring__dot { background: var(--dial-border-hover); }
 
-/* Handle — same CSS as dialkit-slider-handle, animated by motion.div */
 .ub-spring__handle {
-  position: absolute;
-  top: 50%;
-  width: 3px; height: 20px;
+  position: absolute; top: 50%;
+  width: var(--ub-handle-width); height: var(--ub-handle-height);
   border-radius: 999px;
-  background: var(--dial-text-primary);
-  pointer-events: none;
+  background: var(--dial-text-primary); pointer-events: none;
 }
 
-/* Value turns white on hover/active — matching slider */
 .ub-spring:hover .dialkit-slider-value,
 .ub-spring--active .dialkit-slider-value { color: var(--dial-text-focus); }
 
-/* --- Scrub Field (ub-2, ub-5) --- */
+/* --- Scrub Field --- */
 .ub-zones {
   position: relative;
   height: var(--dial-row-height);
   background: var(--dial-surface);
-  border-radius: var(--dial-radius);
-  cursor: ew-resize;
-  user-select: none;
-  touch-action: none;
+  border-radius: var(--ub-border-radius);
+  cursor: ew-resize; user-select: none; touch-action: none;
   overflow: visible;
-  transition: background 0.15s;
+  transition: background var(--ub-bg-transition);
 }
 .ub-zones:hover { background: var(--dial-surface-hover); }
 .ub-zones--active { background: var(--dial-surface-active); }
 
-/* Value turns white on hover/active */
 .ub-zones:hover .dialkit-slider-value,
 .ub-zones--active .dialkit-slider-value { color: var(--dial-text-focus); }
 
 .ub-zones__badge {
-  position: absolute;
-  top: -22px; left: 50%;
+  position: absolute; top: -22px; left: 50%;
   transform: translateX(-50%);
-  padding: 2px 7px;
-  border-radius: 4px;
+  padding: 2px 7px; border-radius: 4px;
   background: var(--dial-dropdown-bg);
   border: 1px solid var(--dial-border);
   font-size: 10px; font-weight: 600;
   font-family: 'Geist Mono', monospace;
   color: var(--dial-text-label);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 10;
+  white-space: nowrap; pointer-events: none; z-index: 10;
 }
 
-/* --- Ring Slider (ub-3, ub-6) — uses wrapper/track pattern like original slider --- */
+/* --- Ring Slider --- */
 .ub-tape {
-  position: absolute;
-  top: 0; left: 0;
+  position: absolute; top: 0; left: 0;
   width: 100%; height: 100%;
   background: var(--dial-surface);
-  border-radius: var(--dial-radius);
+  border-radius: var(--ub-border-radius);
   overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-  transition: background 0.15s;
+  cursor: grab; user-select: none; touch-action: none;
+  transition: background var(--ub-bg-transition);
 }
 .ub-tape:hover { background: var(--dial-surface-hover); }
 .ub-tape--active { background: var(--dial-surface-hover); cursor: grabbing; }
 
-/* Hashmarks hidden at rest, visible on hover — matching slider */
 .ub-tape .dialkit-slider-hashmark {
-  background: rgba(255,255,255,0);
-  transition: background 200ms;
+  background: rgba(255,255,255,0); transition: background 200ms;
 }
 .ub-tape:hover .dialkit-slider-hashmark,
 .ub-tape--active .dialkit-slider-hashmark { background: var(--dial-border-hover); }
 
-.ub-tape__tick--major {
-  height: 12px !important;
-}
+.ub-tape__tick--major { height: 12px !important; }
 .ub-tape:hover .ub-tape__tick--major,
-.ub-tape--active .ub-tape__tick--major {
-  background: rgba(255,255,255,0.22) !important;
-}
+.ub-tape--active .ub-tape__tick--major { background: rgba(255,255,255,0.22) !important; }
 
-/* Center hairline — matches dialkit-slider-handle dimensions */
 .ub-tape__hairline {
-  position: absolute;
-  left: calc(50% - 0.5px); top: 50%;
-  width: 1px; height: 20px;
-  border-radius: 999px;
-  transform: translateY(-50%);
+  position: absolute; left: calc(50% - 0.5px); top: 50%;
+  width: 1px; height: var(--ub-handle-height);
+  border-radius: 999px; transform: translateY(-50%);
   background: var(--dial-text-primary);
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.15s;
+  pointer-events: none; z-index: 1;
+  opacity: 0; transition: opacity 0.15s;
 }
 .ub-tape:hover .ub-tape__hairline { opacity: 0.5; }
 .ub-tape--active .ub-tape__hairline { opacity: 0.9; }
 
-/* Ring B: hashmarks always visible even at rest */
 .ub-tape--always-marks .dialkit-slider-hashmark { background: var(--dial-border-hover); }
 .ub-tape--always-marks .ub-tape__hairline { opacity: 0.3; }
 .ub-tape--always-marks:hover .ub-tape__hairline { opacity: 0.5; }
 .ub-tape--always-marks.ub-tape--active .ub-tape__hairline { opacity: 0.9; }
 
-/* Value turns white on hover/active */
 .ub-tape:hover .dialkit-slider-value,
 .ub-tape--active .dialkit-slider-value { color: var(--dial-text-focus); }
 
-/* Tick labels for annotated tape */
-.ub-tape__tick-label {
-  position: absolute;
-  bottom: 14px; left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px; font-weight: 500;
-  font-family: 'Geist Mono', monospace;
-  color: rgba(255,255,255,0);
-  white-space: nowrap;
-  pointer-events: none;
-  transition: color 200ms;
-}
-.ub-tape:hover .ub-tape__tick-label { color: rgba(255,255,255,0.2); }
-.ub-tape--active .ub-tape__tick-label { color: rgba(255,255,255,0.3); }
-
-/* ================================================================
-   Toggle Variants (ub-t1 … ub-t6)
-   All are DialKit segmented Off/On controls with a directional
-   liquid-blob stretch animation on the sliding pill.
-   Variants differ only in visual styling.
-   ================================================================ */
-
-/* ── Shared base (mirrors DialKit .dialkit-segmented exactly) ── */
-
+/* --- Toggle Variant Base Framework --- */
 .tv-seg {
   position: relative;
   display: flex;
@@ -186,7 +165,6 @@
   flex-shrink: 0;
   margin-right: -6px;
 }
-
 .tv-pill {
   position: absolute;
   top: 2px; bottom: 2px;
@@ -196,7 +174,6 @@
   pointer-events: none;
   transform-origin: center;
 }
-
 .tv-btn {
   position: relative;
   z-index: 1;
@@ -213,115 +190,51 @@
 .tv-btn[data-active="true"]  { color: var(--dial-text-primary); }
 .tv-btn[data-active="false"] { color: var(--dial-text-label); }
 
-/* ── Shared liquid-blob animation ──
-   Three stops: start → directional stretch at 62% → land.
-   Custom properties --tv-sl/sw/ml/mw/el/ew are set by JS
-   based on measured button positions and travel direction.   */
-
 .tv-liquid {
-  animation: tv-blob 560ms cubic-bezier(0.22, 0.68, 0.35, 1) both;
+  animation: tv-blob 540ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
-
 @keyframes tv-blob {
   0%   { left: var(--tv-sl); width: var(--tv-sw); transform: scaleY(1); }
-  52%  { left: var(--tv-ml); width: var(--tv-mw); transform: scaleY(0.92); }
-  78%  { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1.03); }
+  62%  { left: var(--tv-ml); width: var(--tv-mw); transform: scaleY(0.88); }
   100% { left: var(--tv-el); width: var(--tv-ew); transform: scaleY(1); }
 }
 
-
-/* ════════════════════════════════════════════════════════════════
-   T1 — Clean Liquid
-   Standard DialKit segmented look. No overrides.
-   ════════════════════════════════════════════════════════════════ */
-/* (Base styles only) */
-
-
-/* ════════════════════════════════════════════════════════════════
-   T6 — Warm Accent
-   Pill picks up a warm tint when toggled on. Active button
-   text shifts warm. Creates a color signal beyond position.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t6 {
-  border-radius: 10px;
-  padding: 2px;
-}
-.tv-t6-pill {
-  border-radius: 7px;
-  transition: background 0.35s;
-}
-.tv-t6[data-checked="true"] .tv-t6-pill {
-  background: rgba(255, 170, 80, 0.18);
-}
-.tv-t6[data-checked="true"] .tv-btn[data-active="true"] {
-  color: rgba(255, 195, 130, 0.95);
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   T11 — Jade Refined
-   Border with 2px padding all around. Pill inset equally on
-   every side. Nested radii: inner = outer - padding.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t11 {
-  border: 1px solid var(--dial-border);
-  border-radius: 10px;
-}
-.tv-t11-pill {
-  border-radius: 7px;
-  transition: background 0.35s, box-shadow 0.35s;
-}
-.tv-t11[data-checked="true"] .tv-t11-pill {
-  background: rgba(80, 200, 140, 0.16);
-  box-shadow: 0 0 6px rgba(80, 200, 140, 0.06);
-}
-.tv-t11[data-checked="true"] .tv-btn[data-active="true"] {
-  color: rgba(110, 220, 170, 0.95);
-}
-.tv-t11[data-checked="true"] {
-  border-color: rgba(80, 200, 140, 0.18);
-}
-
-.tv-t11-pill.tv-liquid {
-  animation: tv-blob 580ms cubic-bezier(0.25, 0.75, 0.3, 1) both;
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   T12 — Green Accent
-   Exact duplicate of T6 (warm accent) with jade green colors.
-   ════════════════════════════════════════════════════════════════ */
-
-.tv-t12 {
-  border-radius: 10px;
-  padding: 2px;
-}
-.tv-t12-pill {
-  border-radius: 7px;
-  transition: background 0.35s;
-}
-.tv-t12[data-checked="true"] .tv-t12-pill {
-  background: rgba(80, 200, 140, 0.18);
-}
-.tv-t12[data-checked="true"] .tv-btn[data-active="true"] {
-  color: rgba(110, 220, 170, 0.95);
-}
-
-/* Snappy start, gentle landing */
-.tv-t12-pill.tv-liquid {
-  animation: tv-blob-snappy 380ms cubic-bezier(0.5, 0, 0.15, 1) both;
-}
-
-@keyframes tv-blob-snappy {
-  0%   { left: var(--tv-sl); width: var(--tv-sw); }
-  45%  { left: var(--tv-ml); width: var(--tv-mw); }
-  100% { left: var(--tv-el); width: var(--tv-ew); }
-}
-
-
-/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .tv-liquid { animation: none !important; }
+}
+
+/* --- Jade Refined Toggle (t11) via CSS vars --- */
+.tv-t11 {
+  border: var(--ub-jade-border-width) solid var(--dial-border);
+  border-radius: var(--ub-jade-border-radius);
+  padding: var(--ub-jade-padding);
+}
+.tv-t11-btn { padding: var(--ub-jade-btn-pad-v) var(--ub-jade-btn-pad-h); }
+.tv-t11-pill {
+  top: var(--ub-jade-padding); bottom: var(--ub-jade-padding);
+  border-radius: var(--ub-jade-pill-radius);
+  transition: background var(--ub-jade-pill-transition), box-shadow var(--ub-jade-pill-transition);
+}
+.tv-t11[data-checked="true"] .tv-t11-pill {
+  background: var(--ub-jade-pill-bg);
+  box-shadow: var(--ub-jade-pill-glow);
+}
+.tv-t11[data-checked="true"] .tv-btn[data-active="true"] { color: var(--ub-jade-text-color); }
+.tv-t11[data-checked="true"] { border-color: var(--ub-jade-border-color); }
+.tv-t11-pill.tv-liquid { animation: tv-blob var(--ub-jade-anim-duration) var(--ub-jade-ease) both; }
+
+/* --- Warm Accent Toggle (t6) via CSS vars --- */
+.tv-t6 {
+  padding: var(--ub-warm-padding);
+  border-radius: var(--ub-warm-border-radius);
+}
+.tv-t6-pill {
+  border-radius: var(--ub-warm-pill-radius);
+  transition: background var(--ub-warm-pill-transition);
+}
+.tv-t6[data-checked="true"] .tv-t6-pill {
+  background: var(--ub-warm-pill-bg);
+}
+.tv-t6[data-checked="true"] .tv-btn[data-active="true"] {
+  color: var(--ub-warm-text-color);
 }

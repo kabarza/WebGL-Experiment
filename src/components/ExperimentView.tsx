@@ -7,9 +7,8 @@ import { motion } from 'motion/react';
 import { findExperiment } from '../experiments/registry.ts';
 import { useExperiment } from '../hooks/useExperiment.ts';
 import { useExperimentParams } from '../hooks/useExperimentParams.ts';
-import { ShareButton } from './ShareButton.tsx';
+import { useChrome } from './ChromeContext.tsx';
 import { ExportPanel } from './ExportPanel.tsx';
-import { FpsCounter } from './FpsCounter.tsx';
 import { VersionStore, type Version } from '../lib/versions.ts';
 import { decodeParams } from '../lib/sharing.ts';
 import { generateExport } from '../experiments/flow-field/generateExport.ts';
@@ -18,13 +17,22 @@ interface ExperimentViewProps {
   slug: string;
   sharedParams?: string;
   onBack: () => void;
+  setOverlayVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  exportOpen: boolean;
+  setExportOpen: (open: boolean) => void;
 }
 
-export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewProps) {
+export function ExperimentView({
+  slug,
+  sharedParams,
+  onBack,
+  setOverlayVisible,
+  exportOpen,
+  setExportOpen,
+}: ExperimentViewProps) {
   const experiment = findExperiment(slug);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exportOpen, setExportOpen] = useState(false);
+  const { shareDataRef } = useChrome();
 
   // Version management — seed presets on first load
   const [store] = useState(() => {
@@ -49,13 +57,20 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
   const overrides = decodedShared ?? activeVersion?.params;
 
   // Bridge hooks
-  const params = useExperimentParams(
+  const { params } = useExperimentParams(
     experiment?.meta.title ?? 'Controls',
     experiment?.controls.dialConfig,
     experiment?.controls.defaults ?? {},
+    slug,
     overrides,
   );
   const { error, loading } = useExperiment(canvasRef, experiment, params);
+
+  // Register share data with chrome context (read at click time by dock)
+  useEffect(() => {
+    shareDataRef.current = { slug, params };
+    return () => { shareDataRef.current = null; };
+  }, [slug, params, shareDataRef]);
 
   // Auto-save active version on param changes (debounced)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -98,7 +113,7 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onBack, params, exportOpen]);
+  }, [onBack, params, exportOpen, setExportOpen, setOverlayVisible]);
 
   // Set document title
   useEffect(() => {
@@ -163,46 +178,6 @@ export function ExperimentView({ slug, sharedParams, onBack }: ExperimentViewPro
             <p>Failed to initialize experiment</p>
             <p className="error-detail">{error}</p>
             <button onClick={onBack}>Back to Gallery</button>
-          </div>
-        )}
-
-        {overlayVisible && (
-          <div className="experiment-chrome">
-            <nav className="chrome-dock">
-              <button className="dock-btn" onClick={onBack} title="Back to gallery">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-1px' }}>
-                  <path d="M10 3L5 8l5 5" />
-                </svg>
-              </button>
-              <ShareButton slug={slug} params={params} />
-              {slug === 'flow-field' && (
-                <button
-                  className="dock-btn"
-                  onClick={() => {
-                    history.pushState(null, '', `/experiment/${slug}/article`);
-                    window.dispatchEvent(new PopStateEvent('popstate'));
-                  }}
-                  title="How it works"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 2h10v12H3z" />
-                    <path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" />
-                  </svg>
-                </button>
-              )}
-              <button
-                className="dock-btn"
-                onClick={() => setExportOpen(true)}
-                title="Export"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 10V2M5 5l3-3 3 3" />
-                  <path d="M3 11v2h10v-2" />
-                </svg>
-              </button>
-              <div className="dock-divider" />
-              <FpsCounter />
-            </nav>
           </div>
         )}
 
