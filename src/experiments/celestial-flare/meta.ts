@@ -6,4 +6,5 @@ export const meta: ExperimentMeta = {
   description: 'Layered noise wave gradient with particle circle, chromatic lens flares, and film grain',
   tags: ['noise', 'fbm', 'domain-warp', 'lens-flare', 'particles', 'grain', 'glsl'],
   date: '2026-04-06',
+  hasArticle: true,
 };

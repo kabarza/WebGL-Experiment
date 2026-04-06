@@ -8,6 +8,7 @@ import { DialRoot } from 'dialkit';
 import { Gallery } from './components/Gallery.tsx';
 import { ExperimentView } from './components/ExperimentView.tsx';
 import { FlowFieldArticle } from './components/FlowFieldArticle.tsx';
+import { CelestialFlareArticle } from './components/CelestialFlareArticle.tsx';
 import { ArticlePage } from './components/ArticlePage.tsx';
 import { ChromeProvider } from './components/ChromeContext.tsx';
 import { ChromeDock } from './components/ChromeDock.tsx';
@@ -98,6 +99,8 @@ export function App() {
         ) : route.type === 'article' && route.slug ? (
           route.slug === 'flow-field' ? (
             <FlowFieldArticle key="article-flow-field" />
+          ) : route.slug === 'celestial-flare' ? (
+            <CelestialFlareArticle key="article-celestial-flare" />
           ) : (
             <ArticlePage key={`article-${route.slug}`} slug={route.slug} />
           )

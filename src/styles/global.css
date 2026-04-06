@@ -53,4 +53,9 @@ html, body {
   padding-bottom: 0;
 }
 
+/* Give the reset action button breathing room at the bottom of the panel */
+.dialkit-panel-inner > .dialkit-button:last-child {
+  margin: 8px 12px 12px;
+}
+
 

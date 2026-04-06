@@ -50,11 +50,14 @@ export function ExperimentView({
   // Decode shared params if present
   const decodedShared = sharedParams ? decodeParams(sharedParams) : null;
 
-  // Determine which overrides to use
+  // Determine which overrides to use.
+  // Only pass explicit overrides for shared URLs and non-Default versions.
+  // For the normal case (Defaults version), let the param cache handle persistence.
   const activeVersion = activeVersionId
     ? versions.find((v) => v.id === activeVersionId)
     : null;
-  const overrides = decodedShared ?? activeVersion?.params;
+  const isDefaultVersion = !activeVersion || activeVersion.name === 'Defaults';
+  const overrides = decodedShared ?? (!isDefaultVersion ? activeVersion?.params : undefined);
 
   // Bridge hooks
   const { params } = useExperimentParams(

@@ -41,47 +41,195 @@ function dialConfigToDialKitSchema(config: DialConfig): DialKitConfig {
 }
 
 /**
+ * Check whether a config value is a typed object config
+ * (ub-*, select, color, text, action, spring, easing).
+ */
+function isTypedConfig(spec: unknown): spec is { type: string; [k: string]: unknown } {
+  return (
+    typeof spec === 'object' &&
+    spec !== null &&
+    !Array.isArray(spec) &&
+    'type' in spec &&
+    typeof (spec as Record<string, unknown>).type === 'string'
+  );
+}
+
+/**
  * Inject cached / override values into the DialConfig so that
  * DialKit initialises with the persisted state, not the defaults.
  *
- * For sliders `[default, min, max, step]` the first element is replaced.
- * For booleans, strings (colours) etc. the value is replaced directly.
+ * Handles every config shape that DialKit supports:
+ *  - [default, min, max, step]   → replace index 0
+ *  - plain number/boolean/string → replace directly
+ *  - { type: 'ub-*', default }  → replace .default
+ *  - { type: 'select', default } → replace .default
+ *  - { type: 'color', default }  → replace .default
+ *  - { type: 'text', default }   → replace .default
+ *  - { type: 'spring|easing' }   → replace entire value
+ *  - { type: 'action' }          → skip (not a value)
+ *  - nested sub-folder object    → recurse
  */
-function applyOverridesToConfig(
+function applyValuesToConfig(
   config: DialConfig,
-  overrides: Record<string, unknown>,
+  values: Record<string, unknown>,
 ): DialConfig {
   const result: DialConfig = {};
 
-  for (const [folderName, params] of Object.entries(config)) {
-    const folder: Record<string, unknown> = {};
-
-    for (const [key, spec] of Object.entries(
-      params as Record<string, unknown>,
-    )) {
-      const cached = overrides[key];
-
-      if (cached !== undefined) {
-        if (
-          Array.isArray(spec) &&
-          spec.length <= 4 &&
-          typeof spec[0] === 'number'
-        ) {
-          // Slider tuple — replace default (index 0), keep min/max/step
-          folder[key] = [cached, ...spec.slice(1)];
-        } else {
-          // Colour, boolean, string, etc.
-          folder[key] = cached;
-        }
-      } else {
-        folder[key] = spec;
-      }
-    }
-
-    result[folderName] = folder;
+  for (const [folderName, folderParams] of Object.entries(config)) {
+    result[folderName] = applyToFolder(
+      folderParams as Record<string, unknown>,
+      values,
+    );
   }
 
   return result;
+}
+
+function applyToFolder(
+  folder: Record<string, unknown>,
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+
+  for (const [key, spec] of Object.entries(folder)) {
+    const cached = values[key];
+
+    // Slider tuple: [default, min, max, step?]
+    if (
+      Array.isArray(spec) &&
+      spec.length <= 4 &&
+      typeof spec[0] === 'number'
+    ) {
+      out[key] =
+        cached !== undefined ? [cached, ...spec.slice(1)] : spec;
+      continue;
+    }
+
+    // Typed object config
+    if (isTypedConfig(spec)) {
+      const t = spec.type;
+
+      // Action — no user value, pass through
+      if (t === 'action') {
+        out[key] = spec;
+        continue;
+      }
+
+      // Spring / easing — replace the whole transition config
+      if (t === 'spring' || t === 'easing') {
+        out[key] = cached !== undefined ? cached : spec;
+        continue;
+      }
+
+      // ub-*, select, color, text — replace the .default field
+      if (cached !== undefined) {
+        out[key] = { ...spec, default: cached };
+      } else {
+        out[key] = spec;
+      }
+      continue;
+    }
+
+    // Plain primitives (number, boolean, hex string)
+    if (
+      typeof spec === 'number' ||
+      typeof spec === 'boolean' ||
+      typeof spec === 'string'
+    ) {
+      out[key] = cached !== undefined ? cached : spec;
+      continue;
+    }
+
+    // Nested sub-folder — recurse
+    if (typeof spec === 'object' && spec !== null) {
+      out[key] = applyToFolder(spec as Record<string, unknown>, values);
+      continue;
+    }
+
+    // Fallback
+    out[key] = spec;
+  }
+
+  return out;
+}
+
+/**
+ * Extract flat default values from the dialConfig, matching exactly
+ * what DialKit's flattenValues produces. Used by Reset to Defaults
+ * so the restored values are bit-identical to DialKit's initial state.
+ */
+function extractDialDefaults(config: DialConfig): Record<string, unknown> {
+  const flat: Record<string, unknown> = {};
+
+  function walk(obj: Record<string, unknown>): void {
+    for (const [key, spec] of Object.entries(obj)) {
+      if (key === '_collapsed') continue;
+
+      // Slider tuple
+      if (
+        Array.isArray(spec) &&
+        spec.length <= 4 &&
+        typeof spec[0] === 'number'
+      ) {
+        flat[key] = spec[0];
+        continue;
+      }
+
+      // Typed config
+      if (isTypedConfig(spec)) {
+        const t = spec.type;
+        if (t === 'action') continue;
+        if (t === 'spring' || t === 'easing') {
+          flat[key] = spec;
+          continue;
+        }
+        if (t === 'select') {
+          const opts = spec.options as (string | { value: string })[];
+          const first = opts?.[0];
+          flat[key] =
+            spec.default ??
+            (typeof first === 'string' ? first : first?.value);
+          continue;
+        }
+        if (t === 'color') {
+          flat[key] = spec.default ?? '#000000';
+          continue;
+        }
+        if (t === 'text') {
+          flat[key] = spec.default ?? '';
+          continue;
+        }
+        // ub-* and ub-t*
+        if (t.startsWith('ub-')) {
+          flat[key] = spec.default ?? (t.match(/^ub-t/) ? false : 0);
+          continue;
+        }
+        continue;
+      }
+
+      // Plain primitives
+      if (
+        typeof spec === 'number' ||
+        typeof spec === 'boolean' ||
+        typeof spec === 'string'
+      ) {
+        flat[key] = spec;
+        continue;
+      }
+
+      // Nested sub-folder — recurse
+      if (typeof spec === 'object' && spec !== null) {
+        walk(spec as Record<string, unknown>);
+        continue;
+      }
+    }
+  }
+
+  for (const folderParams of Object.values(config)) {
+    walk(folderParams as Record<string, unknown>);
+  }
+
+  return flat;
 }
 
 /**
@@ -94,10 +242,10 @@ function flattenDialValues(
 ): Record<string, unknown> {
   const flat: Record<string, unknown> = {};
 
-  for (const value of Object.values(nested)) {
+  for (const [, value] of Object.entries(nested)) {
     if (value && typeof value === 'object' && !Array.isArray(value)) {
-      // Skip action configs — they are not experiment params
       const obj = value as Record<string, unknown>;
+      // Skip action configs — they are not experiment params
       if (obj.type === 'action') continue;
 
       for (const [k, v] of Object.entries(obj)) {
@@ -112,15 +260,36 @@ function flattenDialValues(
 
 /**
  * Build the DialKit path for a param key given the original DialConfig.
- * DialKit paths are `FolderName.key`.
+ * DialKit paths are `FolderName.key` (or `Folder.Sub.key` for nested).
  */
 function buildPathMap(config: DialConfig): Map<string, string> {
   const map = new Map<string, string>();
-  for (const [folderName, params] of Object.entries(config)) {
-    for (const key of Object.keys(params as Record<string, unknown>)) {
-      map.set(key, `${folderName}.${key}`);
+
+  function walk(obj: Record<string, unknown>, prefix: string): void {
+    for (const [key, spec] of Object.entries(obj)) {
+      if (key === '_collapsed') continue;
+      const path = prefix ? `${prefix}.${key}` : key;
+
+      // Nested sub-folder — recurse
+      if (
+        typeof spec === 'object' &&
+        spec !== null &&
+        !Array.isArray(spec) &&
+        !isTypedConfig(spec)
+      ) {
+        walk(spec as Record<string, unknown>, path);
+        continue;
+      }
+
+      // Leaf control — record mapping
+      map.set(key, path);
     }
   }
+
+  for (const [folderName, params] of Object.entries(config)) {
+    walk(params as Record<string, unknown>, folderName);
+  }
+
   return map;
 }
 
@@ -137,40 +306,39 @@ export function useExperimentParams(
   slug: string,
   overrides?: Record<string, unknown>,
 ): UseExperimentParamsResult {
-  // ── Compute initial config ONCE, baking in cached values ───
-  const [initialConfig] = useState(() => {
-    const cached = loadParamCache(slug);
-    // Priority: explicit overrides (version / shared URL) > cache > defaults
-    const initial = overrides ?? cached;
-    if (!dialConfig || !initial) return dialConfig;
-    return applyOverridesToConfig(dialConfig, initial);
-  });
-
-  const schema = initialConfig
-    ? dialConfigToDialKitSchema(initialConfig)
-    : {};
-
-  // ── Stable refs for defaults & original config ─────────────
-  const defaultsRef = useRef(defaults);
-  defaultsRef.current = defaults;
-  const dialConfigRef = useRef(dialConfig);
-  dialConfigRef.current = dialConfig;
-  const slugRef = useRef(slug);
-  slugRef.current = slug;
+  // ── Compute the DialKit-derived defaults ONCE ──────────────
+  const [dialDefaults] = useState(() =>
+    dialConfig ? extractDialDefaults(dialConfig) : defaults,
+  );
 
   // ── Path map for programmatic DialStore updates ────────────
   const [pathMap] = useState(() =>
     dialConfig ? buildPathMap(dialConfig) : new Map<string, string>(),
   );
 
+  // ── Compute initial config ONCE, baking in cached values ───
+  const [initialConfig] = useState(() => {
+    const cached = loadParamCache(slug);
+    // Priority: explicit overrides (shared URL / non-default version) > cache > raw config
+    const initial = overrides ?? cached;
+    if (!dialConfig || !initial) return dialConfig;
+    return applyValuesToConfig(dialConfig, initial);
+  });
+
+  const schema = initialConfig
+    ? dialConfigToDialKitSchema(initialConfig)
+    : {};
+
+  // ── Stable refs ────────────────────────────────────────────
+  const slugRef = useRef(slug);
+  slugRef.current = slug;
+  const dialConfigRef = useRef(dialConfig);
+  dialConfigRef.current = dialConfig;
+
   // ── "Reset to Defaults" action ─────────────────────────────
   const handleAction = useCallback(
     (action: string) => {
-      if (action !== 'Reset to Defaults') return;
-
-      const cfg = dialConfigRef.current;
-      const defs = defaultsRef.current;
-      if (!cfg) return;
+      if (action !== 'Settings.Reset to Defaults') return;
 
       // Clear the localStorage cache
       clearParamCache(slugRef.current);
@@ -180,7 +348,7 @@ export function useExperimentParams(
       const panel = panels.find((p) => p.name === title);
       if (!panel) return;
 
-      for (const [key, defaultValue] of Object.entries(defs)) {
+      for (const [key, defaultValue] of Object.entries(dialDefaults)) {
         const path = pathMap.get(key);
         if (path) {
           DialStore.updateValue(
@@ -191,13 +359,15 @@ export function useExperimentParams(
         }
       }
     },
-    [title, pathMap],
+    [title, pathMap, dialDefaults],
   );
 
-  // Append the reset action to the schema
+  // Append the reset action inside a folder
   const schemaWithAction: DialKitConfig = {
     ...schema,
-    'Reset to Defaults': { type: 'action' as const } as unknown as DialKitConfig,
+    Settings: {
+      'Reset to Defaults': { type: 'action' as const },
+    } as unknown as DialKitConfig,
   };
 
   // ── DialKit hook ───────────────────────────────────────────
@@ -217,14 +387,13 @@ export function useExperimentParams(
       current[key] = value;
     }
 
-    // Only cache keys present in defaults (skip actions, etc.)
-    const defs = defaultsRef.current;
+    // Only cache keys that are actual experiment params (skip actions, etc.)
     const toCache: Record<string, unknown> = {};
-    for (const key of Object.keys(defs)) {
+    for (const key of Object.keys(dialDefaults)) {
       if (key in current) toCache[key] = current[key];
     }
     saveParamCache(slugRef.current, toCache);
-  }, [dialValues]);
+  }, [dialValues, dialDefaults]);
 
   // Apply explicit overrides when they change (version switch / shared URL)
   useEffect(() => {
