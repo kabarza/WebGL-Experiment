@@ -14,7 +14,7 @@ import {
   type DialConfig as DialKitConfig,
 } from 'dialkit';
 import { useRef, useEffect, useCallback, useState } from 'react';
-import type { DialConfig } from '../core/Experiment.ts';
+import type { DialConfig, VisibilityRule } from '../core/Experiment.ts';
 import {
   saveParamCache,
   loadParamCache,
@@ -305,6 +305,7 @@ export function useExperimentParams(
   defaults: Record<string, unknown>,
   slug: string,
   overrides?: Record<string, unknown>,
+  visibility?: Record<string, VisibilityRule>,
 ): UseExperimentParamsResult {
   // ── Compute the DialKit-derived defaults ONCE ──────────────
   const [dialDefaults] = useState(() =>
@@ -338,7 +339,13 @@ export function useExperimentParams(
   // ── "Reset to Defaults" action ─────────────────────────────
   const handleAction = useCallback(
     (action: string) => {
-      if (action !== 'Settings.Reset to Defaults') return;
+      if (action !== 'Settings.Reset to Defaults') {
+        // Forward experiment-specific actions via the mutable params object
+        // so the experiment's render loop can react to them.
+        paramsRef.current._action = action;
+        paramsRef.current._actionTs = Date.now();
+        return;
+      }
 
       // Clear the localStorage cache
       clearParamCache(slugRef.current);
@@ -356,6 +363,15 @@ export function useExperimentParams(
             path,
             defaultValue as import('dialkit').DialValue,
           );
+        }
+      }
+
+      // Clear all underscore-prefixed transient state (e.g. _assetDataUrl,
+      // _videoElement). Experiments detect the change and clean up.
+      const current = paramsRef.current;
+      for (const key of Object.keys(current)) {
+        if (key.startsWith('_')) {
+          delete current[key];
         }
       }
     },
@@ -378,6 +394,9 @@ export function useExperimentParams(
   // ── Stable mutable ref — the experiment reads this every frame ──
   const paramsRef = useRef<Record<string, unknown>>({ ...defaults });
 
+  // ── Track active DialKit preset ─────────────────────────────
+  const lastPresetIdRef = useRef<string | null>(null);
+
   // Sync DialKit values → paramsRef + persist to localStorage
   useEffect(() => {
     const current = paramsRef.current;
@@ -387,13 +406,30 @@ export function useExperimentParams(
       current[key] = value;
     }
 
+    // Expose active DialKit preset ID so experiments can key
+    // per-preset storage (e.g. uploaded assets per preset).
+    const panels = DialStore.getPanels();
+    const panel = panels.find((p) => p.name === title);
+    if (panel) {
+      const presetId = DialStore.getActivePresetId(panel.id);
+      const prevPresetId = lastPresetIdRef.current;
+      current._presetId = presetId ?? '';
+
+      // Signal preset change so experiments can react
+      if (prevPresetId !== null && presetId !== prevPresetId) {
+        current._prevPresetId = prevPresetId ?? '';
+        current._presetChanged = Date.now();
+      }
+      lastPresetIdRef.current = presetId;
+    }
+
     // Only cache keys that are actual experiment params (skip actions, etc.)
     const toCache: Record<string, unknown> = {};
     for (const key of Object.keys(dialDefaults)) {
       if (key in current) toCache[key] = current[key];
     }
     saveParamCache(slugRef.current, toCache);
-  }, [dialValues, dialDefaults]);
+  }, [dialValues, dialDefaults, title]);
 
   // Apply explicit overrides when they change (version switch / shared URL)
   useEffect(() => {
@@ -403,6 +439,80 @@ export function useExperimentParams(
       current[key] = value;
     }
   }, [overrides]);
+
+  // ── Conditional visibility ────────────────────────────────
+  // Hide / show DialKit controls based on the current value of
+  // a controlling param (e.g. hide "progress" when playMode is
+  // "Auto Play").
+  const visibilityRef = useRef(visibility);
+  visibilityRef.current = visibility;
+
+  useEffect(() => {
+    const rules = visibilityRef.current;
+    if (!rules) return;
+
+    // DialKit formats camelCase keys into Title Case labels.
+    const formatLabel = (key: string) =>
+      key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+
+    // Collect all label elements inside DialKit panels.
+    const labelSelectors = [
+      '.dialkit-slider-label',
+      '.dialkit-labeled-control-label',
+      '.dialkit-select-label',
+    ];
+
+    // Walk the wrapper classes to find the hide-able row element.
+    const wrapperClasses = [
+      'dialkit-slider-wrapper',
+      'dialkit-labeled-control',
+      'dialkit-select-row',
+    ];
+
+    function findControlRow(label: string): HTMLElement | null {
+      for (const sel of labelSelectors) {
+        const els = document.querySelectorAll<HTMLElement>(sel);
+        for (const el of els) {
+          if (el.textContent?.trim() === label) {
+            // Walk up to the wrapper row
+            let node: HTMLElement | null = el;
+            while (node) {
+              if (wrapperClasses.some((c) => node!.classList.contains(c))) return node;
+              node = node.parentElement;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    function applyVisibility() {
+      const params = paramsRef.current;
+      for (const [key, rule] of Object.entries(rules)) {
+        const label = formatLabel(key);
+        const row = findControlRow(label);
+        if (row) {
+          const visible = params[rule.when] === rule.is;
+          row.style.display = visible ? '' : 'none';
+        }
+      }
+    }
+
+    // Apply immediately and on every DialStore change.
+    // Small delay to let Svelte render first.
+    const timer = setTimeout(applyVisibility, 50);
+
+    const panels = DialStore.getPanels();
+    const panel = panels.find((p) => p.name === title);
+    const unsub = panel
+      ? DialStore.subscribe(panel.id, applyVisibility)
+      : undefined;
+
+    return () => {
+      clearTimeout(timer);
+      unsub?.();
+    };
+  }, [title, dialValues]);
 
   return { params: paramsRef.current };
 }

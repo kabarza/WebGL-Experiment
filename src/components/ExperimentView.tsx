@@ -11,7 +11,20 @@ import { useChrome } from './ChromeContext.tsx';
 import { ExportPanel } from './ExportPanel.tsx';
 import { VersionStore, type Version } from '../lib/versions.ts';
 import { decodeParams } from '../lib/sharing.ts';
-import { generateExport } from '../experiments/flow-field/generateExport.ts';
+import { generateExport as generateFlowField } from '../experiments/flow-field/generateExport.ts';
+import { generateExport as generateBloomDither } from '../experiments/bloom-dither/generateExport.ts';
+import { generateExport as generateCelestialFlare } from '../experiments/celestial-flare/generateExport.ts';
+import { generateExport as generateDitherForge } from '../experiments/dither-forge/generateExport.ts';
+import { generateExport as generateDotTrace } from '../experiments/dot-trace/generateExport.ts';
+import type { GenerateExportOptions } from '../experiments/flow-field/generateExport.ts';
+
+const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string> = {
+  'flow-field': generateFlowField,
+  'bloom-dither': generateBloomDither,
+  'celestial-flare': generateCelestialFlare,
+  'dither-forge': generateDitherForge,
+  'dot-trace': generateDotTrace,
+};
 
 interface ExperimentViewProps {
   slug: string;
@@ -66,6 +79,7 @@ export function ExperimentView({
     experiment?.controls.defaults ?? {},
     slug,
     overrides,
+    experiment?.controls.visibility,
   );
   const { error, loading } = useExperiment(canvasRef, experiment, params);
 
@@ -84,7 +98,15 @@ export function ExperimentView({
 
     clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      store.updateVersion(activeVersionId, { ...params });
+      // Filter out non-serializable and transient underscore-prefixed values
+      // (DOM elements, stale actions, etc.) before saving to version store.
+      const serializable: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(params)) {
+        if (k.startsWith('_')) continue;
+        if (v instanceof Element || typeof v === 'function') continue;
+        serializable[k] = v;
+      }
+      store.updateVersion(activeVersionId, serializable);
       setVersions(store.getVersions());
     }, 1000);
 
@@ -128,11 +150,13 @@ export function ExperimentView({
     };
   }, [experiment]);
 
-  // Generate inline script for Webflow JSON export (flow-field only for now)
+  // Generate inline script for Webflow JSON export
+  const hasExportGenerator = slug in EXPORT_GENERATORS;
   const getInlineScript = useCallback(
     (currentParams: Record<string, unknown>) => {
-      if (slug !== 'flow-field' || !experiment) return '';
-      return generateExport({
+      const gen = EXPORT_GENERATORS[slug];
+      if (!gen || !experiment) return '';
+      return gen({
         params: currentParams,
         dialConfig: experiment.controls.dialConfig,
         slug,
@@ -192,7 +216,7 @@ export function ExperimentView({
             versions={versions}
             activeVersionId={activeVersionId}
             onClose={() => setExportOpen(false)}
-            generateInlineScript={slug === 'flow-field' ? getInlineScript : undefined}
+            generateInlineScript={hasExportGenerator ? getInlineScript : undefined}
           />
         )}
     </motion.div>

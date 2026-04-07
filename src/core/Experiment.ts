@@ -14,10 +14,24 @@ export interface ExperimentMeta {
 
 export type DialConfig = Record<string, Record<string, unknown>>;
 
+/**
+ * Visibility rule: a control is shown only when another param
+ * matches a specific value.
+ *
+ * Example: `{ when: 'playMode', is: 'Manual' }` → control visible
+ * only when `playMode === 'Manual'`.
+ */
+export interface VisibilityRule {
+  when: string;
+  is: unknown;
+}
+
 export interface ExperimentControls {
   defaults: Record<string, unknown>;
   dialConfig: DialConfig;
   presets?: Record<string, Partial<Record<string, unknown>>>;
+  /** Per-control conditional visibility rules. */
+  visibility?: Record<string, VisibilityRule>;
 }
 
 export interface ExperimentContext {
