@@ -17,6 +17,7 @@ import fragGLSL from './shader.glsl';
 import vertGLSL from '../../shaders/glsl/fullscreen-quad.vert';
 
 const REVEAL_MODES = ['Radial', 'Sweep Right', 'Sweep Down', 'Random', 'Spiral'];
+const FIT_MODES = ['Fill', 'Contain', 'Cover'];
 
 function hex2rgb(h: string): [number, number, number] {
   return [
