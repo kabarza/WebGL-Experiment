@@ -136,12 +136,18 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   }
 
   // ── Texture state ──────────────────────────────────
-  const ASSET_STORAGE_KEY = 'dither-forge/asset';
+  const ASSET_KEY_PREFIX = 'dither-forge/asset';
   let texture: WebGLTexture | null = null;
   let textureWidth = 0;
   let textureHeight = 0;
   let hasTexture = false;
-  let currentAssetUrl = ''; // tracks _assetDataUrl to detect version switches
+  let currentAssetUrl = '';
+  let currentPresetId = (params._presetId as string) || '';
+  let lastPresetChangeTs = 0;
+
+  function assetKeyForPreset(presetId: string): string {
+    return presetId ? `${ASSET_KEY_PREFIX}/${presetId}` : ASSET_KEY_PREFIX;
+  }
 
   function uploadTexture(
     img: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
@@ -186,25 +192,31 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
     img.src = dataUrl;
   }
 
-  /** Persist asset data URL to params (picked up by version save) and localStorage. */
+  /** Persist asset data URL to localStorage keyed by the current preset. */
   function persistAsset(dataUrl: string) {
-    params._assetDataUrl = dataUrl;
     currentAssetUrl = dataUrl;
     try {
-      localStorage.setItem(ASSET_STORAGE_KEY, dataUrl);
+      localStorage.setItem(assetKeyForPreset(currentPresetId), dataUrl);
     } catch {
-      // localStorage quota exceeded — version system will still have it
+      // localStorage quota exceeded
+    }
+  }
+
+  /** Load the stored asset for the given preset (or clear if none). */
+  function loadAssetForPreset(presetId: string) {
+    const stored = localStorage.getItem(assetKeyForPreset(presetId)) ?? '';
+    currentAssetUrl = stored;
+    if (stored) {
+      loadAssetFromDataUrl(stored);
+    } else {
+      hasTexture = false;
     }
   }
 
   // ── Restore persisted asset on init ────────────────
-  const initAsset =
-    (params._assetDataUrl as string) ||
-    localStorage.getItem(ASSET_STORAGE_KEY) ||
-    '';
+  const initAsset = localStorage.getItem(assetKeyForPreset(currentPresetId)) ?? '';
   if (initAsset) {
     currentAssetUrl = initAsset;
-    params._assetDataUrl = initAsset;
     loadAssetFromDataUrl(initAsset);
   }
 
@@ -307,17 +319,40 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
 
       handleActions();
 
-      // Detect asset change from version switch
-      const assetUrl = (P._assetDataUrl as string) ?? '';
-      if (assetUrl !== currentAssetUrl) {
-        currentAssetUrl = assetUrl;
-        if (assetUrl) {
-          loadAssetFromDataUrl(assetUrl);
-          try { localStorage.setItem(ASSET_STORAGE_KEY, assetUrl); } catch { /* quota */ }
-        } else {
-          hasTexture = false;
-          localStorage.removeItem(ASSET_STORAGE_KEY);
+      // Detect preset change — save asset under old preset, load for new
+      const presetChangeTs = (P._presetChanged as number) ?? 0;
+      if (presetChangeTs > lastPresetChangeTs) {
+        lastPresetChangeTs = presetChangeTs;
+        const newPresetId = (P._presetId as string) ?? '';
+        if (newPresetId !== currentPresetId) {
+          // Save current asset under the old preset before switching
+          if (currentAssetUrl) {
+            try { localStorage.setItem(assetKeyForPreset(currentPresetId), currentAssetUrl); } catch { /* quota */ }
+          }
+          currentPresetId = newPresetId;
+          // Stop any playing video — it's tied to the old preset
+          const vid = P._videoElement;
+          if (vid instanceof HTMLVideoElement) {
+            vid.pause();
+            URL.revokeObjectURL(vid.src);
+            P._videoElement = null;
+          }
+          loadAssetForPreset(newPresetId);
         }
+      }
+
+      // Detect reset (underscore keys deleted) — clear asset
+      if (!('_presetId' in P)) {
+        // Reset occurred — clear texture and storage for current preset
+        hasTexture = false;
+        currentAssetUrl = '';
+        try { localStorage.removeItem(assetKeyForPreset(currentPresetId)); } catch { /* */ }
+        const vid = P._videoElement;
+        if (vid instanceof HTMLVideoElement) {
+          vid.pause();
+          URL.revokeObjectURL(vid.src);
+        }
+        P._videoElement = null;
       }
 
       // Update video texture each frame while playing

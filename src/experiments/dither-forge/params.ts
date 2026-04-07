@@ -7,7 +7,7 @@ export const controls: ExperimentControls = {
     paused: false,
 
     // Source
-    fitMode: 'cover',
+    fitMode: 'fill',
 
     // Dither
     ditherOn: true,
@@ -75,7 +75,7 @@ export const controls: ExperimentControls = {
       fitMode: {
         type: 'select',
         options: ['cover', 'contain', 'fill'],
-        default: 'cover',
+        default: 'fill',
       },
     },
     Dither: {

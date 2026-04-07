@@ -14,7 +14,7 @@ const BAKED_PARAMS: Record<string, unknown> =
     : {
         bgColor: '#0a0a0f',
         speed: 1.0,
-        fitMode: 'cover',
+        fitMode: 'fill',
         // Dither
         ditherOn: true,
         glyphSize: 0.85,

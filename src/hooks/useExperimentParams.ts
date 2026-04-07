@@ -486,9 +486,11 @@ export function useExperimentParams(
       return null;
     }
 
+    const rulesEntries = Object.entries(rules!);
+
     function applyVisibility() {
       const params = paramsRef.current;
-      for (const [key, rule] of Object.entries(rules)) {
+      for (const [key, rule] of rulesEntries) {
         const label = formatLabel(key);
         const row = findControlRow(label);
         if (row) {

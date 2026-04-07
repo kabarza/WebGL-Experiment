@@ -7,6 +7,7 @@ import fragGLSL from './shader.glsl';
 import vertGLSL from '../../shaders/glsl/fullscreen-quad.vert';
 
 const REVEAL_MODES = ['Radial', 'Sweep Right', 'Sweep Down', 'Random', 'Spiral'];
+const FIT_MODES = ['Fill', 'Contain', 'Cover'];
 
 declare const __BAKED_PARAMS__: Record<string, unknown>;
 
@@ -37,6 +38,8 @@ const BAKED_PARAMS: Record<string, unknown> =
         revealOriginY: 0.5,
         revealSpread: 0.05,
         revealReverse: false,
+        // Source
+        fitMode: 'Fill',
         // Post
         brightness: 1.0,
         contrast: 1.2,
@@ -113,6 +116,7 @@ function mkShader(
   const uRes = gl.getUniformLocation(prog, 'u_resolution');
   const uHasTexture = gl.getUniformLocation(prog, 'u_hasTexture');
   const uTextureSize = gl.getUniformLocation(prog, 'u_textureSize');
+  const uFitMode = gl.getUniformLocation(prog, 'u_fitMode');
 
   const uDotsOn = gl.getUniformLocation(prog, 'u_dotsOn');
 
@@ -180,6 +184,10 @@ function mkShader(
     // No texture in standalone
     gl!.uniform1f(uHasTexture, 0.0);
     gl!.uniform2f(uTextureSize, 1.0, 1.0);
+    gl!.uniform1f(
+      uFitMode,
+      Math.max(FIT_MODES.indexOf(BP.fitMode as string), 0),
+    );
 
     // Layer toggles
     gl!.uniform1f(uDotsOn, BP.dotsOn ? 1.0 : 0.0);
