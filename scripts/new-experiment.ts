@@ -74,7 +74,7 @@ for (const file of files) {
 }
 
 console.log(`\nScaffolded: src/experiments/${slug}/`);
-console.log(`  meta.ts        — Experiment metadata (hasArticle: true)`);
+console.log(`  meta.ts        — Experiment metadata`);
 console.log(`  params.ts      — DialKit control config`);
 console.log(`  experiment.ts  — WebGL2 experiment shell`);
 console.log(`  shader.glsl    — Fragment shader`);

@@ -14,6 +14,9 @@
   --ub-dot-width: 1px;
   --ub-dot-height: 8px;
   --ub-bg-transition: 0.15s;
+  /* Ring slider */
+  --ub-ring-tick-height: 8px;
+  --ub-ring-major-tick-height: 12px;
   /* Jade toggle */
   --ub-jade-padding: 3px;
   --ub-jade-border-radius: 11px;
@@ -35,6 +38,9 @@
   --ub-warm-pill-bg: rgba(255, 170, 80, 0.18);
   --ub-warm-pill-glow: none;
   --ub-warm-text-color: rgba(255, 195, 130, 0.95);
+  --ub-warm-on-pill-bg: rgba(80, 200, 140, 0.16);
+  --ub-warm-on-pill-glow: 0 0 6px rgba(80, 200, 140, 0.06);
+  --ub-warm-on-text-color: rgba(110, 220, 170, 0.95);
   --ub-warm-pill-transition: 0.35s;
   --ub-warm-anim-duration: 540ms;
   --ub-warm-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -132,7 +138,7 @@
 .ub-tape:hover .dialkit-slider-hashmark,
 .ub-tape--active .dialkit-slider-hashmark { background: var(--dial-border-hover); }
 
-.ub-tape__tick--major { height: 12px !important; }
+.ub-tape__tick--major { height: var(--ub-ring-major-tick-height) !important; }
 .ub-tape:hover .ub-tape__tick--major,
 .ub-tape--active .ub-tape__tick--major { background: rgba(255,255,255,0.22) !important; }
 
@@ -224,6 +230,7 @@
 .tv-t11-pill.tv-liquid { animation: tv-blob var(--ub-jade-anim-duration) var(--ub-jade-ease) both; }
 
 /* --- Warm Accent Toggle (t6) via CSS vars --- */
+/* Green when On, Orange when Off */
 .tv-t6 {
   padding: var(--ub-warm-padding);
   border-radius: var(--ub-warm-border-radius);
@@ -232,9 +239,19 @@
   border-radius: var(--ub-warm-pill-radius);
   transition: background var(--ub-warm-pill-transition);
 }
-.tv-t6[data-checked="true"] .tv-t6-pill {
+/* Off state: orange */
+.tv-t6[data-checked="false"] .tv-t6-pill {
   background: var(--ub-warm-pill-bg);
 }
-.tv-t6[data-checked="true"] .tv-btn[data-active="true"] {
+.tv-t6[data-checked="false"] .tv-btn[data-active="true"] {
   color: var(--ub-warm-text-color);
 }
+/* On state: green (warm-specific) */
+.tv-t6[data-checked="true"] .tv-t6-pill {
+  background: var(--ub-warm-on-pill-bg);
+  box-shadow: var(--ub-warm-on-pill-glow);
+}
+.tv-t6[data-checked="true"] .tv-btn[data-active="true"] {
+  color: var(--ub-warm-on-text-color);
+}
+.tv-t6-pill.tv-liquid { animation: tv-blob var(--ub-warm-anim-duration) var(--ub-warm-ease) both; }

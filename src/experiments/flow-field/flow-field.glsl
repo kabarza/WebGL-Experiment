@@ -179,17 +179,16 @@ void main() {
     wP = p + u_warpStrength * vec2(q1, q2);
   }
 
-  float r1 = fbm(vec3((wP + vec2(1.7, 9.2)) * u_warpScale, ft * 0.45));
-  float r2 = fbm(vec3((wP + vec2(8.3, 2.8)) * u_warpScale, ft * 0.5));
-
   if (u_warpDepth >= 2.0) {
+    float r1 = fbm(vec3((wP + vec2(1.7, 9.2)) * u_warpScale, ft * 0.45));
+    float r2 = fbm(vec3((wP + vec2(8.3, 2.8)) * u_warpScale, ft * 0.5));
     wP = p + u_warpStrength * vec2(r1, r2);
-  }
 
-  if (u_warpDepth >= 3.0) {
-    float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
-    float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
-    wP = p + u_warpStrength * vec2(s1, s2);
+    if (u_warpDepth >= 3.0) {
+      float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
+      float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
+      wP = p + u_warpStrength * vec2(s1, s2);
+    }
   }
 
   // Mouse: inject noise-driven warp near cursor (no radial vectors)
@@ -205,7 +204,6 @@ void main() {
   float n1 = fbm(vec3(wP, noiseT));
   float n2 = fbm(vec3(wP + vec2(3.7, 1.1), noiseT * 0.9 + 5.0));
   float n3 = (q1 + q2) * 0.5;
-  float n4 = (r1 + r2) * 0.5;
 
   // Vignette mask (rounded rectangle SDF, aspect-independent)
   vec2 vigP = uv * 2.0 - 1.0;
@@ -221,7 +219,6 @@ void main() {
   float v1 = sin(n1 * TAU * u_blendWidth * 0.5 + timeShift) * 0.5 + 0.5;
   float v2 = sin(n2 * TAU * u_blendWidth * 0.5 + timeShift * 0.8 + 1.5708) * 0.5 + 0.5;
   float v3 = sin(n3 * TAU * u_blendWidth * 0.4 + timeShift * 0.5) * 0.5 + 0.5;
-  float v4 = sin(n4 * TAU * u_blendWidth * 0.4 + 0.785) * 0.5 + 0.5;
 
   vec3 mixA = mix(u_col1, u_col2, v1);
   vec3 mixB = mix(u_col3, u_col4, v1);

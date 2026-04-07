@@ -4,7 +4,7 @@
 // "Tuning" has sliders that drive CSS vars + window.__UB_TUNING__
 // ============================================================
 
-import { useDialKit, type DialConfig } from 'dialkit';
+import { useDialKit, type DialConfig, type EasingConfig } from 'dialkit';
 import { useEffect } from 'react';
 
 // The controls we want to display — rendered as real UB components
@@ -15,11 +15,17 @@ const previewConfig: DialConfig = {
   'Spring D': {
     springD: { type: 'ub-8', default: 100, step: 1 },
   },
+  'Ring A': {
+    ringA: { type: 'ub-3', default: 235, step: 1 },
+  },
+  'Ring B': {
+    ringB: { type: 'ub-6', default: 170, step: 1 },
+  },
   'Jade Refined': {
     jadeToggle: { type: 'ub-t11', default: true },
   },
   'Warm Accent': {
-    warmToggle: { type: 'ub-t6', default: false },
+    warmToggle: { type: 'ub-t6', default: true },
   },
 };
 
@@ -72,6 +78,17 @@ const tuningConfig: DialConfig = {
     dragScale: [0.5, 0.05, 2, 0.05],
     editHoverDelay: [800, 100, 2000, 50],
   },
+  'Ring Slider': {
+    _collapsed: true,
+    ringHairlineHeight: [20, 8, 36, 1],
+    ringTickHeight: [8, 2, 20, 1],
+    ringMajorTickHeight: [12, 4, 24, 1],
+    ringDefaultZoom: [100, 10, 1000, 10],
+    ringZoomInFactor: [0.77, 0.5, 0.95, 0.01],
+    ringZoomOutFactor: [1.3, 1.05, 2, 0.05],
+    ringMomentumDecay: [0.94, 0.8, 0.99, 0.01],
+    ringMomentumThreshold: [0.1, 0.01, 1, 0.01],
+  },
   'Jade Toggle': {
     _collapsed: true,
     jadePadding: [3, 0, 8, 1],
@@ -101,26 +118,34 @@ const tuningConfig: DialConfig = {
   },
   'Warm Toggle': {
     _collapsed: true,
+    warmColor: '#ffaa50',
+    warmTextColor: '#ffc382',
+    warmOnColor: '#50c88c',
+    warmOnTextColor: '#6edcaa',
+    warmEasing: {
+      type: 'easing' as const,
+      duration: 0.54,
+      ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
+    },
+    warmPillTransition: [0.35, 0.05, 1, 0.01],
     warmPadding: [2, 0, 8, 1],
     warmBorderRadius: [10, 0, 24, 1],
     warmPillRadius: [7, 0, 20, 1],
     warmPillAlpha: [0.18, 0, 0.5, 0.01],
     warmTextAlpha: [0.95, 0.3, 1, 0.01],
-    warmR: [255, 0, 255, 1],
-    warmG: [170, 0, 255, 1],
-    warmB: [80, 0, 255, 1],
-    warmTextR: [255, 0, 255, 1],
-    warmTextG: [195, 0, 255, 1],
-    warmTextB: [130, 0, 255, 1],
-    warmPillTransition: [0.35, 0.05, 1, 0.01],
-    warmAnimDuration: [540, 100, 1200, 10],
-    warmEase1: [0.4, 0, 1, 0.01],
-    warmEase2: [0, 0, 1, 0.01],
-    warmEase3: [0.2, 0, 1, 0.01],
-    warmEase4: [1, 0, 1, 0.01],
     warmBias: [0.1, 0, 0.5, 0.01],
   },
 };
+
+/** Parse "#rrggbb" → [r, g, b] */
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ];
+}
 
 function flattenDialValues(nested: Record<string, unknown>): Record<string, unknown> {
   const flat: Record<string, unknown> = {};
@@ -141,7 +166,8 @@ export function ControlTuner() {
 
   // Register the tuning sliders
   const tuningRaw = useDialKit('Tuning', tuningConfig);
-  const t = flattenDialValues(tuningRaw as Record<string, unknown>) as Record<string, number>;
+  const tFull = flattenDialValues(tuningRaw as Record<string, unknown>);
+  const t = tFull as Record<string, number>;
 
   // Bridge: tuning values → CSS custom properties (visual params)
   useEffect(() => {
@@ -161,6 +187,10 @@ export function ControlTuner() {
       root.style.setProperty('--ub-dot-height', `${t.dotHeight ?? 8}px`);
       root.style.setProperty('--ub-bg-transition', `${t.bgTransition ?? 0.15}s`);
 
+      // Ring slider visual — hairline reuses --ub-handle-height, ticks use these
+      root.style.setProperty('--ub-ring-tick-height', `${t.ringTickHeight ?? 8}px`);
+      root.style.setProperty('--ub-ring-major-tick-height', `${t.ringMajorTickHeight ?? 12}px`);
+
       // Jade toggle visual
       const jr = t.jadeR ?? 80, jg = t.jadeG ?? 200, jb = t.jadeB ?? 140;
       root.style.setProperty('--ub-jade-padding', `${t.jadePadding ?? 3}px`);
@@ -177,16 +207,29 @@ export function ControlTuner() {
       root.style.setProperty('--ub-jade-anim-duration', `${t.jadeAnimDuration ?? 580}ms`);
       root.style.setProperty('--ub-jade-ease', `cubic-bezier(${t.jadeEase1 ?? 0.25}, ${t.jadeEase2 ?? 0.75}, ${t.jadeEase3 ?? 0.3}, ${t.jadeEase4 ?? 1})`);
 
-      // Warm toggle visual
-      const wr = t.warmR ?? 255, wg = t.warmG ?? 170, wb = t.warmB ?? 80;
+      // Warm toggle visual — colors from pickers, easing from curve editor
+      const [wr, wg, wb] = hexToRgb((tFull.warmColor as string) ?? '#ffaa50');
+      const [wtr, wtg, wtb] = hexToRgb((tFull.warmTextColor as string) ?? '#ffc382');
+      const [wor, wog, wob] = hexToRgb((tFull.warmOnColor as string) ?? '#50c88c');
+      const [wotr, wotg, wotb] = hexToRgb((tFull.warmOnTextColor as string) ?? '#6edcaa');
+      const warmEase = tFull.warmEasing as EasingConfig | undefined;
+      const warmAlpha = t.warmPillAlpha ?? 0.18;
+      const warmTextA = t.warmTextAlpha ?? 0.95;
+
       root.style.setProperty('--ub-warm-padding', `${t.warmPadding ?? 2}px`);
       root.style.setProperty('--ub-warm-border-radius', `${t.warmBorderRadius ?? 10}px`);
       root.style.setProperty('--ub-warm-pill-radius', `${t.warmPillRadius ?? 7}px`);
-      root.style.setProperty('--ub-warm-pill-bg', `rgba(${wr}, ${wg}, ${wb}, ${t.warmPillAlpha ?? 0.18})`);
-      root.style.setProperty('--ub-warm-text-color', `rgba(${t.warmTextR ?? 255}, ${t.warmTextG ?? 195}, ${t.warmTextB ?? 130}, ${t.warmTextAlpha ?? 0.95})`);
+      // Off state (orange)
+      root.style.setProperty('--ub-warm-pill-bg', `rgba(${wr}, ${wg}, ${wb}, ${warmAlpha})`);
+      root.style.setProperty('--ub-warm-text-color', `rgba(${wtr}, ${wtg}, ${wtb}, ${warmTextA})`);
+      // On state (green)
+      root.style.setProperty('--ub-warm-on-pill-bg', `rgba(${wor}, ${wog}, ${wob}, ${warmAlpha})`);
+      root.style.setProperty('--ub-warm-on-pill-glow', `0 0 6px rgba(${wor}, ${wog}, ${wob}, 0.06)`);
+      root.style.setProperty('--ub-warm-on-text-color', `rgba(${wotr}, ${wotg}, ${wotb}, ${warmTextA})`);
+      // Timing — DialKit easing uses seconds, CSS var expects ms
       root.style.setProperty('--ub-warm-pill-transition', `${t.warmPillTransition ?? 0.35}s`);
-      root.style.setProperty('--ub-warm-anim-duration', `${t.warmAnimDuration ?? 540}ms`);
-      root.style.setProperty('--ub-warm-ease', `cubic-bezier(${t.warmEase1 ?? 0.4}, ${t.warmEase2 ?? 0}, ${t.warmEase3 ?? 0.2}, ${t.warmEase4 ?? 1})`);
+      root.style.setProperty('--ub-warm-anim-duration', `${Math.round((warmEase?.duration ?? 0.54) * 1000)}ms`);
+      root.style.setProperty('--ub-warm-ease', `cubic-bezier(${(warmEase?.ease ?? [0.4, 0, 0.2, 1]).join(', ')})`);
     } catch (e) {
       // CSS var setting can't really fail, but guard anyway
     }
@@ -218,6 +261,12 @@ export function ControlTuner() {
       dragScale: t.dragScale,
       editHoverDelay: t.editHoverDelay,
       bias: t.jadeBias ?? t.warmBias,
+      // Ring slider
+      ringDefaultZoom: t.ringDefaultZoom,
+      ringZoomInFactor: t.ringZoomInFactor,
+      ringZoomOutFactor: t.ringZoomOutFactor,
+      ringMomentumDecay: t.ringMomentumDecay,
+      ringMomentumThreshold: t.ringMomentumThreshold,
     };
   }, [t]);
 

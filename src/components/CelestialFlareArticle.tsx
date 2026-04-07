@@ -40,20 +40,20 @@ function LayerStackDiagram() {
 
   const layerH = 44;
   const padY = 30;
-  const padX = 40;
-  const w = 460;
+  const padX = 30;
+  const w = 800;
   const h = padY + layers.length * layerH + 20;
-  const rectW = 260;
-  const rectH = 28;
+  const rectW = 440;
+  const rectH = 30;
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} fill="none" role="img" aria-label="Layer compositing stack" style={{ maxWidth: 480 }}>
+    <svg viewBox={`0 0 ${w} ${h}`} fill="none" role="img" aria-label="Layer compositing stack">
       <text x={w / 2} y="16" textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>
         top (drawn last)
       </text>
       {layers.map((l, i) => {
         const y = padY + i * layerH;
-        const x = padX + i * 8;
+        const x = padX + i * 12;
         const hl = (l as { highlight?: boolean }).highlight;
         return (
           <g key={i}>
@@ -63,14 +63,14 @@ function LayerStackDiagram() {
               stroke={hl ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}
               strokeWidth="1"
             />
-            <text x={x + 12} y={y + 18} fill={hl ? '#e8e8e8' : 'rgba(255,255,255,0.6)'} fontSize="13" fontWeight={hl ? '600' : '400'} style={{ fontFamily: 'var(--font-body)' }}>
+            <text x={x + 14} y={y + 19} fill={hl ? '#e8e8e8' : 'rgba(255,255,255,0.6)'} fontSize="13" fontWeight={hl ? '600' : '400'} style={{ fontFamily: 'var(--font-body)' }}>
               {l.label}
             </text>
-            <text x={x + rectW + 14} y={y + 18} fill="rgba(255,255,255,0.2)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>
+            <text x={x + rectW + 20} y={y + 19} fill="rgba(255,255,255,0.2)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>
               {l.desc}
             </text>
             {i < layers.length - 1 && (
-              <line x1={x + rectW / 2} y1={y + rectH + 2} x2={x + 8 + rectW / 2} y2={y + layerH - 2} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <line x1={x + rectW / 2} y1={y + rectH + 2} x2={x + 12 + rectW / 2} y2={y + layerH - 2} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
             )}
           </g>
         );

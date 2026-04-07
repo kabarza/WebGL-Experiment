@@ -99,24 +99,23 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
     wP = p + u.warpStrength * vec2f(q1, q2);
   }
 
-  let r1 = fbm(vec3f((wP + vec2f(1.7, 9.2)) * u.warpScale, ft * 0.45), octaves);
-  let r2 = fbm(vec3f((wP + vec2f(8.3, 2.8)) * u.warpScale, ft * 0.5), octaves);
-
   if (u.warpDepth >= 2.0) {
+    let r1 = fbm(vec3f((wP + vec2f(1.7, 9.2)) * u.warpScale, ft * 0.45), octaves);
+    let r2 = fbm(vec3f((wP + vec2f(8.3, 2.8)) * u.warpScale, ft * 0.5), octaves);
     wP = p + u.warpStrength * vec2f(r1, r2);
-  }
 
-  if (u.warpDepth >= 3.0) {
-    let s1 = fbm(vec3f((wP + vec2f(3.1, 7.7)) * u.warpScale, ft * 0.4), octaves);
-    let s2 = fbm(vec3f((wP + vec2f(6.5, 4.2)) * u.warpScale, ft * 0.42), octaves);
-    wP = p + u.warpStrength * vec2f(s1, s2);
+    if (u.warpDepth >= 3.0) {
+      let s1 = fbm(vec3f((wP + vec2f(3.1, 7.7)) * u.warpScale, ft * 0.4), octaves);
+      let s2 = fbm(vec3f((wP + vec2f(6.5, 4.2)) * u.warpScale, ft * 0.42), octaves);
+      wP = p + u.warpStrength * vec2f(s1, s2);
+    }
   }
 
   // Mouse: inject noise-driven warp near cursor (no radial vectors)
   if (u.mouseStr > 0.0) {
     let mTime = t * 0.2 + 42.0;
-    let mw1 = fbm(vec3f(st * u.warpScale * 1.3 + vec2f(17.3, 5.7), mTime), 1);
-    let mw2 = fbm(vec3f(st * u.warpScale * 1.3 + vec2f(3.1, 14.2), mTime * 0.9 + 35.0), 1);
+    let mw1 = snoise(vec3f(st * u.warpScale * 1.3 + vec2f(17.3, 5.7), mTime));
+    let mw2 = snoise(vec3f(st * u.warpScale * 1.3 + vec2f(3.1, 14.2), mTime * 0.9 + 35.0));
     wP += vec2f(mw1, mw2) * mouseProx * u.mouseStr;
     wP += (cursorPos - trailMPos) * mInfluence * u.mouseVel * 0.5;
   }
@@ -126,7 +125,6 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let n1 = fbm(vec3f(wP, noiseT), octaves);
   let n2 = fbm(vec3f(wP + vec2f(3.7, 1.1), noiseT * 0.9 + 5.0), octaves);
   let n3 = (q1 + q2) * 0.5;
-  let n4 = (r1 + r2) * 0.5;
 
   // Vignette mask (rounded rectangle SDF, aspect-independent)
   let vigP = uv * 2.0 - 1.0;
@@ -142,7 +140,6 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let v1 = sin(n1 * TAU * u.blendWidth * 0.5 + timeShift) * 0.5 + 0.5;
   let v2 = sin(n2 * TAU * u.blendWidth * 0.5 + timeShift * 0.8 + 1.5708) * 0.5 + 0.5;
   let v3 = sin(n3 * TAU * u.blendWidth * 0.4 + timeShift * 0.5) * 0.5 + 0.5;
-  let v4 = sin(n4 * TAU * u.blendWidth * 0.4 + 0.785) * 0.5 + 0.5;
 
   let mixA = mix(u.col1, u.col2, v1);
   let mixB = mix(u.col3, u.col4, v1);

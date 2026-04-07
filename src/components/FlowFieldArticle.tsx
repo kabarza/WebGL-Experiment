@@ -323,19 +323,17 @@ if (u_warpDepth >= 1.0) {
   wP = p + u_warpStrength * vec2(q1, q2);
 }
 
-// Second warp layer: sample from warped position
-float r1 = fbm(vec3((wP + vec2(1.7, 9.2)) * u_warpScale, ft * 0.45));
-float r2 = fbm(vec3((wP + vec2(8.3, 2.8)) * u_warpScale, ft * 0.5));
-
+// Second + third warp layers (only computed when needed)
 if (u_warpDepth >= 2.0) {
+  float r1 = fbm(vec3((wP + vec2(1.7, 9.2)) * u_warpScale, ft * 0.45));
+  float r2 = fbm(vec3((wP + vec2(8.3, 2.8)) * u_warpScale, ft * 0.5));
   wP = p + u_warpStrength * vec2(r1, r2);
-}
 
-// Third warp layer: even deeper cascade
-if (u_warpDepth >= 3.0) {
-  float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
-  float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
-  wP = p + u_warpStrength * vec2(s1, s2);
+  if (u_warpDepth >= 3.0) {
+    float s1 = fbm(vec3((wP + vec2(3.1, 7.7)) * u_warpScale, ft * 0.4));
+    float s2 = fbm(vec3((wP + vec2(6.5, 4.2)) * u_warpScale, ft * 0.42));
+    wP = p + u_warpStrength * vec2(s1, s2);
+  }
 }`;
 
 const CODE_MOUSE = `// Mouse: inject noise-driven warp near cursor
@@ -392,15 +390,19 @@ foldQ = pow(foldQ, 0.7);        // slightly sharper
 float totalFold = max(fold, foldQ);
 color = mix(color, u_highlightColor, totalFold * u_highlightStr);`;
 
-const CODE_VIGNETTE = `// Superellipse vignette (aspect-independent, tunable shape)
-vec2 vigUv = abs(uv * 2.0 - 1.0);   // 0 at center, 1 at edges
-float n = u_vignetteRound;           // 2 = ellipse, 4 = squircle, 10 = rectangle
-float edge = pow(pow(vigUv.x, n) + pow(vigUv.y, n), 1.0 / n);
-float vignette = 1.0 - smoothstep(
-  u_vignetteRadius - u_vignetteSoft,
-  u_vignetteRadius + u_vignetteSoft,
-  edge
-);
+const CODE_VIGNETTE = `// Rounded rectangle SDF vignette (aspect-independent)
+vec2 vigP = uv * 2.0 - 1.0;         // -1 at edges, 0 at center
+
+// Corner radius: vignetteRound (0..100) controls roundness
+// 0 = sharp rectangle, 100 = fully circular
+float cr = (u_vignetteRound / 100.0) * u_vignetteRadius;
+
+// Signed distance to the rounded rectangle boundary
+vec2 q = abs(vigP) - vec2(u_vignetteRadius) + cr;
+float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cr;
+
+// Smooth falloff: inside (d<0) = 1, outside (d>0) = 0
+float vignette = 1.0 - smoothstep(-u_vignetteSoft, u_vignetteSoft, d);
 
 // Blend: background at edges, computed color in center
 color = mix(u_bgColor, color, vignette);`;
@@ -822,7 +824,7 @@ export function FlowFieldArticle() {
           The <code className="c">sin()</code> function converts the noise value into a smoothly oscillating blend factor between 0 and 1. The <code className="c">* 0.5 + 0.5</code> shifts sin's output from [-1, 1] to [0, 1].
         </p>
         <p>
-          Why not just use the noise value directly? Because noise is smooth and monotonic over large areas &mdash; you'd get broad, boring color regions. By pushing it through sin(), small changes in the noise value can swing the blend factor through its full range, creating <strong>richer color banding</strong> with more visual detail.
+          Why not just use the noise value directly? Because noise varies slowly and gradually over large areas &mdash; you'd get broad, boring color regions. By pushing it through sin(), small changes in the noise value can swing the blend factor through its full range, creating <strong>richer color banding</strong> with more visual detail.
         </p>
         <p>
           The <code className="c">blendWidth</code> parameter controls how many oscillations you get: a small value means broad, gradual color transitions; a large value creates tight, ribboned bands.
@@ -863,13 +865,16 @@ export function FlowFieldArticle() {
           The flow field is infinite &mdash; it extends in all directions. The vignette is what <strong>contains</strong> it, fading the edges to the background color:
         </p>
 
-        <CodeBlock code={CODE_VIGNETTE} caption="Edge-distance vignette" />
+        <CodeBlock code={CODE_VIGNETTE} caption="Rounded rectangle SDF vignette" />
 
         <p>
-          Instead of a circular mask, this uses <strong>edge distance</strong> &mdash; how far each pixel is from the nearest screen edge. The <code className="c">max(vigUv.x, vigUv.y)</code> creates a rectangular falloff that naturally adapts to any aspect ratio. No matter how wide or tall the screen, the fade always starts the same distance from each edge.
+          This uses a <strong>signed distance field</strong> (SDF) for a rounded rectangle &mdash; a standard technique from Inigo Quilez's distance function library. The SDF returns a single number: negative inside the shape, zero on the boundary, positive outside. That distance feeds into <code className="c">smoothstep</code> to create the soft fade.
         </p>
         <p>
-          This is the same <code className="c">smoothstep</code> technique used for the mouse influence &mdash; it appears repeatedly throughout the shader because it's the go-to tool for creating soft boundaries.
+          The <code className="c">vignetteRound</code> parameter (0&ndash;100) controls the <strong>corner radius</strong>. At 100, the corner radius equals the vignette size &mdash; producing a circle. At 0, the corners are sharp &mdash; a pure rectangle. Values in between give a "squircle" shape. Because the SDF is computed in raw UV space (not aspect-corrected), the vignette shape adapts naturally to any screen ratio.
+        </p>
+        <p>
+          The <code className="c">smoothstep(-soft, +soft, d)</code> centered at zero means the fade is symmetric around the shape boundary &mdash; it bleeds equally inward and outward. This is the same <code className="c">smoothstep</code> technique used for the mouse influence &mdash; it appears repeatedly throughout the shader as the go-to tool for creating soft boundaries.
         </p>
 
         {/* ────────────────────────────────────────── */}

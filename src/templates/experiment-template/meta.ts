@@ -6,5 +6,5 @@ export const meta: ExperimentMeta = {
   description: '__DESCRIPTION__',
   tags: ['glsl'],
   date: '__DATE__',
-  hasArticle: true,
+  hasArticle: false,
 };
