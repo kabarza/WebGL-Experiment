@@ -5,28 +5,30 @@ export const controls: ExperimentControls = {
     bgColor: '#12121a',
 
     branchOn: true,
-    branchScale: 1.0,
-    branchThickness: 1.0,
+    branchScale: 1.81,
+    branchThickness: 3,
     branchColor: '#555568',
 
     flowerOn: true,
-    flowerSize: 1.0,
+    flowerSize: 2.62,
     flowerColor: '#6b4faa',
-    petalCount: 5,
+    petalCount: 8,
 
     glowOn: true,
-    glowIntensity: 1.2,
-    glowColor: '#aaddff',
-    glowRadius: 1.0,
+    glowIntensity: 2.24,
+    glowColor: '#b2a8ff',
+    glowRadius: 1.42,
 
     ditherOn: true,
     ditherSize: 5.0,
 
-    progress: 1.0,
-    seed: 42.0,
+    playMode: 'Auto Play',
+    progress: 0.723,
+    animSpeed: 6.5,
+    loop: true,
 
-    autoPlay: false,
-    animSpeed: 0.15,
+    seed: 55.3,
+
     speed: 1.0,
     paused: false,
   },
@@ -37,36 +39,49 @@ export const controls: ExperimentControls = {
     },
     Branches: {
       branchOn: true,
-      branchScale: [1.0, 0.3, 3.0, 0.01],
-      branchThickness: [1.0, 0.1, 3.0, 0.01],
+      branchScale: [1.81, 0.3, 3.0, 0.01],
+      branchThickness: [3, 0.1, 3.0, 0.01],
       branchColor: '#555568',
     },
     Flowers: {
       flowerOn: true,
-      flowerSize: [1.0, 0.1, 3.0, 0.01],
+      flowerSize: [2.62, 0.1, 3.0, 0.01],
       flowerColor: '#6b4faa',
-      petalCount: [5, 3, 8, 1],
+      petalCount: [8, 3, 8, 1],
     },
     Glow: {
       glowOn: true,
-      glowIntensity: [1.2, 0, 5, 0.01],
-      glowColor: '#aaddff',
-      glowRadius: [1.0, 0.1, 3.0, 0.01],
+      glowIntensity: [2.24, 0, 5, 0.01],
+      glowColor: '#b2a8ff',
+      glowRadius: [1.42, 0.1, 3.0, 0.01],
     },
     Dither: {
       ditherOn: true,
       ditherSize: [5.0, 2.0, 15.0, 0.5],
     },
+    Playback: {
+      playMode: {
+        type: 'select',
+        options: ['Manual', 'Auto Play'],
+        default: 'Auto Play',
+      },
+      progress: [0.723, 0, 1, 0.001],
+      animSpeed: [6.5, 1.0, 30.0, 0.5],
+      loop: true,
+    },
+    Seed: {
+      seed: { type: 'ub-2', default: 55.3, step: 0.1 },
+    },
     Animation: {
-      progress: [1.0, 0, 1, 0.001],
-      autoPlay: false,
-      animSpeed: [0.15, 0.01, 1.0, 0.01],
       speed: [1.0, 0, 5, 0.01],
       paused: false,
     },
-    Seed: {
-      seed: { type: 'ub-2', default: 42.0, step: 0.1 },
-    },
+  },
+
+  visibility: {
+    progress: { when: 'playMode', is: 'Manual' },
+    animSpeed: { when: 'playMode', is: 'Auto Play' },
+    loop: { when: 'playMode', is: 'Auto Play' },
   },
 
   presets: {
@@ -74,10 +89,10 @@ export const controls: ExperimentControls = {
       bgColor: '#12121a',
       branchColor: '#555568',
       flowerColor: '#6b4faa',
-      glowColor: '#aaddff',
-      glowIntensity: 1.2,
+      glowColor: '#b2a8ff',
+      glowIntensity: 2.24,
       ditherSize: 5.0,
-      seed: 42.0,
+      seed: 55.3,
     },
     'Cherry Blush': {
       bgColor: '#1a1015',

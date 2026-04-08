@@ -6,34 +6,18 @@ export const controls: ExperimentControls = {
     speed: 1.0,
     paused: false,
 
-    // Dots
-    dotsOn: true,
-    dotSize: 0.85,
-    dotSpacing: 6,
-    dotSoftness: 0.3,
-    gridAngle: 0,
-    luminanceGamma: 1.2,
-
-    // Colors
-    accent1: '#6432c8',
-    accent2: '#9060d0',
-    neutral: '#606080',
-    colorThreshold: 0.15,
-    colorMix: 1.0,
-
     // Source
     fitMode: 'Fill',
 
-    // Playback / Reveal
+    // Playback & Reveal
     playMode: 'Auto Play',
     progress: 0,
     playSpeed: 0.12,
     looping: true,
-    revealMode: 'Radial',
-    revealOriginX: 0.5,
-    revealOriginY: 0.5,
-    revealSpread: 0.05,
-    revealReverse: false,
+    originX: 0.5,
+    originY: 1.0,
+    popDuration: 0.03,
+    bloomOvershoot: 1.5,
 
     // Post
     brightness: 1.0,
@@ -51,7 +35,7 @@ export const controls: ExperimentControls = {
       },
       'Take Snapshot': { type: 'action' },
     },
-    Playback: {
+    'Playback & Reveal': {
       playMode: {
         type: 'select',
         default: 'Auto Play',
@@ -60,33 +44,13 @@ export const controls: ExperimentControls = {
       progress: [0, 0, 1, 0.001],
       playSpeed: [0.12, 0.01, 1, 0.01],
       looping: true,
-    },
-    Reveal: {
-      revealMode: {
-        type: 'select',
-        default: 'Radial',
-        options: ['Radial', 'Sweep Right', 'Sweep Down', 'Random', 'Spiral'],
-      },
-      revealOriginX: [0.5, 0, 1, 0.01],
-      revealOriginY: [0.5, 0, 1, 0.01],
-      revealSpread: [0.05, 0.001, 0.3, 0.001],
-      revealReverse: false,
-    },
-    Dither: {
-      dotsOn: true,
-      dotSize: [0.85, 0.05, 1.0, 0.01],
-      dotSpacing: [6, 2, 24, 0.5],
-      dotSoftness: [0.3, 0, 1, 0.01],
-      gridAngle: [0, 0, 90, 1],
-      luminanceGamma: [1.2, 0.2, 4, 0.01],
+      originX: [0.5, 0, 1, 0.01],
+      originY: [1.0, 0, 1, 0.01],
+      popDuration: [0.03, 0.005, 0.15, 0.001],
+      bloomOvershoot: [1.5, 0, 3, 0.1],
     },
     Colors: {
       bgColor: '#0a0a0f',
-      accent1: '#6432c8',
-      accent2: '#9060d0',
-      neutral: '#606080',
-      colorThreshold: [0.15, 0, 1, 0.01],
-      colorMix: [1.0, 0, 2, 0.01],
     },
     Post: {
       brightness: [1.0, 0, 3, 0.01],
@@ -106,34 +70,19 @@ export const controls: ExperimentControls = {
   },
 
   presets: {
-    'Violet Bloom': {
-      accent1: '#6432c8',
-      accent2: '#9060d0',
-      neutral: '#606080',
-      bgColor: '#0a0a0f',
-      revealMode: 'Radial',
-      dotSpacing: 6,
-      dotSize: 0.85,
+    'Slow Bloom': {
+      playSpeed: 0.06,
+      originX: 0.5,
+      originY: 1.0,
+      popDuration: 0.05,
+      bloomOvershoot: 2.0,
     },
-    'Sakura Sweep': {
-      accent1: '#e04080',
-      accent2: '#ff6090',
-      neutral: '#505050',
-      bgColor: '#0d0a0c',
-      revealMode: 'Sweep Right',
-      dotSpacing: 5,
-      dotSize: 0.8,
-      playSpeed: 0.08,
-    },
-    'Scatter Dust': {
-      accent1: '#3040b0',
-      accent2: '#6080e0',
-      neutral: '#404060',
-      bgColor: '#050510',
-      revealMode: 'Random',
-      revealSpread: 0.01,
-      dotSpacing: 4,
-      dotSize: 0.75,
+    'Quick Draw': {
+      playSpeed: 0.25,
+      originX: 0.5,
+      originY: 0.5,
+      popDuration: 0.02,
+      bloomOvershoot: 1.0,
     },
   },
 };

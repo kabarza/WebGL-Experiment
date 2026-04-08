@@ -64,6 +64,7 @@ const EXPORT_KEYS = new Set([
   'blendWidth', 'colorShift',
   'circleX', 'circleY', 'circleRadius', 'circleEdge',
   'circleDensity', 'circleParticleSize', 'circleSpeed', 'circleOpacity',
+  'circleTrail', 'circleTwinkle',
   'flareIntensity', 'flareSpread', 'flareLength',
   'flareRainbow', 'flareCount', 'flareSpeed', 'flareAngle',
   'grainAmount', 'grainSize', 'grainSpeed', 'grainVariation',
@@ -286,6 +287,7 @@ export function generateExport(options: GenerateExportOptions): string {
     "u_blendWidth", "u_colorShift",
     "u_circlePos", "u_circleRadius", "u_circleEdge",
     "u_circleDensity", "u_circleParticleSize", "u_circleSpeed", "u_circleOpacity",
+    "u_circleTrail", "u_circleTwinkle",
     "u_flareIntensity", "u_flareSpread", "u_flareLength",
     "u_flareRainbow", "u_flareCount", "u_flareSpeed", "u_flareAngle",
     "u_grainAmount", "u_grainSize", "u_grainSpeed", "u_grainVariation",
@@ -346,6 +348,8 @@ export function generateExport(options: GenerateExportOptions): string {
     gl.uniform1f(U.u_circleParticleSize, P.circleParticleSize);
     gl.uniform1f(U.u_circleSpeed, P.circleSpeed);
     gl.uniform1f(U.u_circleOpacity, P.circleOpacity);
+    gl.uniform1f(U.u_circleTrail, P.circleTrail != null ? P.circleTrail : 0.5);
+    gl.uniform1f(U.u_circleTwinkle, P.circleTwinkle != null ? P.circleTwinkle : 0.7);
 
     gl.uniform1f(U.u_flareIntensity, P.flareIntensity);
     gl.uniform1f(U.u_flareSpread, P.flareSpread);

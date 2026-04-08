@@ -21,6 +21,7 @@ const BAKED_PARAMS: Record<string, unknown> =
         circleRadius: 0.25, circleEdge: 0.3,
         circleDensity: 5.0, circleParticleSize: 0.3,
         circleSpeed: 0.5, circleOpacity: 0.4,
+        circleTrail: 0.5, circleTwinkle: 0.7,
         flareIntensity: 0.3, flareSpread: 1.0, flareLength: 1.0,
         flareRainbow: 0.7, flareCount: 4, flareSpeed: 0.5, flareAngle: 0.5,
         grainAmount: 0.08, grainSize: 1.5, grainSpeed: 30, grainVariation: 0.3,
@@ -88,6 +89,7 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     'u_blendWidth', 'u_colorShift',
     'u_circlePos', 'u_circleRadius', 'u_circleEdge',
     'u_circleDensity', 'u_circleParticleSize', 'u_circleSpeed', 'u_circleOpacity',
+    'u_circleTrail', 'u_circleTwinkle',
     'u_flareIntensity', 'u_flareSpread', 'u_flareLength',
     'u_flareRainbow', 'u_flareCount', 'u_flareSpeed', 'u_flareAngle',
     'u_grainAmount', 'u_grainSize', 'u_grainSpeed', 'u_grainVariation',
@@ -146,6 +148,8 @@ function mkShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLS
     gl!.uniform1f(U.u_circleParticleSize, P.circleParticleSize as number);
     gl!.uniform1f(U.u_circleSpeed, P.circleSpeed as number);
     gl!.uniform1f(U.u_circleOpacity, P.circleOpacity as number);
+    gl!.uniform1f(U.u_circleTrail, (P.circleTrail ?? 0.5) as number);
+    gl!.uniform1f(U.u_circleTwinkle, (P.circleTwinkle ?? 0.7) as number);
 
     // Flares
     gl!.uniform1f(U.u_flareIntensity, P.flareIntensity as number);

@@ -68,6 +68,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
     // Circle
     'u_circlePos', 'u_circleRadius', 'u_circleEdge',
     'u_circleDensity', 'u_circleParticleSize', 'u_circleSpeed', 'u_circleOpacity',
+    'u_circleTrail', 'u_circleTwinkle',
     // Flares
     'u_flareIntensity', 'u_flareSpread', 'u_flareLength',
     'u_flareRainbow', 'u_flareCount', 'u_flareSpeed', 'u_flareAngle',
@@ -120,6 +121,8 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       gl.uniform1f(U.u_circleParticleSize, P.circleParticleSize as number);
       gl.uniform1f(U.u_circleSpeed, P.circleSpeed as number);
       gl.uniform1f(U.u_circleOpacity, P.circleOpacity as number);
+      gl.uniform1f(U.u_circleTrail, P.circleTrail as number);
+      gl.uniform1f(U.u_circleTwinkle, P.circleTwinkle as number);
 
       // Flares
       gl.uniform1f(U.u_flareIntensity, P.flareIntensity as number);

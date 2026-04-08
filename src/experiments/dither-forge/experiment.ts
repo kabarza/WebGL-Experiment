@@ -144,6 +144,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   let currentAssetUrl = '';
   let currentPresetId = (params._presetId as string) || '';
   let lastPresetChangeTs = 0;
+  let lastResetTs = 0;
 
   function assetKeyForPreset(presetId: string): string {
     return presetId ? `${ASSET_KEY_PREFIX}/${presetId}` : ASSET_KEY_PREFIX;
@@ -199,17 +200,6 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       localStorage.setItem(assetKeyForPreset(currentPresetId), dataUrl);
     } catch {
       // localStorage quota exceeded
-    }
-  }
-
-  /** Load the stored asset for the given preset (or clear if none). */
-  function loadAssetForPreset(presetId: string) {
-    const stored = localStorage.getItem(assetKeyForPreset(presetId)) ?? '';
-    currentAssetUrl = stored;
-    if (stored) {
-      loadAssetFromDataUrl(stored);
-    } else {
-      hasTexture = false;
     }
   }
 
@@ -325,28 +315,47 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
         lastPresetChangeTs = presetChangeTs;
         const newPresetId = (P._presetId as string) ?? '';
         if (newPresetId !== currentPresetId) {
-          // Save current asset under the old preset before switching
+          // Save current asset under the OLD preset
           if (currentAssetUrl) {
             try { localStorage.setItem(assetKeyForPreset(currentPresetId), currentAssetUrl); } catch { /* quota */ }
           }
           currentPresetId = newPresetId;
-          // Stop any playing video — it's tied to the old preset
+
+          // Stop any playing video — can't persist across presets
           const vid = P._videoElement;
           if (vid instanceof HTMLVideoElement) {
             vid.pause();
             URL.revokeObjectURL(vid.src);
             P._videoElement = null;
           }
-          loadAssetForPreset(newPresetId);
+
+          // null  = brand-new preset (never stored) → inherit current asset
+          // ''    = explicitly cleared (reset) → stay empty
+          // 'data:…' = has an asset → load it
+          const stored = localStorage.getItem(assetKeyForPreset(newPresetId));
+          if (stored === null && currentAssetUrl) {
+            // New preset — inherit current asset and persist under new key
+            try { localStorage.setItem(assetKeyForPreset(newPresetId), currentAssetUrl); } catch { /* quota */ }
+          } else if (stored) {
+            currentAssetUrl = stored;
+            loadAssetFromDataUrl(stored);
+          } else {
+            // Cleared or no asset
+            hasTexture = false;
+            currentAssetUrl = '';
+          }
         }
       }
 
-      // Detect reset (underscore keys deleted) — clear asset
-      if (!('_presetId' in P)) {
-        // Reset occurred — clear texture and storage for current preset
+      // Detect "Reset to Defaults" — clear asset for current preset
+      const resetTs = (P._resetTs as number) ?? 0;
+      if (resetTs > lastResetTs) {
+        lastResetTs = resetTs;
         hasTexture = false;
         currentAssetUrl = '';
-        try { localStorage.removeItem(assetKeyForPreset(currentPresetId)); } catch { /* */ }
+        // Store empty string (not removeItem) so we can distinguish
+        // "explicitly cleared" from "never had an asset" on preset switch.
+        try { localStorage.setItem(assetKeyForPreset(currentPresetId), ''); } catch { /* */ }
         const vid = P._videoElement;
         if (vid instanceof HTMLVideoElement) {
           vid.pause();

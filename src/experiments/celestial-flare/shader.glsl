@@ -26,6 +26,8 @@ uniform float u_circleDensity;
 uniform float u_circleParticleSize;
 uniform float u_circleSpeed;
 uniform float u_circleOpacity;
+uniform float u_circleTrail;
+uniform float u_circleTwinkle;
 
 // Lens Flares
 uniform float u_flareIntensity;
@@ -108,45 +110,88 @@ void main() {
   }
 
   // ============ LAYER 2: Particle Circle ============
+  // Orbit-slot system: each particle is an individual entity at a specific
+  // position on the ring. For each pixel we find the nearest angular slots
+  // and check ~5 candidates. mod(slot, N) wraps seamlessly (N is integer),
+  // so the atan ±π discontinuity never produces a visible seam.
   if (u_circleOn > 0.5) {
     vec2 cPos = vec2(u_circlePos.x * aspect, u_circlePos.y);
-    float cDist = length(st - cPos);
+    vec2 delta = st - cPos;
+    float cDist = length(delta);
     float ringDist = cDist - u_circleRadius;
 
     float edgeW = u_circleEdge * 0.08;
     float ringGlow = exp(-ringDist * ringDist / (edgeW * edgeW));
     float edgeMask = exp(-ringDist * ringDist / (edgeW * edgeW * 6.0));
 
-    float cAngle = atan(st.y - cPos.y, st.x - cPos.x);
     float totalParticles = 0.0;
 
-    for (int layer = 0; layer < 3; layer++) {
-      float fi = float(layer);
-      float scale = u_circleDensity * (12.0 + fi * 6.0);
-      float tOff = t * u_circleSpeed * (0.4 + fi * 0.2);
+    // Skip expensive particle work for pixels far from the ring
+    if (edgeMask > 0.001 && cDist > 0.001) {
+      float pixelAngle = atan(delta.y, delta.x);
+      float normAngle = pixelAngle / TAU + 0.5; // 0..1
 
-      vec2 gridUV = vec2(
-        (cAngle / TAU + 0.5) * scale + tOff,
-        ringDist * scale * 4.0 + fi * 17.3
-      );
+      for (int layer = 0; layer < 3; layer++) {
+        float fi = float(layer);
+        // Integer count guarantees seamless angular wrap
+        float N = floor(u_circleDensity * (30.0 + fi * 15.0) + 0.5);
+        N = max(N, 1.0);
 
-      vec2 cell = floor(gridUV);
-      vec2 f = fract(gridUV);
+        // Each layer orbits at a slightly different rate
+        float rotation = t * u_circleSpeed * 0.02 * (1.0 + fi * 0.08);
 
-      float h = hash21(cell + fi * 137.0);
-      float hx = hash21(cell + fi * 137.0 + 11.0);
-      float hy = hash21(cell + fi * 137.0 + 23.0);
+        // Pixel's angular slot in the rotated frame
+        float shiftedAngle = fract(normAngle - rotation);
+        float slotF = shiftedAngle * N;
+        float slotBase = floor(slotF);
 
-      float exists = step(0.55 + fi * 0.1, h);
+        // Check nearby orbit slots
+        for (int j = -2; j <= 2; j++) {
+          float s = slotBase + float(j);
+          float slot = mod(s, N); // seamless wrap — no seam possible
+          float seed = slot + fi * 173.7;
 
-      float phase = hash21(cell + fi * 137.0 + 47.0) * TAU + t * u_circleSpeed * 1.5;
-      float fade = 0.3 + 0.7 * max(0.0, sin(phase));
+          // Hash-derived properties
+          float h  = hash21(vec2(seed, 0.0));
+          float h2 = hash21(vec2(seed, 1.0));
+          float h3 = hash21(vec2(seed, 2.0));
 
-      vec2 center = vec2(0.15 + hx * 0.7, 0.15 + hy * 0.7);
-      float d = length(f - center);
-      float size = u_circleParticleSize * (0.08 + h * 0.12);
+          // Sparser in higher layers
+          float exists = step(0.45 + fi * 0.08, h);
 
-      totalParticles += exists * (1.0 - smoothstep(0.0, size, d)) * fade;
+          // Angular jitter within the slot
+          float angJitter = (h2 - 0.5) * 0.65;
+
+          // Arc-length distance: pixel vs particle
+          float angSep = slotF - (s + 0.5 + angJitter);
+          float arcDist = (angSep / N) * TAU * u_circleRadius;
+
+          // Radial offset from ring centre-line
+          float radJitter = (h3 - 0.5) * edgeW * 3.0;
+          float radDist = ringDist - radJitter;
+
+          // Streak shape controlled by circleTrail
+          float sizeVar = 0.4 + h * 0.6;
+          float streakLen = u_circleParticleSize * 0.015 * sizeVar
+                          * (0.5 + u_circleTrail * 4.0);
+          float streakW   = u_circleParticleSize * 0.0015 * sizeVar
+                          * (0.3 + (1.0 - u_circleTrail) * 1.5);
+
+          // Elliptical distance (tangent × radial)
+          float da = arcDist / max(streakLen, 0.0001);
+          float dr = radDist / max(streakW,  0.0001);
+          float d2 = da * da + dr * dr;
+
+          // Soft Gaussian falloff
+          float particle = exists * exp(-d2 * 4.0);
+
+          // Twinkle / pulse
+          float phase = hash21(vec2(seed, 3.0)) * TAU + t * u_circleSpeed * 2.0;
+          float twinkle = mix(1.0, 0.15 + 0.85 * max(0.0, sin(phase)), u_circleTwinkle);
+
+          totalParticles += particle * twinkle;
+        }
+      }
     }
 
     float circleMask = (ringGlow * 0.12 + totalParticles * edgeMask * 0.7) * u_circleOpacity;

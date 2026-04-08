@@ -58,11 +58,11 @@ function formatValue(value: string | number | boolean): string {
  */
 const EXPORT_KEYS = new Set([
   'bgColor',
-  'branchScale', 'branchThickness', 'branchColor',
-  'flowerSize', 'flowerColor', 'petalCount',
-  'glowIntensity', 'glowColor', 'glowRadius',
-  'ditherSize',
-  'seed', 'animSpeed',
+  'branchOn', 'branchScale', 'branchThickness', 'branchColor',
+  'flowerOn', 'flowerSize', 'flowerColor', 'petalCount',
+  'glowOn', 'glowIntensity', 'glowColor', 'glowRadius',
+  'ditherOn', 'ditherSize',
+  'seed', 'animSpeed', 'loop',
   'dialKit',
 ]);
 
@@ -272,19 +272,136 @@ export function generateExport(options: GenerateExportOptions): string {
   gl.bindVertexArray(null);
 
   // Uniform locations
-  var U = {};
-  var uNames = [
-    "u_time", "u_resolution",
-    "u_branchOn", "u_flowerOn", "u_glowOn", "u_ditherOn",
-    "u_branchScale", "u_branchThickness", "u_branchColor",
-    "u_flowerSize", "u_flowerColor", "u_petalCount",
-    "u_glowIntensity", "u_glowColor", "u_glowRadius",
-    "u_ditherSize",
-    "u_progress", "u_seed", "u_bgColor"
-  ];
-  for (var i = 0; i < uNames.length; i++) {
-    U[uNames[i]] = gl.getUniformLocation(prog, uNames[i]);
+  var uRes = gl.getUniformLocation(prog, "u_resolution");
+  var uScene = gl.getUniformLocation(prog, "u_scene");
+  var uDitherOn = gl.getUniformLocation(prog, "u_ditherOn");
+  var uDitherSize = gl.getUniformLocation(prog, "u_ditherSize");
+  var uBg = gl.getUniformLocation(prog, "u_bgColor");
+
+  // ── Seeded PRNG ──
+  function mulberry32(seed) {
+    var s = seed | 0;
+    return function() {
+      s = (s + 0x6D2B79F5) | 0;
+      var t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
+  function lerp2(a, b, t) { return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]; }
+  function bezAt(a,c,b,t) { return lerp2(lerp2(a,c,t),lerp2(c,b,t),t); }
+  function bezTan(a,c,b,t) { var s=1-t; return [2*s*(c[0]-a[0])+2*t*(b[0]-c[0]),2*s*(c[1]-a[1])+2*t*(b[1]-c[1])]; }
+  function splitBez(a,c,b,t) { var ac=lerp2(a,c,t),cb=lerp2(c,b,t); return {s:a,c:ac,e:lerp2(ac,cb,t)}; }
+  function sst(e0,e1,x) { var t=Math.max(0,Math.min(1,(x-e0)/(e1-e0))); return t*t*(3-2*t); }
+
+  // ── Tree generation ──
+  function genTree(seed, scale) {
+    var rng = mulberry32(Math.round(seed*1000));
+    var stems = [];
+    var n = 4 + Math.floor(rng()*3);
+    for (var i=0;i<n;i++) {
+      var side=rng(), o, ba;
+      if (side<0.4) { o=[-0.03,0.15+rng()*0.6]; ba=-0.3+rng()*0.6; }
+      else if (side<0.75) { o=[0.1+rng()*0.6,-0.03]; ba=Math.PI/2-0.4+rng()*0.8; }
+      else { o=[1.03,0.2+rng()*0.5]; ba=Math.PI-0.3+rng()*0.6; }
+      stems.push(mkBr(rng,o,ba+(rng()-0.5)*0.4,(0.25+rng()*0.35)*scale,1,0,0,scale));
+    }
+    return stems;
+  }
+  function mkBr(rng,start,angle,length,thick,depth,pg,scale) {
+    var end=[start[0]+Math.cos(angle)*length,start[1]+Math.sin(angle)*length];
+    var mid=lerp2(start,end,0.4+rng()*0.2);
+    var perp=[-(end[1]-start[1]),end[0]-start[0]];
+    var pl=Math.sqrt(perp[0]*perp[0]+perp[1]*perp[1])||1;
+    var ctrl=[mid[0]+(perp[0]/pl)*length*(rng()-0.5)*0.3,mid[1]+(perp[1]/pl)*length*(rng()-0.5)*0.3];
+    var go=Math.min(depth===0?pg+rng()*0.05:pg+0.15+rng()*0.1,0.85);
+    var node={s:start,e:end,c:ctrl,th:thick,d:depth,go:go,ch:[],fl:[]};
+    if(depth<3){var mc=depth===0?3+Math.floor(rng()*3):depth===1?2+Math.floor(rng()*2):1+Math.floor(rng()*2);
+    for(var i=0;i<mc;i++){var t=0.25+rng()*0.6;var fp=bezAt(start,ctrl,end,t);var tan=bezTan(start,ctrl,end,t);
+    node.ch.push(mkBr(rng,fp,Math.atan2(tan[1],tan[0])+(rng()-0.5)*1.3,length*(0.3+rng()*0.35),thick*(depth===0?0.55:0.5),depth+1,go+t*0.15,scale));}}
+    if(depth>=1&&rng()>0.3)node.fl.push(mkFl(rng,end,thick,go+0.12));
+    if(depth>=1&&rng()>0.5){var ft=0.4+rng()*0.4;node.fl.push(mkFl(rng,bezAt(start,ctrl,end,ft),thick*0.8,go+ft*0.08+0.1));}
+    if(depth===0&&rng()>0.6){var ft2=0.5+rng()*0.3;node.fl.push(mkFl(rng,bezAt(start,ctrl,end,ft2),thick*0.7,go+ft2*0.1+0.15));}
+    return node;
+  }
+  function mkFl(rng,center,sm,bo) {
+    return {center:center,r:(0.018+rng()*0.018)*sm,pc:5,ph:rng()*Math.PI*2,bo:Math.min(bo,0.9),cv:0.75+rng()*0.5};
+  }
+
+  // ── Canvas2D rendering ──
+  var sc = document.createElement("canvas");
+  var sctx = sc.getContext("2d");
+  var tex = null;
+  function initTex(w,h) {
+    sc.width=w; sc.height=h;
+    if(tex) gl.deleteTexture(tex);
+    tex=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,1);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sc);
+    gl.bindTexture(gl.TEXTURE_2D,null);
+  }
+  function uploadTex() {
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,1);
+    gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,sc);
+    gl.bindTexture(gl.TEXTURE_2D,null);
+  }
+  function drawBranches(ctx,nodes,progress,w,h,bt,color) {
+    for(var i=0;i<nodes.length;i++){var n=nodes[i];
+    var g=sst(n.go,n.go+0.12,progress); if(g<=0) continue;
+    var s=[n.s[0]*w,n.s[1]*h],c=[n.c[0]*w,n.c[1]*h],e=[n.e[0]*w,n.e[1]*h];
+    ctx.beginPath(); ctx.moveTo(s[0],s[1]);
+    if(g>=0.99) ctx.quadraticCurveTo(c[0],c[1],e[0],e[1]);
+    else{var p=splitBez(s,c,e,g); ctx.quadraticCurveTo(p.c[0],p.c[1],p.e[0],p.e[1]);}
+    ctx.strokeStyle=color; ctx.lineWidth=Math.max(bt*n.th*(1-n.d*0.15),0.5); ctx.lineCap="round"; ctx.stroke();
+    if(n.ch.length) drawBranches(ctx,n.ch,progress,w,h,bt,color);}
+  }
+  function drawFlowers(ctx,nodes,progress,w,h,sm,rgb) {
+    for(var i=0;i<nodes.length;i++){var n=nodes[i];
+    for(var j=0;j<n.fl.length;j++){var fl=n.fl[j];
+    var bloom=sst(fl.bo,fl.bo+0.1,progress); if(bloom<=0) continue;
+    var cx=fl.center[0]*w,cy=fl.center[1]*h,r=fl.r*h*sm*bloom;
+    var rv=Math.min(1,rgb[0]*fl.cv),gv=Math.min(1,rgb[1]*fl.cv),bv=Math.min(1,rgb[2]*fl.cv);
+    ctx.fillStyle="rgb("+Math.round(rv*255)+","+Math.round(gv*255)+","+Math.round(bv*255)+")";
+    ctx.globalAlpha=0.85*bloom;
+    for(var k=0;k<fl.pc;k++){var a=(k/fl.pc)*Math.PI*2+fl.ph;ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*0.4,cy+Math.sin(a)*r*0.4,r*0.55,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=0.6*bloom;ctx.fillStyle="#1a1025";ctx.beginPath();ctx.arc(cx,cy,r*0.15,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+    if(n.ch.length) drawFlowers(ctx,n.ch,progress,w,h,sm,rgb);}
+  }
+  function drawGlow(ctx,nodes,progress,w,h,sm,intensity,radius,glowRGB) {
+    for(var i=0;i<nodes.length;i++){var n=nodes[i];
+    for(var j=0;j<n.fl.length;j++){var fl=n.fl[j];
+    var age=progress-fl.bo; if(age<0) continue;
+    var peak=Math.exp(-Math.pow(Math.max(age-0.07,0),2)/0.003); if(peak<0.05) continue;
+    var cx=fl.center[0]*w,cy=fl.center[1]*h,r=fl.r*h*sm*radius*3.5;
+    var grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    var gR=Math.round(glowRGB[0]*255),gG=Math.round(glowRGB[1]*255),gB=Math.round(glowRGB[2]*255);
+    grad.addColorStop(0,"rgba("+gR+","+gG+","+gB+","+Math.min(peak*intensity*0.6,1)+")");
+    grad.addColorStop(1,"rgba("+gR+","+gG+","+gB+",0)");
+    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();}
+    if(n.ch.length) drawGlow(ctx,n.ch,progress,w,h,sm,intensity,radius,glowRGB);}
+  }
+  function renderScn(progress) {
+    var w=sc.width,h=sc.height;
+    sctx.fillStyle=P.bgColor.charAt(0)==="#"?"#"+P.bgColor.slice(1):("#"+P.bgColor);
+    sctx.fillRect(0,0,w,h);
+    var bt=(P.branchThickness||1)*h*0.008;
+    var bc=P.branchColor.charAt(0)==="#"?P.branchColor:("#"+P.branchColor);
+    if(P.branchOn!==false) drawBranches(sctx,tree,progress,w,h,bt,bc);
+    var fc=hex2rgb(P.flowerColor||"6b4faa");
+    if(P.flowerOn!==false&&P.glowOn!==false){sctx.save();sctx.globalCompositeOperation="lighter";
+    drawGlow(sctx,tree,progress,w,h,P.flowerSize||1,P.glowIntensity||1.2,P.glowRadius||1,hex2rgb(P.glowColor||"aaddff"));sctx.restore();}
+    if(P.flowerOn!==false) drawFlowers(sctx,tree,progress,w,h,P.flowerSize||1,fc);
+  }
+
+  var tree = genTree(P.seed || 42, P.branchScale || 1);
+  var animSpd = P.animSpeed || 6;
+  var doLoop = P.loop !== false;
 
   // Resize
   function resize() {
@@ -293,6 +410,7 @@ export function generateExport(options: GenerateExportOptions): string {
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
+    initTex(Math.ceil(canvas.width/2), Math.ceil(canvas.height/2));
   }
   var ro = new ResizeObserver(resize);
   ro.observe(canvas);
@@ -301,6 +419,7 @@ export function generateExport(options: GenerateExportOptions): string {
   // Render loop
   var accTime = 0;
   var lastTime = performance.now();
+  var lastP = -1;
 
   function render() {
     var now = performance.now();
@@ -308,45 +427,26 @@ export function generateExport(options: GenerateExportOptions): string {
     lastTime = now;
     accTime += dt;
 
-    var progress = Math.min(1.0, accTime * P.animSpeed);
+    var progress = accTime / animSpd;
+    if (doLoop) progress = progress % 1.0;
+    else progress = Math.min(progress, 1.0);
+
+    if (Math.abs(progress - lastP) > 0.0005) {
+      renderScn(progress);
+      uploadTex();
+      lastP = progress;
+    }
 
     gl.useProgram(prog);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uDitherOn, P.ditherOn !== false ? 1.0 : 0.0);
+    gl.uniform1f(uDitherSize, P.ditherSize || 5);
+    var bg = hex2rgb(P.bgColor || "12121a");
+    gl.uniform3f(uBg, bg[0], bg[1], bg[2]);
 
-    gl.uniform1f(U.u_time, accTime);
-    gl.uniform2f(U.u_resolution, canvas.width, canvas.height);
-
-    // Layer toggles — all on
-    gl.uniform1f(U.u_branchOn, 1.0);
-    gl.uniform1f(U.u_flowerOn, 1.0);
-    gl.uniform1f(U.u_glowOn, 1.0);
-    gl.uniform1f(U.u_ditherOn, 1.0);
-
-    // Branches
-    gl.uniform1f(U.u_branchScale, P.branchScale);
-    gl.uniform1f(U.u_branchThickness, P.branchThickness);
-    var bc = hex2rgb(P.branchColor);
-    gl.uniform3f(U.u_branchColor, bc[0], bc[1], bc[2]);
-
-    // Flowers
-    gl.uniform1f(U.u_flowerSize, P.flowerSize);
-    var fc = hex2rgb(P.flowerColor);
-    gl.uniform3f(U.u_flowerColor, fc[0], fc[1], fc[2]);
-    gl.uniform1f(U.u_petalCount, P.petalCount);
-
-    // Glow
-    gl.uniform1f(U.u_glowIntensity, P.glowIntensity);
-    var gc = hex2rgb(P.glowColor);
-    gl.uniform3f(U.u_glowColor, gc[0], gc[1], gc[2]);
-    gl.uniform1f(U.u_glowRadius, P.glowRadius);
-
-    // Dither
-    gl.uniform1f(U.u_ditherSize, P.ditherSize);
-
-    // General
-    gl.uniform1f(U.u_progress, progress);
-    gl.uniform1f(U.u_seed, P.seed);
-    var bg = hex2rgb(P.bgColor);
-    gl.uniform3f(U.u_bgColor, bg[0], bg[1], bg[2]);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(uScene, 0);
 
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);

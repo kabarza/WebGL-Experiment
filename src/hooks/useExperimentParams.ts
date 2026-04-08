@@ -366,14 +366,9 @@ export function useExperimentParams(
         }
       }
 
-      // Clear all underscore-prefixed transient state (e.g. _assetDataUrl,
-      // _videoElement). Experiments detect the change and clean up.
-      const current = paramsRef.current;
-      for (const key of Object.keys(current)) {
-        if (key.startsWith('_')) {
-          delete current[key];
-        }
-      }
+      // Signal reset to experiments so they can clear transient state
+      // (uploaded assets, video elements, etc.)
+      paramsRef.current._resetTs = Date.now();
     },
     [title, pathMap, dialDefaults],
   );
@@ -395,7 +390,8 @@ export function useExperimentParams(
   const paramsRef = useRef<Record<string, unknown>>({ ...defaults });
 
   // ── Track active DialKit preset ─────────────────────────────
-  const lastPresetIdRef = useRef<string | null>(null);
+  // `undefined` = not yet observed (skip first run); `null` = DialKit has no active preset
+  const lastPresetIdRef = useRef<string | null | undefined>(undefined);
 
   // Sync DialKit values → paramsRef + persist to localStorage
   useEffect(() => {
@@ -415,8 +411,9 @@ export function useExperimentParams(
       const prevPresetId = lastPresetIdRef.current;
       current._presetId = presetId ?? '';
 
-      // Signal preset change so experiments can react
-      if (prevPresetId !== null && presetId !== prevPresetId) {
+      // Signal preset change so experiments can react.
+      // Skip the very first observation (prevPresetId === undefined).
+      if (prevPresetId !== undefined && presetId !== prevPresetId) {
         current._prevPresetId = prevPresetId ?? '';
         current._presetChanged = Date.now();
       }

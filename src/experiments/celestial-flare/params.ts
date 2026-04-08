@@ -28,6 +28,8 @@ export const controls: ExperimentControls = {
     circleParticleSize: 0.55,
     circleSpeed: 0.44,
     circleOpacity: 0.61,
+    circleTrail: 0.5,
+    circleTwinkle: 0.7,
 
     flareOn: true,
     flareIntensity: 0.63,
@@ -83,6 +85,8 @@ export const controls: ExperimentControls = {
       circleParticleSize: [0.55, 0.01, 1, 0.01],
       circleSpeed: [0.44, 0, 2, 0.01],
       circleOpacity: [0.61, 0, 1, 0.01],
+      circleTrail: [0.5, 0, 1, 0.01],
+      circleTwinkle: [0.7, 0, 1, 0.01],
     },
     'Lens Flares': {
       flareOn: true,
