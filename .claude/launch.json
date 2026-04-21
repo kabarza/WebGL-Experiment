@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vite dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5174", "--strictPort", "false"],
+      "port": 5174
+    },
+    {
+      "name": "vite preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4173
+    },
+    {
+      "name": "floating-dock",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "5180", "--directory", "/Users/kabarza/Dev/general/floating-dock"],
+      "port": 5180
+    }
+  ]
+}

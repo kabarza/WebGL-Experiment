@@ -24,6 +24,14 @@ export type DialConfig = Record<string, Record<string, unknown>>;
 export interface VisibilityRule {
   when: string;
   is: unknown;
+  op?: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte';
+}
+
+export interface LayerOrderEntry {
+  id: string;
+  label: string;
+  color: string;
+  orderKey: string;
 }
 
 export interface ExperimentControls {
@@ -32,6 +40,8 @@ export interface ExperimentControls {
   presets?: Record<string, Partial<Record<string, unknown>>>;
   /** Per-control conditional visibility rules. */
   visibility?: Record<string, VisibilityRule>;
+  /** Draggable layer stack config — when present, the LayerStack UI is shown. */
+  layerOrder?: LayerOrderEntry[];
 }
 
 export interface ExperimentContext {

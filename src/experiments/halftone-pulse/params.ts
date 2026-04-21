@@ -1,0 +1,212 @@
+import type { ExperimentControls } from '../../core/Experiment.ts';
+
+export const controls: ExperimentControls = {
+  defaults: {
+    bgColor: '#0a0a12',
+    speed: 1.0,
+    paused: false,
+
+    // Source
+    fitMode: 'Fill',
+    texInfluence: 0.5,
+    useSourceColor: true,
+    texWarpOn: true,
+    texWarpScale: 3.0,
+    texWarpSpeed: 0.3,
+    texWarpStrength: 0.5,
+
+    // Grid
+    numSquares: 40,
+    baseRadius: 0.35,
+
+    // Noise 1
+    noiseOn: true,
+    noiseScale: 2.0,
+    noiseSpeed: 0.3,
+    noiseStrength: 0.15,
+
+    // Noise 2 (flow)
+    noise2On: true,
+    noise2Scale: 5.0,
+    noise2Speed: 0.8,
+    noise2Strength: 0.1,
+
+    // Pulse
+    pulseOn: true,
+    pulseRate: 1.0,
+    pulseDepth: 0.2,
+    pulseWave: 0.0,
+
+    // Color
+    colorOn: true,
+    colorA: '#ffffff',
+    colorB: '#4a9eff',
+    dotColor: '#ffffff',
+    colorSpeed: 0.5,
+    colorAngle: 0.0,
+    colorNoiseAmt: 0.3,
+
+    // Mouse
+    mouseNoiseBoost: 0.5,
+    mouseRepel: 0.0,
+    mouseRadius: 0.3,
+
+    // Post
+    brightness: 1.0,
+    contrast: 1.2,
+    postSaturation: 1.0,
+  },
+
+  dialConfig: {
+    Source: {
+      'Upload Asset': { type: 'action' },
+      fitMode: {
+        type: 'select',
+        default: 'Fill',
+        options: ['Fill', 'Contain', 'Cover'],
+      },
+      texInfluence: [0.5, 0.0, 1.0, 0.01],
+      useSourceColor: true,
+      texWarpOn: true,
+      texWarpScale: [3.0, 0.1, 10.0, 0.1],
+      texWarpSpeed: [0.3, 0.0, 2.0, 0.01],
+      texWarpStrength: [0.5, 0.0, 2.0, 0.01],
+      'Take Snapshot': { type: 'action' },
+    },
+    Grid: {
+      numSquares: { type: 'ub-1', default: 40, step: 1 },
+      baseRadius: [0.35, 0.01, 0.5, 0.01],
+    },
+    Noise: {
+      noiseOn: true,
+      noiseScale: [2.0, 0.1, 10.0, 0.1],
+      noiseSpeed: [0.3, 0.0, 2.0, 0.01],
+      noiseStrength: [0.15, 0.0, 0.4, 0.01],
+    },
+    Flow: {
+      noise2On: true,
+      noise2Scale: [5.0, 0.1, 20.0, 0.1],
+      noise2Speed: [0.8, 0.0, 3.0, 0.01],
+      noise2Strength: [0.1, 0.0, 0.4, 0.01],
+    },
+    Pulse: {
+      pulseOn: true,
+      pulseRate: [1.0, 0.1, 5.0, 0.01],
+      pulseDepth: [0.2, 0.0, 0.5, 0.01],
+      pulseWave: [0.0, 0.0, 1.0, 0.01],
+    },
+    Color: {
+      colorOn: true,
+      colorA: '#ffffff',
+      colorB: '#4a9eff',
+      dotColor: '#ffffff',
+      colorSpeed: [0.5, 0.0, 3.0, 0.01],
+      colorAngle: [0.0, -3.14159, 3.14159, 0.01],
+      colorNoiseAmt: [0.3, 0.0, 1.0, 0.01],
+    },
+    Mouse: {
+      mouseNoiseBoost: [0.5, 0.0, 2.0, 0.01],
+      mouseRepel: [0.0, 0.0, 0.3, 0.01],
+      mouseRadius: [0.3, 0.05, 1.0, 0.01],
+    },
+    Background: {
+      bgColor: '#0a0a12',
+    },
+    Post: {
+      brightness: [1.0, 0.0, 3.0, 0.01],
+      contrast: [1.2, 0.0, 3.0, 0.01],
+      postSaturation: [1.0, 0.0, 3.0, 0.01],
+    },
+    Animation: {
+      speed: [1.0, 0, 5, 0.01],
+      paused: false,
+    },
+  },
+
+  visibility: {
+    dotColor: { when: 'colorOn', is: false },
+  },
+
+  presets: {
+    'Ocean Drift': {
+      numSquares: 50,
+      baseRadius: 0.3,
+      noiseOn: true,
+      noiseScale: 3.0,
+      noiseSpeed: 0.15,
+      noiseStrength: 0.12,
+      noise2On: true,
+      noise2Scale: 8.0,
+      noise2Speed: 0.4,
+      noise2Strength: 0.08,
+      pulseOn: true,
+      pulseRate: 0.4,
+      pulseDepth: 0.1,
+      pulseWave: 0.6,
+      colorOn: true,
+      colorA: '#0a4a6e',
+      colorB: '#00e5ff',
+      colorSpeed: 0.2,
+      colorAngle: 1.57,
+      colorNoiseAmt: 0.5,
+      bgColor: '#020810',
+      contrast: 1.3,
+      texWarpOn: true,
+      texWarpScale: 2.0,
+      texWarpSpeed: 0.2,
+      texWarpStrength: 0.8,
+      mouseNoiseBoost: 0.8,
+      mouseRepel: 0.05,
+    },
+    'Breathing Grid': {
+      numSquares: 30,
+      baseRadius: 0.4,
+      noiseOn: false,
+      noise2On: false,
+      pulseOn: true,
+      pulseRate: 0.6,
+      pulseDepth: 0.35,
+      pulseWave: 0.8,
+      colorOn: false,
+      dotColor: '#ffffff',
+      bgColor: '#111111',
+      brightness: 1.0,
+      contrast: 1.0,
+      texWarpOn: false,
+      mouseNoiseBoost: 0.0,
+      mouseRepel: 0.15,
+      mouseRadius: 0.4,
+    },
+    'Neon Noise': {
+      numSquares: 60,
+      baseRadius: 0.32,
+      noiseOn: true,
+      noiseScale: 4.0,
+      noiseSpeed: 0.5,
+      noiseStrength: 0.2,
+      noise2On: true,
+      noise2Scale: 12.0,
+      noise2Speed: 1.2,
+      noise2Strength: 0.15,
+      pulseOn: true,
+      pulseRate: 1.5,
+      pulseDepth: 0.15,
+      pulseWave: 0.0,
+      colorOn: true,
+      colorA: '#ff00aa',
+      colorB: '#00ffcc',
+      colorSpeed: 0.8,
+      colorAngle: 0.78,
+      colorNoiseAmt: 0.7,
+      bgColor: '#05050a',
+      contrast: 1.5,
+      postSaturation: 1.3,
+      texWarpOn: true,
+      texWarpScale: 5.0,
+      texWarpSpeed: 0.6,
+      texWarpStrength: 0.4,
+      mouseNoiseBoost: 1.0,
+      mouseRepel: 0.1,
+    },
+  },
+};

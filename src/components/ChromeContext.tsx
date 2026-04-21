@@ -24,6 +24,13 @@ interface ChromeContextValue {
 
   /** Experiment share data — imperative (read at click time) */
   shareDataRef: MutableRefObject<{ slug: string; params: Record<string, unknown> } | null>;
+
+  /** Vision debug overlay — toggled from dock, read by VisionView */
+  visionDebugVisible: boolean;
+  setVisionDebugVisible: (v: boolean) => void;
+
+  /** Vision HUD pill — ChromeDock renders it, VisionView writes values into it. */
+  visionHudRef: MutableRefObject<HTMLElement | null>;
 }
 
 const ChromeContext = createContext<ChromeContextValue | null>(null);
@@ -31,11 +38,13 @@ const ChromeContext = createContext<ChromeContextValue | null>(null);
 export function ChromeProvider({ children }: { children: ReactNode }) {
   const [activeSection, setActiveSection] = useState('overview');
   const [tocSections, setTocSections] = useState<TocSection[]>([]);
+  const [visionDebugVisible, setVisionDebugVisible] = useState(true);
   const scrollToSectionRef = useRef<((id: string) => void) | null>(null);
   const shareDataRef = useRef<{ slug: string; params: Record<string, unknown> } | null>(null);
+  const visionHudRef = useRef<HTMLElement | null>(null);
 
   return (
-    <ChromeContext.Provider value={{ activeSection, setActiveSection, tocSections, setTocSections, scrollToSectionRef, shareDataRef }}>
+    <ChromeContext.Provider value={{ activeSection, setActiveSection, tocSections, setTocSections, scrollToSectionRef, shareDataRef, visionDebugVisible, setVisionDebugVisible, visionHudRef }}>
       {children}
     </ChromeContext.Provider>
   );

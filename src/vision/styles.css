@@ -1,0 +1,216 @@
+/* ============================================================
+   Vision — camera + hand-tracking experiment styles
+   ============================================================ */
+
+.vision-view {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.vision-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Permission gate ───────────────────────────────── */
+
+.vision-permission {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.vision-permission-card {
+  max-width: 420px;
+  padding: 32px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.vision-permission-card h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 12px;
+  color: var(--text-primary);
+}
+
+.vision-permission-card p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.vision-permission-error {
+  color: #ff7373 !important;
+  font-size: 13px !important;
+  margin-bottom: 16px !important;
+}
+
+.vision-permission-hint {
+  color: #ffd27a !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  margin-bottom: 16px !important;
+}
+
+.vision-permission-btn {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.vision-permission-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.vision-permission-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* ── Loading state ─────────────────────────────────── */
+
+.vision-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.vision-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: vision-spin 0.8s linear infinite;
+}
+
+@keyframes vision-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error state ───────────────────────────────────── */
+
+.vision-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.vision-error-message {
+  max-width: 420px;
+  color: #ff7373;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Debug HUD chips (lives inside a second chrome-dock pill) ── */
+
+.hud-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  height: 30px;
+  font-family: var(--font-mono);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hud-chip-label {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.hud-chip-suffix {
+  opacity: 0.6;
+  margin-left: -2px;
+}
+
+.hud-chip-value {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+  /* Preserve the padding spaces baked into textContent — without `pre`,
+     browsers collapse sequences of spaces to one, which would defeat the
+     fixed-width formatting and make chips jitter as numbers change. */
+  white-space: pre;
+}
+
+/* ── Gallery tabs ──────────────────────────────────── */
+
+.gallery-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.gallery-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast);
+}
+
+.gallery-tab:hover {
+  color: var(--text-secondary);
+}
+
+.gallery-tab.active {
+  color: var(--text-primary);
+}
+
+.gallery-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 1px;
+  background: var(--text-primary);
+}

@@ -9,6 +9,7 @@ import { useExperiment } from '../hooks/useExperiment.ts';
 import { useExperimentParams } from '../hooks/useExperimentParams.ts';
 import { useChrome } from './ChromeContext.tsx';
 import { ExportPanel } from './ExportPanel.tsx';
+import { LayerStack } from './LayerStack.tsx';
 import { VersionStore, type Version } from '../lib/versions.ts';
 import { decodeParams } from '../lib/sharing.ts';
 import { generateExport as generateFlowField } from '../experiments/flow-field/generateExport.ts';
@@ -16,6 +17,7 @@ import { generateExport as generateBloomDither } from '../experiments/bloom-dith
 import { generateExport as generateCelestialFlare } from '../experiments/celestial-flare/generateExport.ts';
 import { generateExport as generateDitherForge } from '../experiments/dither-forge/generateExport.ts';
 import { generateExport as generateDotTrace } from '../experiments/dot-trace/generateExport.ts';
+import { generateExport as generateAuroraDrift } from '../experiments/aurora-drift/generateExport.ts';
 import type { GenerateExportOptions } from '../experiments/flow-field/generateExport.ts';
 
 const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string> = {
@@ -24,6 +26,7 @@ const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string>
   'celestial-flare': generateCelestialFlare,
   'dither-forge': generateDitherForge,
   'dot-trace': generateDotTrace,
+  'aurora-drift': generateAuroraDrift,
 };
 
 interface ExperimentViewProps {
@@ -80,6 +83,7 @@ export function ExperimentView({
     slug,
     overrides,
     experiment?.controls.visibility,
+    experiment?.controls.presets,
   );
   const { error, loading } = useExperiment(canvasRef, experiment, params);
 
@@ -217,6 +221,14 @@ export function ExperimentView({
             activeVersionId={activeVersionId}
             onClose={() => setExportOpen(false)}
             generateInlineScript={hasExportGenerator ? getInlineScript : undefined}
+          />
+        )}
+
+        {experiment.controls.layerOrder && (
+          <LayerStack
+            params={params}
+            panelName={experiment.meta.title}
+            layers={experiment.controls.layerOrder}
           />
         )}
     </motion.div>

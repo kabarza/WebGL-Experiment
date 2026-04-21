@@ -1,0 +1,163 @@
+/* ============================================================
+   LayerStack — Draggable z-order reorder panel
+   Styled to match DialKit's dark, minimal aesthetic.
+   ============================================================ */
+
+.layer-stack {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 150;
+  width: 200px;
+  background: rgba(22, 22, 22, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.layer-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.layer-stack-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.layer-stack-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.layer-stack-list {
+  position: relative;
+  padding: 4px 0;
+}
+
+/* ── Individual layer item ── */
+
+.layer-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 14px;
+  cursor: grab;
+  transition: background 150ms ease;
+  touch-action: none;
+}
+
+.layer-item:active {
+  cursor: grabbing;
+}
+
+.layer-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.layer-item--dragging {
+  background: rgba(255, 255, 255, 0.08) !important;
+  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+}
+
+/* Drag handle icon (6 dots) */
+.layer-item-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0.25;
+  transition: opacity 150ms ease;
+}
+
+.layer-item:hover .layer-item-handle {
+  opacity: 0.5;
+}
+
+.layer-item--dragging .layer-item-handle {
+  opacity: 0.7;
+}
+
+.layer-item-handle-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.layer-item-handle-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+/* Color indicator */
+.layer-item-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Layer name */
+.layer-item-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layer-item--dragging .layer-item-label {
+  color: var(--text-primary);
+}
+
+/* Z-order badge */
+.layer-item-order {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+  min-width: 14px;
+  text-align: right;
+}
+
+/* Drop indicator line */
+.layer-stack-drop-indicator {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+  pointer-events: none;
+  transition: top 100ms ease, opacity 100ms ease;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 640px) {
+  .layer-stack {
+    bottom: 8px;
+    left: 8px;
+    width: 180px;
+  }
+}

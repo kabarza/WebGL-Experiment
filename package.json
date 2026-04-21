@@ -11,20 +11,24 @@
     "build:export": "tsx scripts/build-export.ts",
     "build:dialkit": "tsx scripts/build-dialkit-standalone.ts",
     "new-experiment": "tsx scripts/new-experiment.ts",
-    "postinstall": "sh scripts/patch-dialkit.sh"
+    "postinstall": "sh scripts/patch-dialkit.sh && tsx scripts/copy-mediapipe-assets.ts"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.34",
     "dialkit": "^1.2.0",
+    "lil-gui": "^0.21.0",
     "motion": "^12.38.0",
     "pako": "^2.1.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
     "@types/pako": "^2.0.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.183.1",
     "@vitejs/plugin-react": "^4.7.0",
     "@webgpu/types": "^0.1.52",
     "tsx": "^4.21.0",

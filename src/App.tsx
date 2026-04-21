@@ -9,13 +9,17 @@ import { Gallery } from './components/Gallery.tsx';
 import { ExperimentView } from './components/ExperimentView.tsx';
 import { FlowFieldArticle } from './components/FlowFieldArticle.tsx';
 import { CelestialFlareArticle } from './components/CelestialFlareArticle.tsx';
+import { AuroraDriftArticle } from './components/AuroraDriftArticle.tsx';
+import { ClapLensArticle } from './components/ClapLensArticle.tsx';
 import { ArticlePage } from './components/ArticlePage.tsx';
 import { ChromeProvider } from './components/ChromeContext.tsx';
 import { ChromeDock } from './components/ChromeDock.tsx';
 import { ControlTuner } from './components/ControlTuner.tsx';
+import { VisionView } from './vision/components/VisionView.tsx';
+import { findVisionExperiment } from './vision/registry.ts';
 
 export interface Route {
-  type: 'gallery' | 'experiment' | 'article' | 'tuner';
+  type: 'gallery' | 'experiment' | 'article' | 'tuner' | 'vision';
   slug?: string;
   params?: string; // base64 encoded params from share URL
 }
@@ -31,6 +35,11 @@ function parseRoute(): Route {
 
   if (path === '/tuner') {
     return { type: 'tuner' };
+  }
+
+  const visionMatch = path.match(/^\/vision\/([^?]+)$/);
+  if (visionMatch) {
+    return { type: 'vision', slug: visionMatch[1] };
   }
 
   const match = path.match(/^\/experiment\/([^?]+)$/);
@@ -72,8 +81,10 @@ export function App() {
   }, []);
 
   const navigateToExperiment = useCallback((slug: string) => {
-    history.pushState(null, '', `/experiment/${slug}`);
-    setRoute({ type: 'experiment', slug });
+    const isVision = !!findVisionExperiment(slug);
+    const path = isVision ? `/vision/${slug}` : `/experiment/${slug}`;
+    history.pushState(null, '', path);
+    setRoute({ type: isVision ? 'vision' : 'experiment', slug });
   }, []);
 
   const navigateToArticle = useCallback((slug: string) => {
@@ -96,11 +107,21 @@ export function App() {
           <ControlTuner key="tuner" />
         ) : route.type === 'gallery' ? (
           <Gallery key="gallery" />
+        ) : route.type === 'vision' && route.slug ? (
+          <VisionView
+            key={`vision-${route.slug}`}
+            slug={route.slug}
+            onBack={navigateToGallery}
+          />
         ) : route.type === 'article' && route.slug ? (
           route.slug === 'flow-field' ? (
             <FlowFieldArticle key="article-flow-field" />
           ) : route.slug === 'celestial-flare' ? (
             <CelestialFlareArticle key="article-celestial-flare" />
+          ) : route.slug === 'aurora-drift' ? (
+            <AuroraDriftArticle key="article-aurora-drift" />
+          ) : route.slug === 'lens' ? (
+            <ClapLensArticle key="article-lens" />
           ) : (
             <ArticlePage key={`article-${route.slug}`} slug={route.slug} />
           )
@@ -116,7 +137,7 @@ export function App() {
           />
         ) : null}
       </AnimatePresence>
-      {(route.type === 'experiment' || route.type === 'tuner') && (
+      {(route.type === 'experiment' || route.type === 'tuner' || route.type === 'vision') && (
         <DialRoot productionEnabled defaultOpen={window.innerWidth > 1000} />
       )}
     </ChromeProvider>

@@ -299,6 +299,13 @@ export interface UseExperimentParamsResult {
   params: Record<string, unknown>;
 }
 
+export interface UseExperimentParamsOptions {
+  /** Name of a seeded preset to auto-load on first seed (so the dropdown
+   *  shows a specific preset name instead of "Default"). Only fires when
+   *  no preset is already active. */
+  defaultPresetName?: string;
+}
+
 export function useExperimentParams(
   title: string,
   dialConfig: DialConfig | undefined,
@@ -306,6 +313,8 @@ export function useExperimentParams(
   slug: string,
   overrides?: Record<string, unknown>,
   visibility?: Record<string, VisibilityRule>,
+  presets?: Record<string, Partial<Record<string, unknown>>>,
+  options?: UseExperimentParamsOptions,
 ): UseExperimentParamsResult {
   // ── Compute the DialKit-derived defaults ONCE ──────────────
   const [dialDefaults] = useState(() =>
@@ -386,6 +395,44 @@ export function useExperimentParams(
     onAction: handleAction,
   }) as Record<string, unknown>;
 
+  // ── Seed experiment presets into DialKit's version dropdown ──
+  const presetsRef = useRef(presets);
+  presetsRef.current = presets;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  const seededRef = useRef(false);
+
+  useEffect(() => {
+    if (seededRef.current || !presetsRef.current) return;
+    const panels = DialStore.getPanels();
+    const panel = panels.find((p: { name: string }) => p.name === title);
+    if (!panel) return;
+
+    // Convert flat preset values → dotted-path format DialKit uses
+    const mapped = Object.entries(presetsRef.current).map(([name, flat]) => {
+      const values: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(flat)) {
+        const path = pathMap.get(key);
+        if (path) values[path] = val;
+      }
+      return { name, values };
+    });
+
+    DialStore.seedPresets(panel.id, mapped as Parameters<typeof DialStore.seedPresets>[1]);
+    seededRef.current = true;
+
+    // Auto-load the named default preset so the dropdown shows that name
+    // instead of "Default" on first open. Read once from options (captured
+    // at seed time) — kept out of the deps array so the effect's deps-
+    // length stays stable across callers that do/don't pass options.
+    const defaultName = optionsRef.current?.defaultPresetName;
+    if (defaultName && !DialStore.getActivePresetId(panel.id)) {
+      const seeded = DialStore.getPresets(panel.id);
+      const target = seeded.find((p) => p.name === defaultName);
+      if (target) DialStore.loadPreset(panel.id, target.id);
+    }
+  }, [title, pathMap, dialValues]);
+
   // ── Stable mutable ref — the experiment reads this every frame ──
   const paramsRef = useRef<Record<string, unknown>>({ ...defaults });
 
@@ -450,7 +497,12 @@ export function useExperimentParams(
 
     // DialKit formats camelCase keys into Title Case labels.
     const formatLabel = (key: string) =>
-      key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+      key
+        .replace(/([a-zA-Z])(\d)/g, '$1 $2')
+        .replace(/(\d)([a-zA-Z])/g, '$1 $2')
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (s) => s.toUpperCase())
+        .trim();
 
     // Collect all label elements inside DialKit panels.
     const labelSelectors = [
@@ -491,7 +543,23 @@ export function useExperimentParams(
         const label = formatLabel(key);
         const row = findControlRow(label);
         if (row) {
-          const visible = params[rule.when] === rule.is;
+          const lhs = params[rule.when];
+          const rhs = rule.is;
+          const op = rule.op ?? 'eq';
+
+          let visible = false;
+          if (op === 'eq') visible = lhs === rhs;
+          else if (op === 'neq') visible = lhs !== rhs;
+          else {
+            const a = typeof lhs === 'number' ? lhs : Number(lhs);
+            const b = typeof rhs === 'number' ? rhs : Number(rhs);
+            if (Number.isFinite(a) && Number.isFinite(b)) {
+              if (op === 'gt') visible = a > b;
+              else if (op === 'gte') visible = a >= b;
+              else if (op === 'lt') visible = a < b;
+              else if (op === 'lte') visible = a <= b;
+            }
+          }
           row.style.display = visible ? '' : 'none';
         }
       }
@@ -507,9 +575,16 @@ export function useExperimentParams(
       ? DialStore.subscribe(panel.id, applyVisibility)
       : undefined;
 
+    // DialKit expands folders on user click without a DialStore notification,
+    // so controls can be added to the DOM without `applyVisibility` firing.
+    // A MutationObserver catches that: any time the panel DOM grows, re-apply.
+    const observer = new MutationObserver(() => applyVisibility());
+    observer.observe(document.body, { childList: true, subtree: true });
+
     return () => {
       clearTimeout(timer);
       unsub?.();
+      observer.disconnect();
     };
   }, [title, dialValues]);
 

@@ -211,6 +211,25 @@ var DialStoreClass = class {
     this.activePreset.set(panelId, null);
     this.notify(panelId);
   }
+  /**
+   * Seed named presets from experiment config. Each preset's values
+   * are merged with the current base panel values so loadPreset gets
+   * a complete snapshot. Only seeds if no presets exist yet.
+   */
+  seedPresets(panelId, presets) {
+    const panel = this.panels.get(panelId);
+    if (!panel) return;
+    const existing = this.presets.get(panelId) ?? [];
+    if (existing.length > 0) return;
+    const seeded = presets.map(({ name, values }) => ({
+      id: `preset-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      name,
+      values: { ...panel.values, ...values }
+    }));
+    this.presets.set(panelId, seeded);
+    this.snapshots.set(panelId, { ...panel.values });
+    this.notify(panelId);
+  }
   resolveShortcutTarget(key, modifier) {
     for (const panel of this.panels.values()) {
       for (const [path, shortcut] of Object.entries(panel.shortcuts)) {
@@ -303,7 +322,7 @@ var DialStoreClass = class {
       } else if (this.isTextConfig(value)) {
         controls.push({ type: "text", path, label, placeholder: value.placeholder });
       } else if (this.isUBConfig(value)) {
-        controls.push({ type: value.type, path, label, step: value.step ?? 1 });
+        controls.push({ type: value.type, path, label, step: value.step ?? 1, options: value.options });
       } else if (typeof value === "string") {
         if (this.isHexColor(value)) {
           controls.push({ type: "color", path, label });
@@ -2069,7 +2088,7 @@ function PresetManager({ panelId, presets, activePresetId, onAdd }) {
         "data-has-preset": String(!!activePreset),
         "data-disabled": String(!hasPresets),
         children: [
-          /* @__PURE__ */ jsx13("span", { className: "dialkit-preset-label", children: activePreset ? activePreset.name : "Version 1" }),
+          /* @__PURE__ */ jsx13("span", { className: "dialkit-preset-label", children: activePreset ? activePreset.name : "Default" }),
           /* @__PURE__ */ jsx13(
             motion4.svg,
             {
@@ -2100,13 +2119,16 @@ function PresetManager({ panelId, presets, activePresetId, onAdd }) {
           exit: { opacity: 0, y: 4, scale: 0.97, pointerEvents: "none" },
           transition: { type: "spring", visualDuration: 0.15, bounce: 0 },
           children: [
-            /* @__PURE__ */ jsx13(
+            // Hide the "Default" fallback entry when seeded presets exist —
+            // experiments that seed presets already expose a named baseline
+            // (e.g., "Clap"), so "Default" is redundant and confusing.
+            presets.length === 0 && /* @__PURE__ */ jsx13(
               "div",
               {
                 className: "dialkit-preset-item",
                 "data-active": String(!activePresetId),
                 onClick: () => handleSelect(null),
-                children: /* @__PURE__ */ jsx13("span", { className: "dialkit-preset-name", children: "Version 1" })
+                children: /* @__PURE__ */ jsx13("span", { className: "dialkit-preset-name", children: "Default" })
               }
             ),
             presets.map((preset) => /* @__PURE__ */ jsxs12(
@@ -2616,6 +2638,114 @@ function UBControl({ variant, label, value, step, onChange }) {
   return null;
 }
 
+// src/components/UBLayerStackControl.tsx
+var DEFAULT_LAYER_STACK_IDS = ["aurora", "image", "circle", "grain"];
+var DEFAULT_LAYER_STACK_LABELS = {
+  aurora: "Aurora Veil",
+  image: "Image Plate",
+  circle: "Particle Circle",
+  grain: "Film Grain"
+};
+function parseLayerStackValue(value) {
+  var parsed = [];
+  var seen = /* @__PURE__ */ new Set();
+  if (typeof value === "string") {
+    var raw = value.split(/[,\s|>]+/).map((id) => id.trim().toLowerCase()).filter(Boolean);
+    for (var i = 0; i < raw.length; i++) {
+      var id = raw[i];
+      if (!DEFAULT_LAYER_STACK_LABELS[id] || seen.has(id)) continue;
+      seen.add(id);
+      parsed.push(id);
+    }
+  }
+  for (var j = 0; j < DEFAULT_LAYER_STACK_IDS.length; j++) {
+    var fallback = DEFAULT_LAYER_STACK_IDS[j];
+    if (!seen.has(fallback)) {
+      seen.add(fallback);
+      parsed.push(fallback);
+    }
+  }
+  return parsed.slice(0, 4);
+}
+function reorderLayerIds(order, fromId, toId) {
+  if (fromId === toId) return order;
+  var fromIdx = order.indexOf(fromId);
+  var toIdx = order.indexOf(toId);
+  if (fromIdx === -1 || toIdx === -1) return order;
+  var next = order.slice();
+  next.splice(fromIdx, 1);
+  next.splice(toIdx, 0, fromId);
+  return next;
+}
+function UBLayerStackControl({ label, value, onChange }) {
+  var [order, setOrder] = useStateUB(() => parseLayerStackValue(value));
+  var [draggingId, setDraggingId] = useStateUB(null);
+  var [overId, setOverId] = useStateUB(null);
+  useEffectUB(() => {
+    setOrder(parseLayerStackValue(value));
+  }, [value]);
+  var commitOrder = useCallbackUB((next) => {
+    setOrder(next);
+    onChange(next.join(","));
+  }, [onChange]);
+  var onDragStart = (id, e) => {
+    setDraggingId(id);
+    setOverId(id);
+    try {
+      e.dataTransfer.setData("text/plain", id);
+    } catch {
+      // ignore DataTransfer failures
+    }
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+    }
+  };
+  var onDragOver = (id, e) => {
+    if (!draggingId) return;
+    e.preventDefault();
+    if (id === draggingId) return;
+    setOverId(id);
+    setOrder((prev) => reorderLayerIds(prev, draggingId, id));
+  };
+  var onDrop = (id, e) => {
+    e.preventDefault();
+    if (!draggingId) return;
+    var next = reorderLayerIds(order, draggingId, id);
+    commitOrder(next);
+    setDraggingId(null);
+    setOverId(null);
+  };
+  var onDragEnd = () => {
+    if (draggingId) {
+      onChange(order.join(","));
+    }
+    setDraggingId(null);
+    setOverId(null);
+  };
+  return jsxsUB("div", { className: "ub-layer-stack-control", children: [
+    jsxUB("span", { className: "dialkit-labeled-control-label", children: label }),
+    jsxUB("div", { className: "ub-layer-stack", children: order.map((id, index) => jsxsUB(
+      "button",
+      {
+        type: "button",
+        draggable: true,
+        onPointerDown: (e) => e.stopPropagation(),
+        onDragStart: (e) => onDragStart(id, e),
+        onDragOver: (e) => onDragOver(id, e),
+        onDrop: (e) => onDrop(id, e),
+        onDragEnd,
+        className: `ub-layer-stack__item ${draggingId === id ? "ub-layer-stack__item--dragging" : ""} ${overId === id && draggingId !== id ? "ub-layer-stack__item--over" : ""}`,
+        children: [
+          jsxUB("span", { className: "ub-layer-stack__index", children: String(index + 1).padStart(2, "0") }),
+          jsxUB("span", { className: "ub-layer-stack__name", children: DEFAULT_LAYER_STACK_LABELS[id] ?? id }),
+          jsxUB("span", { className: "ub-layer-stack__grab", children: "|||" })
+        ]
+      },
+      id
+    )) })
+  ] });
+}
+
 // src/components/ToggleVariant.tsx — Custom toggle variants (ub-t1, t6, t11, t12)
 import { useRef as useRefTV, useCallback as useCallbackTV, useLayoutEffect as useLayoutEffectTV } from "react";
 import { jsx as jsxTV, jsxs as jsxsTV } from "react/jsx-runtime";
@@ -2838,6 +2968,8 @@ Apply these values as the new defaults in the useDialKit call.`;
         );
       case "ub-1": case "ub-2": case "ub-3": case "ub-4": case "ub-5": case "ub-6": case "ub-7": case "ub-8":
         return /* @__PURE__ */ jsx14(UBControl, { variant: control.type, label: control.label, value, step: control.step ?? 1, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
+      case "ub-layer-stack":
+        return /* @__PURE__ */ jsx14(UBLayerStackControl, { label: control.label, value, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
       case "ub-t1": case "ub-t6": case "ub-t11": case "ub-t12":
         return /* @__PURE__ */ jsx14(ToggleVariant, { variant: control.type, label: control.label, value, onChange: (v) => DialStore.updateValue(panel.id, control.path, v) }, control.path);
       default:
