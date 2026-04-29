@@ -105,7 +105,7 @@ export const controls: ExperimentControls = {
     // Snake head icon (GPS arrow that rides the head, oriented by heading)
     showSnakeIcon: true,
     snakeIconColor: '#ffffff',
-    snakeIconSize: 22,
+    snakeIconSize: 12,
     snakeIconOpacity: 1.0,
     snakeIconRotationOffset: 0,
 
@@ -183,7 +183,7 @@ export const controls: ExperimentControls = {
       _collapsed: false,
       showSnakeIcon: true,
       snakeIconColor: '#ffffff',
-      snakeIconSize: [22, 8, 80, 1],
+      snakeIconSize: [12, 8, 80, 1],
       snakeIconOpacity: [1.0, 0, 1, 0.01],
       snakeIconRotationOffset: [0, -180, 180, 1],
     },
