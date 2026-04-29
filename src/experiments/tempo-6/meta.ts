@@ -7,4 +7,5 @@ export const meta: ExperimentMeta = {
   tags: ['glsl', 'aurora', 'layers', 'image', 'particles', 'grain', 'dialkit'],
   date: '2026-04-08',
   hasArticle: false,
+  draft: false,
 };

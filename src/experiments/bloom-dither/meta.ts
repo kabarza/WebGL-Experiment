@@ -7,4 +7,5 @@ export const meta: ExperimentMeta = {
   tags: ['glsl', 'generative', 'dither', 'bloom'],
   date: '2026-04-07',
   hasArticle: false,
+  draft: true,
 };

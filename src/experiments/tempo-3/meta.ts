@@ -7,4 +7,5 @@ export const meta: ExperimentMeta = {
   tags: ['composite', 'lens-flare', 'aurora', 'particles', 'grain', 'glsl'],
   date: '2026-04-08',
   hasArticle: false,
+  draft: true,
 };

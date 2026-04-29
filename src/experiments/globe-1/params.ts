@@ -95,17 +95,26 @@ export const controls: ExperimentControls = {
     // Snake animation
     snakeIntervalMin: 0.1,
     snakeIntervalMax: 0.6,
-    snakeSpeed: 0.82,
-    snakeTrailLength: 93,
+    snakeSpeed: 0.44,
+    snakeTrailLength: 31,
     snakeWidth: 1.0,
-    snakeFlashDuration: 1.6,
+    snakeFlashDuration: 2.2,
     snakeIntensity: 0.1,
     snakeEase: DEFAULT_SNAKE_EASE,
     // When true, a finished route doesn't wind up + restart. Instead the
     // head pauses at the destination, then a new destination is appended
     // to the SAME path so the trail and head icon stay continuous.
     // The pause duration reuses snakeIntervalMin/Max.
-    snakeContinuous: false,
+    snakeContinuous: true,
+    // Spring-tail dynamics. The tail is a damped point pulled toward
+    // (head − snakeTrailMin); when the head accelerates the tail can't
+    // keep up so the gap stretches (capped at snakeTrailMax). When the
+    // head stops the tail catches up exponentially-ish but never closes
+    // the minimum gap. snakeTrailFollow is the single "tightness" knob
+    // (0 = lazy/very stretchy, 1 = snappy/short tail).
+    snakeTrailMin: 0.06,
+    snakeTrailMax: 0.55,
+    snakeTrailFollow: 0.45,
 
     // Snake head icon (GPS arrow that rides the head, oriented by heading)
     showSnakeIcon: true,
@@ -174,14 +183,17 @@ export const controls: ExperimentControls = {
     Snake: {
       _collapsed: false,
       showSnake: true,
-      snakeContinuous: false,
+      snakeContinuous: true,
       accentColor: '#ffffff',
       snakeWidth: [1.0, 1, 12, 0.1],
       snakeIntervalMin: [0.1, 0.1, 8, 0.05],
       snakeIntervalMax: [0.6, 0.2, 12, 0.05],
-      snakeSpeed: [0.82, 0.2, 6, 0.01],
-      snakeTrailLength: [93, 4, 120, 1],
-      snakeFlashDuration: [1.6, 0.1, 2.5, 0.05],
+      snakeSpeed: [0.44, 0.2, 6, 0.01],
+      snakeTrailLength: [31, 4, 120, 1],
+      snakeTrailMin: [0.06, 0.01, 1.0, 0.005],
+      snakeTrailMax: [0.55, 0.05, 3.0, 0.01],
+      snakeTrailFollow: [0.45, 0.05, 1.0, 0.01],
+      snakeFlashDuration: [2.2, 0.1, 2.5, 0.05],
       snakeIntensity: [0.1, 0.1, 3.0, 0.01],
       snakeEase: DEFAULT_SNAKE_EASE,
     },

@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['svg', 'animation', 'progressive-reveal', 'dot-art'],
   date: '2026-04-07',
   hasArticle: false,
+  draft: true,
 };

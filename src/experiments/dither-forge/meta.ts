@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['glsl', 'dither', 'halftone', 'image-processing'],
   date: '2026-04-07',
   hasArticle: false,
+  draft: true,
 };

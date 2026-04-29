@@ -433,9 +433,16 @@ interface SnakeRoute {
   phase: SnakePhase;
   // Valid when phase === 'pause'.
   pauseUntil: number;
-  // Valid when phase === 'wind-up' (legacy mode tail catch-up).
-  windupStartTime: number;
-  windupTailStart: number;
+
+  // Spring-tail state. tailDist is the position of the trail's back
+  // end along the cumulative-length axis; tailVel is its rate of change
+  // (units/sec). The tail is a damped harmonic oscillator pulled toward
+  //   target = headDist − minGap   (in travel + pause), or
+  //   target = headDist             (in wind-up, so the trail closes)
+  // and clamped so it never crosses the head and never lags more than
+  // maxGap behind it.
+  tailDist: number;
+  tailVel: number;
 }
 
 class SnakeController {
@@ -521,8 +528,8 @@ class SnakeController {
       flashed: false,
       phase: 'travel',
       pauseUntil: 0,
-      windupStartTime: 0,
-      windupTailStart: 0,
+      tailDist: 0,
+      tailVel: 0,
     };
     this.lastHeadDist = 0;
     this.line.visible = true;
@@ -568,21 +575,20 @@ class SnakeController {
     r.phase = 'travel';
   }
 
-  private enterWindup(now: number) {
+  private enterWindup(_now: number) {
     if (!this.active) return;
     const r = this.active;
     r.phase = 'wind-up';
-    r.windupStartTime = now;
-    // Tail at wind-up start = head - trailLen at the speed used the
-    // moment we entered wind-up. Speed can change later; we recompute
-    // the tail's progress against the current speed each frame.
-    r.windupTailStart = Math.max(0, r.legEndDist - 0.04);
+    // Spring tail keeps its current state; only the target switches
+    // (head − minGap → head), so the closing motion looks like a
+    // continuation, not a jump.
   }
 
   // Update geometry. Returns destination index when an arrival event
   // fires (so the render loop can flash that country's marker).
   update(
     now: number,
+    dt: number,
     speed: number,
     intensity: number,
     easing: (u: number) => number,
@@ -591,6 +597,9 @@ class SnakeController {
       pauseMin: number;
       pauseMax: number;
       countries: Country[];
+      trailMin: number;
+      trailMax: number;
+      trailFollow: number;
     },
   ): number {
     if (!this.active) {
@@ -598,7 +607,6 @@ class SnakeController {
       return -1;
     }
     const r = this.active;
-    const trailLen = Math.max(0.04, speed * 0.4);
     let arrived = -1;
 
     // ── Head ──
@@ -638,18 +646,53 @@ class SnakeController {
         headDist = r.legStartDist;
       }
     } else {
-      // 'wind-up' — head holds at end while tail catches up.
+      // 'wind-up' — head holds at end while spring tail closes the gap.
       headDist = r.legEndDist;
     }
 
-    // ── Tail ──
-    let tailDist: number;
+    // ── Spring tail ──
+    // Map the single follow knob to a stiffness/damping pair. We pick
+    // damping ≈ 0.7× critical so the tail very slightly overshoots
+    // before settling — that lift is what kills the "robotic" feel,
+    // because the tail keeps ghosting forward briefly when the head
+    // stops, instead of locking into place.
+    const minGap = Math.max(0.001, opts.trailMin);
+    const maxGap = Math.max(minGap + 0.001, opts.trailMax);
+    const stiffness = 10 + opts.trailFollow * 200;
+    const damping = 0.7 * 2 * Math.sqrt(stiffness);
+    const targetTail = (r.phase === 'wind-up') ? headDist : headDist - minGap;
+
+    // Sub-step the spring so behaviour stays stable when dt is large
+    // (e.g. tab refocus). 4 steps is plenty for this stiffness range.
+    const STEPS = 4;
+    const h = Math.max(1e-4, dt / STEPS);
+    for (let s = 0; s < STEPS; s++) {
+      const error = targetTail - r.tailDist;
+      const accel = stiffness * error - damping * r.tailVel;
+      r.tailVel += accel * h;
+      r.tailDist += r.tailVel * h;
+    }
+
+    // Clamp gap to [minGap, maxGap] in non-wind-up phases. In wind-up
+    // we let the tail drive all the way up to the head.
     if (r.phase === 'wind-up') {
-      const tAfter = now - r.windupStartTime;
-      tailDist = Math.min(r.legEndDist, r.windupTailStart + tAfter * speed);
+      if (r.tailDist > headDist) {
+        r.tailDist = headDist;
+        if (r.tailVel > 0) r.tailVel = 0;
+      }
     } else {
-      // travel + pause both keep a fixed-length trail behind the head.
-      tailDist = Math.max(0, headDist - trailLen);
+      if (r.tailDist > headDist - minGap) {
+        r.tailDist = headDist - minGap;
+        if (r.tailVel > 0) r.tailVel = 0;
+      }
+      if (r.tailDist < headDist - maxGap) {
+        r.tailDist = headDist - maxGap;
+        if (r.tailVel < 0) r.tailVel = 0;
+      }
+    }
+    if (r.tailDist < 0) {
+      r.tailDist = 0;
+      if (r.tailVel < 0) r.tailVel = 0;
     }
 
     // Sample N points along path between tail..head.
@@ -659,7 +702,7 @@ class SnakeController {
     const baseCol = this.material.color;
     for (let i = 0; i < N; i++) {
       const tt = i / (N - 1);
-      const d = THREE.MathUtils.lerp(tailDist, headDist, tt);
+      const d = THREE.MathUtils.lerp(r.tailDist, headDist, tt);
       const p = this.sampleAt(d);
       positions[i * 3 + 0] = p.x;
       positions[i * 3 + 1] = p.y;
@@ -675,7 +718,7 @@ class SnakeController {
 
     this.lastHeadDist = headDist;
 
-    if (r.phase === 'wind-up' && tailDist >= r.legEndDist - 1e-4) {
+    if (r.phase === 'wind-up' && r.tailDist >= r.legEndDist - 1e-3) {
       this.active = null;
       this.line.visible = false;
     }
@@ -1569,6 +1612,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
         const continuous = (params.snakeContinuous as boolean) === true;
         const arrived = snake.update(
           time,
+          dt,
           params.snakeSpeed as number,
           params.snakeIntensity as number,
           ease,
@@ -1577,6 +1621,9 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
             pauseMin: params.snakeIntervalMin as number,
             pauseMax: params.snakeIntervalMax as number,
             countries: snappedCountries,
+            trailMin: params.snakeTrailMin as number,
+            trailMax: params.snakeTrailMax as number,
+            trailFollow: params.snakeTrailFollow as number,
           },
         );
         if (arrived >= 0 && arrived < markers.length) {

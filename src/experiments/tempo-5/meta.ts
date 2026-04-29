@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['glsl', 'aurora', 'particles', 'image', 'grain', 'layers', 'webgl2'],
   date: '2026-04-08',
   hasArticle: false,
+  draft: true,
 };
