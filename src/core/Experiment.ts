@@ -10,6 +10,10 @@ export interface ExperimentMeta {
   thumbnail?: string;
   date: string; // ISO date for sorting
   hasArticle?: boolean;
+  /** Hide the experiment from the gallery in production. Visible in dev. */
+  draft?: boolean;
+  /** Hide the article in production (experiment still ships). Visible in dev. */
+  articleDraft?: boolean;
 }
 
 export type DialConfig = Record<string, Record<string, unknown>>;

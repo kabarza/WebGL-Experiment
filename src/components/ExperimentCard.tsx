@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import type { ExperimentMeta } from '../core/Experiment.ts';
+import { DraftBadge } from './DraftBadge.tsx';
 
 function getCachedThumbnail(slug: string): string | null {
   try {
@@ -44,10 +45,26 @@ export function ExperimentCard({ meta, onClick }: ExperimentCardProps) {
             loading="lazy"
             onError={() => setImgFailed(true)}
           />
+          {import.meta.env.DEV && (
+            <DraftBadge
+              slug={meta.slug}
+              hasArticle={!!meta.hasArticle}
+              draft={!!meta.draft}
+              articleDraft={!!meta.articleDraft}
+            />
+          )}
         </div>
       ) : (
         <div className="card-thumbnail card-thumbnail--placeholder">
           <span>{meta.title[0]}</span>
+          {import.meta.env.DEV && (
+            <DraftBadge
+              slug={meta.slug}
+              hasArticle={!!meta.hasArticle}
+              draft={!!meta.draft}
+              articleDraft={!!meta.articleDraft}
+            />
+          )}
         </div>
       )}
       <div className="card-body">

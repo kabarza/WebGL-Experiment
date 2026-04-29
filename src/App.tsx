@@ -9,9 +9,11 @@ import { Gallery } from './components/Gallery.tsx';
 import { ExperimentView } from './components/ExperimentView.tsx';
 import { FlowFieldArticle } from './components/FlowFieldArticle.tsx';
 import { CelestialFlareArticle } from './components/CelestialFlareArticle.tsx';
+import { Globe1Article } from './components/Globe1Article.tsx';
 import { AuroraDriftArticle } from './components/AuroraDriftArticle.tsx';
 import { ClapLensArticle } from './components/ClapLensArticle.tsx';
 import { ArticlePage } from './components/ArticlePage.tsx';
+import { isArticleVisible } from './experiments/registry.ts';
 import { ChromeProvider } from './components/ChromeContext.tsx';
 import { ChromeDock } from './components/ChromeDock.tsx';
 import { ControlTuner } from './components/ControlTuner.tsx';
@@ -113,7 +115,7 @@ export function App() {
             slug={route.slug}
             onBack={navigateToGallery}
           />
-        ) : route.type === 'article' && route.slug ? (
+        ) : route.type === 'article' && route.slug && isArticleVisible(route.slug) ? (
           route.slug === 'flow-field' ? (
             <FlowFieldArticle key="article-flow-field" />
           ) : route.slug === 'celestial-flare' ? (
@@ -122,9 +124,14 @@ export function App() {
             <AuroraDriftArticle key="article-aurora-drift" />
           ) : route.slug === 'lens' ? (
             <ClapLensArticle key="article-lens" />
+          ) : route.slug === 'globe-1' ? (
+            <Globe1Article key="article-globe-1" />
           ) : (
             <ArticlePage key={`article-${route.slug}`} slug={route.slug} />
           )
+        ) : route.type === 'article' ? (
+          // Article hidden (draft) in production — fall back to gallery.
+          <Gallery key="gallery-fallback" />
         ) : route.slug ? (
           <ExperimentView
             key={route.slug}

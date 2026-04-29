@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { viteDraftPlugin } from './scripts/vite-draft-plugin.ts';
 
 /**
  * Vite plugin: WGSL loader with #include support
@@ -81,7 +82,7 @@ function glslPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), wgslIncludePlugin(), glslPlugin()],
+  plugins: [react(), wgslIncludePlugin(), glslPlugin(), viteDraftPlugin()],
   build: {
     target: 'es2022',
     minify: 'esbuild',

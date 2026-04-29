@@ -344,8 +344,11 @@ class CountryMarker {
     latLonToVec3(latDeg, lonDeg, MARKER_RADIUS, this.basePosition);
     this.group.position.copy(this.basePosition);
     if (this.surface) {
-      // mesh.lookAt orients the local -Z toward the target, so +Z then
-      // points outward along the sphere normal — exactly what we want.
+      // For Mesh (unlike Camera), Object3D.lookAt orients local +Z
+      // toward the target — so lookAt(0,0,0) makes +Z point inward
+      // along the sphere normal. The plane therefore lies tangent to
+      // the sphere; which face is outward doesn't matter because we
+      // use side: DoubleSide on the material.
       this.cross.lookAt(0, 0, 0);
     }
   }
@@ -413,6 +416,10 @@ class SnakeController {
   scratch: Float32Array;
   active: SnakeRoute | null = null;
   scheduled: number | null = null; // absolute time, null = not scheduled
+  // Last computed head distance along the active path. Used by the
+  // snake icon to compute a stable head position + tangent without
+  // having to re-derive timing inside the icon.
+  lastHeadDist = 0;
 
   constructor(trailLength: number, accent: string) {
     this.trailLength = trailLength;
@@ -481,6 +488,7 @@ class SnakeController {
       startedAt: now,
       flashed: false,
     };
+    this.lastHeadDist = 0;
     this.line.visible = true;
   }
 
@@ -542,6 +550,8 @@ class SnakeController {
     this.geom.setColors(colorArray);
     this.line.computeLineDistances();
 
+    this.lastHeadDist = headDist;
+
     let arrived = -1;
     if (!r.flashed && headDist >= r.totalDistance - 1e-4) {
       r.flashed = true;
@@ -554,7 +564,36 @@ class SnakeController {
     return arrived;
   }
 
-  private sampleAt(d: number): THREE.Vector3 {
+  // Sample a stable tangent direction near the head. Looks slightly
+  // forward at the very start of a route (when headDist ≈ 0 there is
+  // no behind-point), and slightly backward otherwise. Returns false
+  // when no route is active.
+  sampleHeadAndTangent(headOut: THREE.Vector3, tangentOut: THREE.Vector3): boolean {
+    if (!this.active) return false;
+    const total = this.active.totalDistance;
+    const back = Math.min(0.04, total * 0.05);
+    const headD = Math.min(total, Math.max(0, this.lastHeadDist));
+    headOut.copy(this.sampleAt(headD));
+    let aD: number;
+    let bD: number;
+    if (headD < back) {
+      aD = headD;
+      bD = Math.min(total, headD + back);
+    } else {
+      aD = Math.max(0, headD - back);
+      bD = headD;
+    }
+    if (bD - aD < 1e-5) {
+      tangentOut.set(0, 0, 0);
+      return true;
+    }
+    const a = this.sampleAt(aD);
+    const b = this.sampleAt(bD);
+    tangentOut.copy(b).sub(a);
+    return true;
+  }
+
+  sampleAt(d: number): THREE.Vector3 {
     const r = this.active!;
     const cum = r.cumulative;
     if (d <= 0) return r.path[0];
@@ -573,6 +612,132 @@ class SnakeController {
   dispose() {
     this.geom.dispose();
     this.material.dispose();
+  }
+}
+
+// ── Snake head icon (GPS arrow) ───────────────────────────────
+//
+// HTML/SVG element mounted as a CSS2DObject and parented to `world`,
+// so its world matrix tracks the globe rotation. Each frame we:
+//   1. position it at the snake head's local position (same space as
+//      the path samples), and
+//   2. rotate the inner element by the screen-space heading of the
+//      path tangent — atan2(dx, dy) on NDC deltas, where +y is up so
+//      "moving up the screen" = 0° (clockwise from up).
+//
+// The bundled GPS arrow points up-right (≈2 o'clock). To make 0°
+// rotation mean "north", a -45° rotation is baked into the SVG via a
+// <g transform>; the inner SVG runs `overflow: visible` so the rotated
+// arrow isn't clipped by the original viewBox.
+const ICON_STYLE_ID = 'globe-1-snake-icon-css';
+const SNAKE_ICON_SVG_PATH =
+  'M443.537,3.805c-3.84-3.84-9.686-4.893-14.625-2.613L7.553,195.239' +
+  'c-4.827,2.215-7.807,7.153-7.535,12.459c0.254,5.305,3.727,9.908,8.762,11.63' +
+  'l129.476,44.289c21.349,7.314,38.125,24.089,45.438,45.438l44.321,129.509' +
+  'c1.72,5.018,6.325,8.491,11.63,8.762c5.306,0.271,10.244-2.725,12.458-7.535' +
+  'L446.15,18.429C448.428,13.491,447.377,7.644,443.537,3.805z';
+
+function ensureSnakeIconStyles() {
+  if (document.getElementById(ICON_STYLE_ID)) return;
+  const el = document.createElement('style');
+  el.id = ICON_STYLE_ID;
+  el.textContent = `
+    .globe-1-snake-icon {
+      pointer-events: none;
+      will-change: opacity;
+    }
+    .globe-1-snake-icon-rotor {
+      display: block;
+      transform-origin: 50% 50%;
+      will-change: transform;
+      line-height: 0;
+    }
+    .globe-1-snake-icon-svg {
+      display: block;
+      overflow: visible;
+    }
+  `;
+  document.head.appendChild(el);
+}
+
+class SnakeIcon {
+  el: HTMLElement;
+  rotor: HTMLElement;
+  svgEl: SVGSVGElement;
+  pathEl: SVGPathElement;
+  obj: CSS2DObject;
+  size = 22;
+  rotationOffsetDeg = 0;
+  lastHeadingDeg = 0;
+
+  constructor() {
+    ensureSnakeIconStyles();
+    const wrap = document.createElement('div');
+    wrap.className = 'globe-1-snake-icon';
+
+    this.rotor = document.createElement('div');
+    this.rotor.className = 'globe-1-snake-icon-rotor';
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    this.svgEl = document.createElementNS(svgNS, 'svg');
+    this.svgEl.setAttribute('viewBox', '0 0 447.342 447.342');
+    this.svgEl.setAttribute('class', 'globe-1-snake-icon-svg');
+    this.svgEl.setAttribute('xmlns', svgNS);
+
+    const g = document.createElementNS(svgNS, 'g');
+    // -45° around the path's bbox center makes the default arrow point
+    // up (north). The rotated tail extends outside the viewBox; the
+    // SVG's overflow:visible style lets it render anyway.
+    g.setAttribute('transform', 'rotate(-45 223.671 223.671)');
+
+    this.pathEl = document.createElementNS(svgNS, 'path');
+    this.pathEl.setAttribute('d', SNAKE_ICON_SVG_PATH);
+    this.pathEl.setAttribute('fill', 'currentColor');
+    g.appendChild(this.pathEl);
+    this.svgEl.appendChild(g);
+
+    this.rotor.appendChild(this.svgEl);
+    wrap.appendChild(this.rotor);
+    this.el = wrap;
+
+    this.obj = new CSS2DObject(wrap);
+    this.applySize();
+  }
+
+  setSize(px: number) {
+    if (px === this.size) return;
+    this.size = px;
+    this.applySize();
+  }
+  private applySize() {
+    this.svgEl.setAttribute('width', String(this.size));
+    this.svgEl.setAttribute('height', String(this.size));
+  }
+  setColor(hex: string) {
+    this.el.style.color = hex;
+  }
+  setRotationOffset(deg: number) {
+    this.rotationOffsetDeg = deg;
+    this.applyRotation();
+  }
+  setHeading(deg: number) {
+    this.lastHeadingDeg = deg;
+    this.applyRotation();
+  }
+  private applyRotation() {
+    this.rotor.style.transform = `rotate(${this.lastHeadingDeg + this.rotationOffsetDeg}deg)`;
+  }
+  setOpacity(o: number) {
+    this.el.style.opacity = String(o);
+  }
+  setVisible(v: boolean) {
+    this.el.style.visibility = v ? 'visible' : 'hidden';
+  }
+  setLocalPosition(p: THREE.Vector3) {
+    this.obj.position.copy(p);
+  }
+  dispose() {
+    if (this.el.parentElement) this.el.parentElement.removeChild(this.el);
   }
 }
 
@@ -1034,6 +1199,16 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   );
   world.add(snake.line);
 
+  // Snake head icon — parented to `world` so its position auto-tracks
+  // the globe rotation. Hidden by default; shown only while a snake
+  // route is active and on the front side of the globe.
+  const snakeIcon = new SnakeIcon();
+  snakeIcon.setColor(params.snakeIconColor as string);
+  snakeIcon.setSize(params.snakeIconSize as number);
+  snakeIcon.setRotationOffset(params.snakeIconRotationOffset as number);
+  snakeIcon.setVisible(false);
+  world.add(snakeIcon.obj);
+
   // Initial build
   rebuildGrid(
     Math.round(params.lonSegments as number),
@@ -1093,6 +1268,13 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
 
   // ── Visibility (front/back of globe) ──────────────────────
   const _wp = new THREE.Vector3();
+  // Scratch vectors for the snake icon's per-frame projection. Allocated
+  // once here so the render loop never churns the GC.
+  const _iconHead = new THREE.Vector3();
+  const _iconTangent = new THREE.Vector3();
+  const _iconHeadWorld = new THREE.Vector3();
+  const _iconTipWorld = new THREE.Vector3();
+  const _iconCenterView = new THREE.Vector3();
   function updateMarkerVisibility() {
     camera.updateMatrixWorld();
     const mInv = camera.matrixWorldInverse;
@@ -1296,7 +1478,63 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       }
 
       camera.updateMatrixWorld();
+      // The world group's matrix is normally refreshed inside
+      // renderer.render(); refresh it here so the icon's projection
+      // uses this frame's rotation, not last frame's.
+      world.updateMatrixWorld();
       updateMarkerVisibility();
+
+      // Snake head icon — sync style every frame, then drive it from
+      // the snake's current head + tangent. Heading is the screen-space
+      // angle of the tangent, in CSS rotation convention (clockwise
+      // from "up"): atan2(dx_ndc, dy_ndc).
+      snakeIcon.setColor(params.snakeIconColor as string);
+      snakeIcon.setSize(params.snakeIconSize as number);
+      snakeIcon.setRotationOffset(params.snakeIconRotationOffset as number);
+      const showIcon =
+        showSnake &&
+        (params.showSnakeIcon as boolean) !== false &&
+        !!snake.active;
+      if (showIcon && snake.active) {
+        const headLocal = _iconHead;
+        const tangentLocal = _iconTangent;
+        const ok = snake.sampleHeadAndTangent(headLocal, tangentLocal);
+        if (ok) {
+          snakeIcon.setLocalPosition(headLocal);
+
+          // Project head + (head + tangent) to NDC; the tangent is in
+          // local space but we need world space, so push both points
+          // through world.matrixWorld first.
+          _iconHeadWorld.copy(headLocal).applyMatrix4(world.matrixWorld);
+          _iconTipWorld.copy(headLocal).add(tangentLocal).applyMatrix4(world.matrixWorld);
+          const headNDC = _iconHeadWorld.clone().project(camera);
+          const tipNDC = _iconTipWorld.clone().project(camera);
+          const dx = tipNDC.x - headNDC.x;
+          const dy = tipNDC.y - headNDC.y;
+          if (Math.hypot(dx, dy) > 1e-5) {
+            const headingDeg = Math.atan2(dx, dy) * 180 / Math.PI;
+            snakeIcon.setHeading(headingDeg);
+          }
+
+          // Visibility (front-of-globe + opacity) using the same limb
+          // test as country markers so the icon hides when the head
+          // wraps to the back hemisphere.
+          const headView = _iconHeadWorld.applyMatrix4(camera.matrixWorldInverse);
+          const centerView = _iconCenterView
+            .set(0, 0, 0)
+            .applyMatrix4(world.matrixWorld)
+            .applyMatrix4(camera.matrixWorldInverse);
+          const limb = (headView.z - centerView.z) / GLOBE_RADIUS;
+          const op = THREE.MathUtils.smoothstep(limb, 0.05, 0.35) *
+            (params.snakeIconOpacity as number);
+          snakeIcon.setOpacity(op);
+          snakeIcon.setVisible(op > 0.02);
+        } else {
+          snakeIcon.setVisible(false);
+        }
+      } else {
+        snakeIcon.setVisible(false);
+      }
 
       renderer.resetState();
       renderer.render(scene, camera);
@@ -1321,6 +1559,9 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
         m.dispose();
       }
       markers.length = 0;
+
+      world.remove(snakeIcon.obj);
+      snakeIcon.dispose();
 
       snake.dispose();
       lineGeom.dispose();

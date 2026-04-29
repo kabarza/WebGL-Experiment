@@ -102,6 +102,13 @@ export const controls: ExperimentControls = {
     snakeIntensity: 0.1,
     snakeEase: DEFAULT_SNAKE_EASE,
 
+    // Snake head icon (GPS arrow that rides the head, oriented by heading)
+    showSnakeIcon: true,
+    snakeIconColor: '#ffffff',
+    snakeIconSize: 22,
+    snakeIconOpacity: 1.0,
+    snakeIconRotationOffset: 0,
+
     // Country list (JSON)
     countriesJson: JSON.stringify(DEFAULT_COUNTRIES, null, 2),
   },
@@ -171,6 +178,14 @@ export const controls: ExperimentControls = {
       snakeFlashDuration: [1.6, 0.1, 2.5, 0.05],
       snakeIntensity: [0.1, 0.1, 3.0, 0.01],
       snakeEase: DEFAULT_SNAKE_EASE,
+    },
+    'Snake Icon': {
+      _collapsed: false,
+      showSnakeIcon: true,
+      snakeIconColor: '#ffffff',
+      snakeIconSize: [22, 8, 80, 1],
+      snakeIconOpacity: [1.0, 0, 1, 0.01],
+      snakeIconRotationOffset: [0, -180, 180, 1],
     },
   },
 

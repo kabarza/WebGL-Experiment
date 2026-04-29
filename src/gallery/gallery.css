@@ -73,10 +73,59 @@
 /* ── Thumbnail ────────────────────────────────────── */
 
 .card-thumbnail {
+  position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--bg-primary);
 }
+
+/* ── Dev-only publish toggle pills (rendered by DraftBadge) ─── */
+.draft-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+  pointer-events: auto;
+}
+.draft-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: background 120ms ease, color 120ms ease,
+    border-color 120ms ease, opacity 120ms ease;
+}
+.draft-pill:hover { background: rgba(0, 0, 0, 0.75); }
+.draft-pill[disabled] { opacity: 0.55; cursor: progress; }
+.draft-pill-label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+.draft-pill-state { font-weight: 500; }
+.draft-pill.is-draft {
+  border-color: rgba(255, 180, 80, 0.55);
+  color: #ffd699;
+}
+.draft-pill.is-draft .draft-pill-label { color: rgba(255, 214, 153, 0.55); }
+.draft-pill.is-live {
+  border-color: rgba(110, 220, 170, 0.45);
+  color: #a8efce;
+}
+.draft-pill.is-live .draft-pill-label { color: rgba(168, 239, 206, 0.55); }
 
 .card-thumbnail img {
   width: 100%;
