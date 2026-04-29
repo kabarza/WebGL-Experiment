@@ -101,6 +101,11 @@ export const controls: ExperimentControls = {
     snakeFlashDuration: 1.6,
     snakeIntensity: 0.1,
     snakeEase: DEFAULT_SNAKE_EASE,
+    // When true, a finished route doesn't wind up + restart. Instead the
+    // head pauses at the destination, then a new destination is appended
+    // to the SAME path so the trail and head icon stay continuous.
+    // The pause duration reuses snakeIntervalMin/Max.
+    snakeContinuous: false,
 
     // Snake head icon (GPS arrow that rides the head, oriented by heading)
     showSnakeIcon: true,
@@ -169,6 +174,7 @@ export const controls: ExperimentControls = {
     Snake: {
       _collapsed: false,
       showSnake: true,
+      snakeContinuous: false,
       accentColor: '#ffffff',
       snakeWidth: [1.0, 1, 12, 0.1],
       snakeIntervalMin: [0.1, 0.1, 8, 0.05],

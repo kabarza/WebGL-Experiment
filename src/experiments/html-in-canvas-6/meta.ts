@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['html-in-canvas', 'three.js', 'webgl', 'beta-api', 'typography', 'aurora'],
   date: '2026-04-10',
   hasArticle: false,
+  draft: true,
 };

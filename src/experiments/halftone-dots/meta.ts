@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['halftone', 'shader', 'image-processing', 'sdf'],
   date: '2026-04-13',
   hasArticle: false,
+  draft: true,
 };

@@ -7,4 +7,5 @@ export const meta: ExperimentMeta = {
   tags: ['halftone', 'procedural', 'animation', 'sdf', 'interactive'],
   date: '2026-04-13',
   hasArticle: false,
+  draft: true,
 };

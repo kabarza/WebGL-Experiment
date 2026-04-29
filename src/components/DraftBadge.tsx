@@ -1,29 +1,29 @@
 // ============================================================
-// DraftBadge — Dev-only publish toggles for an experiment card.
+// DraftBadge — Dev-only publish toggle for an experiment card.
 //
-// Shown only when import.meta.env.DEV is true. Two pills:
-// "Experiment" (controls meta.draft) and "Article" (controls
-// meta.articleDraft). Click flips the value via the dev-only
-// /__draft endpoint, which patches the experiment's meta.ts on
-// disk. Vite HMR picks up the rewrite and the gallery updates.
+// One pill per card. States: "live" (visible in production) or
+// "draft" (hidden in the gallery and article routes when built).
+// Click flips the value via the dev-only /__draft endpoint, which
+// patches the experiment's meta.ts on disk. Vite HMR re-imports
+// the meta and the gallery re-renders.
+//
+// Article-level draft is still supported in the schema
+// (meta.articleDraft) — flip it in meta.ts directly if you want to
+// ship the experiment but keep the article hidden.
 // ============================================================
 
 import { useState } from 'react';
 
-type DraftKey = 'draft' | 'articleDraft';
-
 interface DraftBadgeProps {
   slug: string;
-  hasArticle: boolean;
   draft: boolean;
-  articleDraft: boolean;
 }
 
-async function postDraft(slug: string, key: DraftKey, value: boolean) {
+async function postDraft(slug: string, value: boolean) {
   const res = await fetch('/__draft', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slug, key, value }),
+    body: JSON.stringify({ slug, key: 'draft', value }),
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
@@ -31,69 +31,44 @@ async function postDraft(slug: string, key: DraftKey, value: boolean) {
   }
 }
 
-export function DraftBadge({ slug, hasArticle, draft, articleDraft }: DraftBadgeProps) {
-  // Optimistic local state — the real source of truth is meta.ts, but
-  // HMR roundtrip can take a tick, and this prevents the pill from
-  // flicker-bouncing back to its old value while the file is being
-  // patched.
+export function DraftBadge({ slug, draft }: DraftBadgeProps) {
+  // Optimistic local state — meta.ts is the source of truth, but
+  // HMR roundtrip can take a tick and we don't want a flicker.
   const [localDraft, setLocalDraft] = useState(draft);
-  const [localArticleDraft, setLocalArticleDraft] = useState(articleDraft);
-  const [busy, setBusy] = useState<DraftKey | null>(null);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function toggle(key: DraftKey, current: boolean) {
-    const next = !current;
-    setBusy(key);
+  async function toggle() {
+    if (busy) return;
+    const next = !localDraft;
+    setBusy(true);
     setErr(null);
-    if (key === 'draft') setLocalDraft(next);
-    else setLocalArticleDraft(next);
+    setLocalDraft(next);
     try {
-      await postDraft(slug, key, next);
+      await postDraft(slug, next);
     } catch (e) {
-      // Roll back optimistic update on failure
-      if (key === 'draft') setLocalDraft(current);
-      else setLocalArticleDraft(current);
+      setLocalDraft(localDraft); // roll back on failure
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
   return (
-    <div
-      className="draft-badge"
-      onClick={(e) => e.stopPropagation()}
+    <button
+      type="button"
+      className={`draft-pill${localDraft ? ' is-draft' : ' is-live'}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        void toggle();
+      }}
       onKeyDown={(e) => e.stopPropagation()}
-      title={err ?? undefined}
+      disabled={busy}
+      title={err ?? `Click to set ${localDraft ? 'live' : 'draft'}`}
+      aria-label={`Experiment is ${localDraft ? 'draft (hidden in production)' : 'live'} — click to toggle`}
     >
-      <button
-        type="button"
-        className={`draft-pill${localDraft ? ' is-draft' : ' is-live'}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (busy !== 'draft') void toggle('draft', localDraft);
-        }}
-        disabled={busy === 'draft'}
-        aria-label={`Experiment is ${localDraft ? 'draft (hidden in production)' : 'live'} — click to toggle`}
-      >
-        <span className="draft-pill-label">EXP</span>
-        <span className="draft-pill-state">{localDraft ? 'draft' : 'live'}</span>
-      </button>
-      {hasArticle && (
-        <button
-          type="button"
-          className={`draft-pill${localArticleDraft ? ' is-draft' : ' is-live'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (busy !== 'articleDraft') void toggle('articleDraft', localArticleDraft);
-          }}
-          disabled={busy === 'articleDraft'}
-          aria-label={`Article is ${localArticleDraft ? 'draft (hidden in production)' : 'live'} — click to toggle`}
-        >
-          <span className="draft-pill-label">ART</span>
-          <span className="draft-pill-state">{localArticleDraft ? 'draft' : 'live'}</span>
-        </button>
-      )}
-    </div>
+      <span className="draft-pill-dot" aria-hidden="true" />
+      {localDraft ? 'draft' : 'live'}
+    </button>
   );
 }

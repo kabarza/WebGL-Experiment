@@ -397,15 +397,45 @@ class CountryMarker {
 }
 
 // ── Snake controller (Line2 for visible thick lines) ──────────
+//
+// A route is a sequence of "legs", each from one country to the next.
+// In legacy (one-shot) mode every route has exactly one leg, then the
+// snake winds up and `active` flips to null so the render loop can
+// schedule the next route.
+//
+// In continuous mode the head pauses at each destination and a new leg
+// is appended to the same `path` array. The trail (a fixed-length
+// window behind the head) flows seamlessly across the join because the
+// head's distance keeps growing along the same cumulative-length axis.
+// The path arrays grow over time — for typical session lengths this is
+// negligible (≈3KB/leg), so there's no pruning here.
+
+type SnakePhase = 'travel' | 'pause' | 'wind-up';
 
 interface SnakeRoute {
-  startIdx: number;
   endIdx: number;
+  // Tracked separately from endIdx so that if the user edits the
+  // country list mid-flight, we can still build the next leg from the
+  // exact lat/lon the head actually arrived at.
+  endCountry: Country;
   path: THREE.Vector3[];
   cumulative: number[];
   totalDistance: number;
-  startedAt: number; // seconds
+
+  // Current leg: head travels legStartDist → legEndDist over legDuration
+  // (recomputed each frame from the live speed param so the user can
+  // dial speed mid-flight).
+  legStartDist: number;
+  legEndDist: number;
+  legStartTime: number;
   flashed: boolean;
+
+  phase: SnakePhase;
+  // Valid when phase === 'pause'.
+  pauseUntil: number;
+  // Valid when phase === 'wind-up' (legacy mode tail catch-up).
+  windupStartTime: number;
+  windupTailStart: number;
 }
 
 class SnakeController {
@@ -469,7 +499,7 @@ class SnakeController {
 
   begin(now: number, countries: Country[]) {
     if (countries.length < 2) return;
-    let s = Math.floor(Math.random() * countries.length);
+    const s = Math.floor(Math.random() * countries.length);
     let e = Math.floor(Math.random() * countries.length);
     if (e === s) e = (e + 1) % countries.length;
     const path = buildSnakePath(countries[s], countries[e]);
@@ -480,53 +510,146 @@ class SnakeController {
       cumulative.push(total);
     }
     this.active = {
-      startIdx: s,
       endIdx: e,
+      endCountry: countries[e],
       path,
       cumulative,
       totalDistance: total,
-      startedAt: now,
+      legStartDist: 0,
+      legEndDist: total,
+      legStartTime: now,
       flashed: false,
+      phase: 'travel',
+      pauseUntil: 0,
+      windupStartTime: 0,
+      windupTailStart: 0,
     };
     this.lastHeadDist = 0;
     this.line.visible = true;
   }
 
-  // Update geometry. Returns destination index when arrival event fires.
+  // Append a new leg from the current end country to a randomly picked
+  // other country. Path / cumulative arrays grow; the head's distance
+  // axis is shared, so the trail flows seamlessly across the join.
+  appendLeg(now: number, countries: Country[]) {
+    if (!this.active) return;
+    const r = this.active;
+    if (countries.length < 2) {
+      // Can't continue — fall through to wind-up so the route ends
+      // gracefully and the next `begin()` can start fresh.
+      this.enterWindup(now);
+      return;
+    }
+    let next = Math.floor(Math.random() * countries.length);
+    // Avoid same destination AND, when the previous endIdx is still
+    // valid in the (possibly edited) list, avoid that one too.
+    if (countries[r.endIdx] === r.endCountry && next === r.endIdx) {
+      next = (next + 1) % countries.length;
+    }
+    const startCountry = r.endCountry;
+    const endCountry = countries[next];
+    const seg = buildSnakePath(startCountry, endCountry);
+    // seg[0] coincides with the existing path's last point (within
+    // float precision, since both come from the same lat/lon). Skip it
+    // so we don't insert a zero-length segment.
+    let cum = r.totalDistance;
+    for (let i = 1; i < seg.length; i++) {
+      cum += seg[i].distanceTo(seg[i - 1]);
+      r.path.push(seg[i]);
+      r.cumulative.push(cum);
+    }
+    r.legStartDist = r.totalDistance;
+    r.legEndDist = cum;
+    r.totalDistance = cum;
+    r.endIdx = next;
+    r.endCountry = endCountry;
+    r.legStartTime = now;
+    r.flashed = false;
+    r.phase = 'travel';
+  }
+
+  private enterWindup(now: number) {
+    if (!this.active) return;
+    const r = this.active;
+    r.phase = 'wind-up';
+    r.windupStartTime = now;
+    // Tail at wind-up start = head - trailLen at the speed used the
+    // moment we entered wind-up. Speed can change later; we recompute
+    // the tail's progress against the current speed each frame.
+    r.windupTailStart = Math.max(0, r.legEndDist - 0.04);
+  }
+
+  // Update geometry. Returns destination index when an arrival event
+  // fires (so the render loop can flash that country's marker).
   update(
     now: number,
     speed: number,
     intensity: number,
     easing: (u: number) => number,
+    opts: {
+      continuous: boolean;
+      pauseMin: number;
+      pauseMax: number;
+      countries: Country[];
+    },
   ): number {
     if (!this.active) {
       this.line.visible = false;
       return -1;
     }
     const r = this.active;
-    const journeyDuration = r.totalDistance / Math.max(0.01, speed);
-    const elapsed = now - r.startedAt;
     const trailLen = Math.max(0.04, speed * 0.4);
+    let arrived = -1;
 
-    // Head: travels 0 → totalDistance over journeyDuration (eased),
-    // then sits at totalDistance.
+    // ── Head ──
     let headDist: number;
-    if (elapsed < journeyDuration) {
-      headDist = easing(elapsed / journeyDuration) * r.totalDistance;
+    if (r.phase === 'travel') {
+      const legDist = r.legEndDist - r.legStartDist;
+      const legDuration = legDist / Math.max(0.01, speed);
+      const elapsed = now - r.legStartTime;
+      if (elapsed < legDuration) {
+        headDist = r.legStartDist + easing(elapsed / legDuration) * legDist;
+      } else {
+        // Arrived at this leg's destination.
+        headDist = r.legEndDist;
+        if (!r.flashed) {
+          r.flashed = true;
+          arrived = r.endIdx;
+        }
+        if (opts.continuous) {
+          const wait =
+            opts.pauseMin +
+            Math.random() * Math.max(0, opts.pauseMax - opts.pauseMin);
+          r.phase = 'pause';
+          r.pauseUntil = now + wait;
+        } else {
+          this.enterWindup(now);
+        }
+      }
+    } else if (r.phase === 'pause') {
+      headDist = r.legEndDist;
+      if (!opts.continuous) {
+        // User toggled continuous off mid-pause — wind up cleanly.
+        this.enterWindup(now);
+      } else if (now >= r.pauseUntil) {
+        this.appendLeg(now, opts.countries);
+        // appendLeg sets phase to 'travel' (or 'wind-up' if it bailed).
+        // Either way, head is still at the leg-join distance.
+        headDist = r.legStartDist;
+      }
     } else {
-      headDist = r.totalDistance;
+      // 'wind-up' — head holds at end while tail catches up.
+      headDist = r.legEndDist;
     }
 
-    // Tail: trails behind the head by `trailLen`. After the head
-    // arrives, the tail keeps moving at constant speed until it
-    // also reaches the end — that's the only way the snake winds
-    // up and `active` can flip to null so the loop continues.
+    // ── Tail ──
     let tailDist: number;
-    if (elapsed < journeyDuration) {
-      tailDist = Math.max(0, headDist - trailLen);
+    if (r.phase === 'wind-up') {
+      const tAfter = now - r.windupStartTime;
+      tailDist = Math.min(r.legEndDist, r.windupTailStart + tAfter * speed);
     } else {
-      const tAfter = elapsed - journeyDuration;
-      tailDist = Math.min(r.totalDistance, (r.totalDistance - trailLen) + tAfter * speed);
+      // travel + pause both keep a fixed-length trail behind the head.
+      tailDist = Math.max(0, headDist - trailLen);
     }
 
     // Sample N points along path between tail..head.
@@ -552,12 +675,7 @@ class SnakeController {
 
     this.lastHeadDist = headDist;
 
-    let arrived = -1;
-    if (!r.flashed && headDist >= r.totalDistance - 1e-4) {
-      r.flashed = true;
-      arrived = r.endIdx;
-    }
-    if (tailDist >= r.totalDistance - 1e-4) {
+    if (r.phase === 'wind-up' && tailDist >= r.legEndDist - 1e-4) {
       this.active = null;
       this.line.visible = false;
     }
@@ -1448,19 +1566,30 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
         }
         const easeCfg = params.snakeEase as unknown as TransitionValue | undefined;
         const ease = makeEaseFn(easeCfg);
+        const continuous = (params.snakeContinuous as boolean) === true;
         const arrived = snake.update(
           time,
           params.snakeSpeed as number,
           params.snakeIntensity as number,
           ease,
+          {
+            continuous,
+            pauseMin: params.snakeIntervalMin as number,
+            pauseMax: params.snakeIntervalMax as number,
+            countries: snappedCountries,
+          },
         );
         if (arrived >= 0 && arrived < markers.length) {
           markers[arrived].flash(time, params.snakeFlashDuration as number);
-          snake.schedule(
-            time,
-            params.snakeIntervalMin as number,
-            params.snakeIntervalMax as number,
-          );
+          // Only schedule a fresh route in legacy mode — in continuous
+          // mode the controller appends the next leg internally.
+          if (!continuous) {
+            snake.schedule(
+              time,
+              params.snakeIntervalMin as number,
+              params.snakeIntervalMax as number,
+            );
+          }
         }
       } else {
         snake.active = null;

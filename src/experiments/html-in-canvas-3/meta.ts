@@ -8,4 +8,5 @@ export const meta: ExperimentMeta = {
   tags: ['glsl', 'html-in-canvas', 'typography', 'dither', 'glitch'],
   date: '2026-04-10',
   hasArticle: false,
+  draft: true,
 };

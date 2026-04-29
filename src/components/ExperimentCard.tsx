@@ -46,24 +46,14 @@ export function ExperimentCard({ meta, onClick }: ExperimentCardProps) {
             onError={() => setImgFailed(true)}
           />
           {import.meta.env.DEV && (
-            <DraftBadge
-              slug={meta.slug}
-              hasArticle={!!meta.hasArticle}
-              draft={!!meta.draft}
-              articleDraft={!!meta.articleDraft}
-            />
+            <DraftBadge slug={meta.slug} draft={!!meta.draft} />
           )}
         </div>
       ) : (
         <div className="card-thumbnail card-thumbnail--placeholder">
           <span>{meta.title[0]}</span>
           {import.meta.env.DEV && (
-            <DraftBadge
-              slug={meta.slug}
-              hasArticle={!!meta.hasArticle}
-              draft={!!meta.draft}
-              articleDraft={!!meta.articleDraft}
-            />
+            <DraftBadge slug={meta.slug} draft={!!meta.draft} />
           )}
         </div>
       )}
