@@ -93,10 +93,14 @@ export const controls: ExperimentControls = {
     pauseSpinOnDrag: true,
 
     // Snake animation
+    // Per-leg duration is `legDistance / snakeSpeed`, clamped to at
+    // least `snakeLegMinDuration` so very short legs don't zip past
+    // before the eye can register them. Speed is in globe-radius units
+    // per second.
     snakeIntervalMin: 0.1,
     snakeIntervalMax: 0.6,
     snakeSpeed: 0.44,
-    snakeTrailLength: 31,
+    snakeLegMinDuration: 0.6,
     snakeWidth: 1.0,
     snakeFlashDuration: 2.2,
     snakeIntensity: 0.1,
@@ -106,15 +110,17 @@ export const controls: ExperimentControls = {
     // to the SAME path so the trail and head icon stay continuous.
     // The pause duration reuses snakeIntervalMin/Max.
     snakeContinuous: true,
-    // Spring-tail dynamics. The tail is a damped point pulled toward
-    // (head − snakeTrailMin); when the head accelerates the tail can't
-    // keep up so the gap stretches (capped at snakeTrailMax). When the
-    // head stops the tail catches up exponentially-ish but never closes
-    // the minimum gap. snakeTrailFollow is the single "tightness" knob
-    // (0 = lazy/very stretchy, 1 = snappy/short tail).
+    // Spring-tail dynamics.
+    //   snakeTrailMin     — resting gap; the trail can't shrink below it.
+    //   snakeTrailLength  — stretch cap; the trail can't grow past it.
+    //   snakeTrailFollow  — tightness (0 = lazy/very stretchy, 1 = snappy).
+    //   snakeTrailDetail  — number of vertices in the trail geometry. A
+    //                       technical detail; raising it just adds more
+    //                       sample points, it does NOT lengthen the trail.
     snakeTrailMin: 0.06,
-    snakeTrailMax: 0.55,
+    snakeTrailLength: 0.55,
     snakeTrailFollow: 0.45,
+    snakeTrailDetail: 31,
 
     // Snake head icon (GPS arrow that rides the head, oriented by heading)
     showSnakeIcon: true,
@@ -189,10 +195,11 @@ export const controls: ExperimentControls = {
       snakeIntervalMin: [0.1, 0.1, 8, 0.05],
       snakeIntervalMax: [0.6, 0.2, 12, 0.05],
       snakeSpeed: [0.44, 0.2, 6, 0.01],
-      snakeTrailLength: [31, 4, 120, 1],
+      snakeLegMinDuration: [0.6, 0.0, 4.0, 0.05],
       snakeTrailMin: [0.06, 0.01, 1.0, 0.005],
-      snakeTrailMax: [0.55, 0.05, 3.0, 0.01],
+      snakeTrailLength: [0.55, 0.05, 3.0, 0.01],
       snakeTrailFollow: [0.45, 0.05, 1.0, 0.01],
+      snakeTrailDetail: [31, 4, 120, 1],
       snakeFlashDuration: [2.2, 0.1, 2.5, 0.05],
       snakeIntensity: [0.1, 0.1, 3.0, 0.01],
       snakeEase: DEFAULT_SNAKE_EASE,
@@ -232,7 +239,7 @@ export const controls: ExperimentControls = {
       latSegments: 30,
       lineOpacity: 0.55,
       snakeSpeed: 2.4,
-      snakeTrailLength: 60,
+      snakeTrailDetail: 60,
     },
     Sparse: {
       lonSegments: 24,
@@ -240,7 +247,7 @@ export const controls: ExperimentControls = {
       lineOpacity: 0.6,
       lineColor: '#3a3a36',
       snakeSpeed: 1.0,
-      snakeTrailLength: 18,
+      snakeTrailDetail: 18,
       snakeWidth: 2,
     },
     Cyan: {
@@ -254,7 +261,7 @@ export const controls: ExperimentControls = {
       snakeIntervalMin: 0.15,
       snakeIntervalMax: 0.5,
       snakeSpeed: 3.5,
-      snakeTrailLength: 48,
+      snakeTrailDetail: 48,
       snakeWidth: 4,
       snakeIntensity: 2.0,
     },

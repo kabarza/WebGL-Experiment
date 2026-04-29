@@ -600,6 +600,11 @@ class SnakeController {
       trailMin: number;
       trailMax: number;
       trailFollow: number;
+      // Floor on per-leg duration. Without this, very short legs (two
+      // close countries) finish too fast for the eye to register; with
+      // it, short legs are slowed down while long legs still scale
+      // distance-by-speed as before.
+      legMinDuration: number;
     },
   ): number {
     if (!this.active) {
@@ -613,7 +618,12 @@ class SnakeController {
     let headDist: number;
     if (r.phase === 'travel') {
       const legDist = r.legEndDist - r.legStartDist;
-      const legDuration = legDist / Math.max(0.01, speed);
+      // Strictly distance-based: time = distance / speed. Then floor
+      // by legMinDuration so very short legs aren't visually rushed.
+      const legDuration = Math.max(
+        opts.legMinDuration,
+        legDist / Math.max(0.01, speed),
+      );
       const elapsed = now - r.legStartTime;
       if (elapsed < legDuration) {
         headDist = r.legStartDist + easing(elapsed / legDuration) * legDist;
@@ -1355,7 +1365,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
 
   // Snake (Line2)
   const snake = new SnakeController(
-    params.snakeTrailLength as number,
+    params.snakeTrailDetail as number,
     params.accentColor as string,
   );
   world.add(snake.line);
@@ -1502,7 +1512,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       if (needsMarkers) rebuildMarkers();
 
       // Sync snake config
-      const trail = Math.max(4, Math.round(params.snakeTrailLength as number));
+      const trail = Math.max(4, Math.round(params.snakeTrailDetail as number));
       if (trail !== snake.trailLength) snake.setTrailLength(trail);
       snake.setAccentColor(params.accentColor as string);
       snake.setWidth(params.snakeWidth as number);
@@ -1622,8 +1632,9 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
             pauseMax: params.snakeIntervalMax as number,
             countries: snappedCountries,
             trailMin: params.snakeTrailMin as number,
-            trailMax: params.snakeTrailMax as number,
+            trailMax: params.snakeTrailLength as number,
             trailFollow: params.snakeTrailFollow as number,
+            legMinDuration: params.snakeLegMinDuration as number,
           },
         );
         if (arrived >= 0 && arrived < markers.length) {
