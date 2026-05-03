@@ -7,18 +7,39 @@ export type Country = {
   lat: number;
   lon: number;
 };
-// Cluster scaled tighter around its centre and shifted slightly north
-// from the previous defaults. Free-snap mode keeps the labels at these
-// exact lat/lon rather than locking onto the 15° grid intersections.
+// 26-country layout matching the reference image. Coordinates are
+// hand-picked so that under intersection-snap (lonSeg=21, latSeg=19)
+// each country lands on a UNIQUE grid intersection — close-together
+// values would otherwise collide on the same +. Tiers run roughly:
+//   lat 60 → northern cap, 50 → UK/Baltics, 40/30 → central, 20 →
+//   southern Europe, 10 → Mediterranean rim, 0 → Iberia, -5 → Italien.
 export const DEFAULT_COUNTRIES: Country[] = [
-  { name: 'NORWEGEN', lat: 57, lon: 0 },
-  { name: 'NIEDERLANDE', lat: 48, lon: -10 },
-  { name: 'BELGIEN', lat: 38, lon: -20 },
-  { name: 'DEUTSCHLAND', lat: 38, lon: 18 },
-  { name: 'LUXEMBURG', lat: 28, lon: -10 },
-  { name: 'FRANKREICH', lat: 20, lon: -28 },
-  { name: 'SCHWEIZ', lat: 10, lon: 0 },
-  { name: 'ÖSTERREICH', lat: 20, lon: 28 },
+  { name: 'NORWEGEN', lat: 60, lon: 5 },
+  { name: 'SCHWEDEN', lat: 60, lon: 20 },
+  { name: 'FINNLAND', lat: 60, lon: 37 },
+  { name: 'IRLAND', lat: 50, lon: -40 },
+  { name: 'ENGLAND', lat: 50, lon: -22 },
+  { name: 'NIEDERLANDE', lat: 50, lon: -8 },
+  { name: 'ESTLAND', lat: 50, lon: 37 },
+  { name: 'BELGIEN', lat: 40, lon: -22 },
+  { name: 'DEUTSCHLAND', lat: 40, lon: -8 },
+  { name: 'POLEN', lat: 40, lon: 8 },
+  { name: 'LETTLAND', lat: 40, lon: 37 },
+  { name: 'LUXEMBURG', lat: 30, lon: -8 },
+  { name: 'TSCHECHIEN', lat: 30, lon: 8 },
+  { name: 'SLOWAKEI', lat: 30, lon: 20 },
+  { name: 'LITAUEN', lat: 30, lon: 37 },
+  { name: 'FRANKREICH', lat: 20, lon: -22 },
+  { name: 'ÖSTERREICH', lat: 20, lon: 8 },
+  { name: 'UNGARN', lat: 20, lon: 20 },
+  { name: 'RUMÄNIEN', lat: 20, lon: 37 },
+  { name: 'SCHWEIZ', lat: 10, lon: -8 },
+  { name: 'SLOWENIEN', lat: 10, lon: 8 },
+  { name: 'SERBIEN', lat: 10, lon: 20 },
+  { name: 'TÜRKEI', lat: 10, lon: 37 },
+  { name: 'PORTUGAL', lat: 0, lon: -40 },
+  { name: 'SPANIEN', lat: 0, lon: -22 },
+  { name: 'ITALIEN', lat: -5, lon: -8 },
 ];
 
 export const SNAP_MODES = [
@@ -60,10 +81,10 @@ export const controls: ExperimentControls = {
     accentColor: '#ffffff',
 
     // Globe geometry
-    lonSegments: 21,
-    latSegments: 19,
-    lineOpacity: 0.45,
-    lineWidth: 1.0,
+    lonSegments: 30,
+    latSegments: 30,
+    lineOpacity: 0.24,
+    lineWidth: 2.0,
 
     // Layers
     showLines: true,
@@ -73,13 +94,13 @@ export const controls: ExperimentControls = {
 
     // Camera framing
     zoom: 0.84,
-    basePitchDeg: 25,
+    basePitchDeg: 21,
     baseYawDeg: -10,
     fov: 25,
 
     // Snap behaviour
-    snapMode: 'intersection' as SnapMode,
-    crossSize: 0.045,
+    snapMode: 'free' as SnapMode,
+    crossSize: 0.055,
     crossOnSurface: true,
     labelSize: 10,
     labelOffsetY: 18,
@@ -141,10 +162,10 @@ export const controls: ExperimentControls = {
       _collapsed: false,
       showLines: true,
       lineColor: '#5a5a52',
-      lineOpacity: [0.45, 0, 1, 0.01],
-      lineWidth: [1.0, 0.5, 4, 0.1],
-      lonSegments: [21, 6, 72, 1],
-      latSegments: [19, 3, 36, 1],
+      lineOpacity: [0.24, 0, 1, 0.01],
+      lineWidth: [2.0, 0.5, 8, 0.1],
+      lonSegments: [30, 6, 72, 1],
+      latSegments: [30, 3, 36, 1],
     },
     Countries: {
       _collapsed: false,
@@ -152,14 +173,14 @@ export const controls: ExperimentControls = {
       showLabels: true,
       crossColor: '#ffffff',
       labelColor: '#cfcfcf',
-      crossSize: [0.045, 0.01, 0.18, 0.005],
+      crossSize: [0.055, 0.01, 0.18, 0.005],
       crossOnSurface: true,
       labelSize: [10, 8, 22, 1],
       labelOffsetY: [18, -40, 60, 1],
       snapMode: {
         type: 'select',
         options: [...SNAP_MODES],
-        default: 'intersection',
+        default: 'free',
       },
       countriesJson: {
         type: 'text',
@@ -170,7 +191,7 @@ export const controls: ExperimentControls = {
       _collapsed: true,
       zoom: [0.84, 0.4, 2.5, 0.01],
       fov: [25, 12, 75, 0.5],
-      basePitchDeg: [25, -90, 90, 0.5],
+      basePitchDeg: [21, -90, 90, 0.5],
       baseYawDeg: [-10, -180, 180, 0.5],
     },
     Interaction: {

@@ -109,32 +109,41 @@ function snapCountry(
     : { lat: latDeg, lon: sLon };
 }
 
-function buildGridPositions(lonSeg: number, latSeg: number): Float32Array {
+// Build the grid as one continuous polyline per meridian and parallel.
+// Returns a flat list of polylines (each = a Float32Array of xyz points)
+// so the renderer can put each one in its own Line2 — that way LineMaterial
+// only puts caps at the two real ends of each line, instead of at every
+// internal sub-segment join (which would render as visible dots).
+function buildGridPolylines(lonSeg: number, latSeg: number): Float32Array[] {
   const radius = GLOBE_RADIUS;
   const subdiv = 64;
-  const pairs: number[] = [];
+  const polylines: Float32Array[] = [];
   const tmp = new THREE.Vector3();
   for (let i = 0; i < lonSeg; i++) {
     const lon = -180 + (360 * i) / lonSeg;
-    let prev: THREE.Vector3 | null = null;
+    const pts = new Float32Array((subdiv + 1) * 3);
     for (let j = 0; j <= subdiv; j++) {
       const lat = -90 + 180 * (j / subdiv);
       latLonToVec3(lat, lon, radius, tmp);
-      if (prev) pairs.push(prev.x, prev.y, prev.z, tmp.x, tmp.y, tmp.z);
-      prev = prev ? prev.copy(tmp) : tmp.clone();
+      pts[j * 3 + 0] = tmp.x;
+      pts[j * 3 + 1] = tmp.y;
+      pts[j * 3 + 2] = tmp.z;
     }
+    polylines.push(pts);
   }
   for (let i = 1; i < latSeg; i++) {
     const lat = -90 + (180 * i) / latSeg;
-    let prev: THREE.Vector3 | null = null;
+    const pts = new Float32Array((subdiv + 1) * 3);
     for (let j = 0; j <= subdiv; j++) {
       const lon = -180 + 360 * (j / subdiv);
       latLonToVec3(lat, lon, radius, tmp);
-      if (prev) pairs.push(prev.x, prev.y, prev.z, tmp.x, tmp.y, tmp.z);
-      prev = prev ? prev.copy(tmp) : tmp.clone();
+      pts[j * 3 + 0] = tmp.x;
+      pts[j * 3 + 1] = tmp.y;
+      pts[j * 3 + 2] = tmp.z;
     }
+    polylines.push(pts);
   }
-  return new Float32Array(pairs);
+  return polylines;
 }
 
 function makeCrossTexture(): THREE.Texture {
@@ -472,7 +481,7 @@ class SnakeController {
       worldUnits: false,
       vertexColors: true, // we colour each vertex for fade-out tail
       dashed: false,
-      alphaToCoverage: false,
+      alphaToCoverage: true,
     });
     this.material.blending = THREE.AdditiveBlending;
     this.material.resolution.set(window.innerWidth, window.innerHeight);
@@ -1292,25 +1301,53 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   const world = new THREE.Group();
   scene.add(world);
 
-  // Dark fill sphere (slightly inside the wireframe) so back-side
-  // lines show through faintly.
+  // Opaque dark fill sphere just inside the wireframe. It writes to
+  // the depth buffer so back-side wireframe lines fail the depth test
+  // (rather than ghost through). Used to be `transparent` to let a
+  // little of the back lines show, but at 0.92 opacity over a black
+  // background that contributed nothing visually anyway — and keeping
+  // it opaque means the front lines don't have to fight a transparent
+  // pass, which is what was producing the bright dots at grid crossings.
   const haloGeom = new THREE.SphereGeometry(GLOBE_RADIUS * 0.998, 64, 32);
   const haloMat = new THREE.MeshBasicMaterial({
     color: 0x000000,
-    transparent: true,
-    opacity: 0.92,
   });
   const halo = new THREE.Mesh(haloGeom, haloMat);
   world.add(halo);
 
-  // Wireframe (LineSegments — many tiny segments, default 1px is fine)
-  const lineGeom = new THREE.BufferGeometry();
-  const lineMat = new THREE.LineBasicMaterial({
-    color: 0x5a5a52,
-    transparent: true,
-    opacity: 0.45,
+  // Wireframe — one Line2 per meridian / parallel, all sharing one
+  // LineMaterial. Two reasons for this layout:
+  //   1) THREE.LineBasicMaterial's `linewidth` is silently ignored in
+  //      WebGL (always 1px), so we have to use LineMaterial which draws
+  //      thick lines as screen-space quads through a shader.
+  //   2) LineMaterial only joins consecutive vertices smoothly within
+  //      one Line2. If we put every grid line into a single LineSegments2
+  //      the 64 sub-divisions per great-circle arc each get their own
+  //      end-caps and show up as visible dots along the line — so each
+  //      arc has to be its own continuous polyline.
+  // Wireframe material: opaque + alphaToCoverage. Why opaque:
+  // semi-transparent lines double-blend at crossings (each pixel goes
+  // through two `dst = src*α + dst*(1-α)` passes) which leaves a
+  // visibly brighter dot at every meridian × parallel intersection.
+  // Going opaque lets the dimness come from the COLOR instead, so a
+  // crossing is just the same pixel written twice — no brightening.
+  // The lineOpacity slider is applied as a multiplier on the rendered
+  // color each frame (see render loop), so the user's "fade the lines"
+  // intent is preserved without the blending side-effect.
+  const lineMat = new LineMaterial({
+    color: new THREE.Color('#5a5a52').getHex(),
+    linewidth: 2,
+    transparent: false,
+    worldUnits: false,
+    depthTest: true,
+    depthWrite: true,
+    dashed: false,
+    alphaToCoverage: true,
   });
-  const wireframe = new THREE.LineSegments(lineGeom, lineMat);
+  lineMat.resolution.set(window.innerWidth, window.innerHeight);
+
+  const wireframe = new THREE.Group();
+  const wireframeLines: Line2[] = [];
   world.add(wireframe);
 
   let currentLonSeg = -1;
@@ -1319,11 +1356,22 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
     if (lonSeg === currentLonSeg && latSeg === currentLatSeg) return;
     currentLonSeg = lonSeg;
     currentLatSeg = latSeg;
-    lineGeom.setAttribute(
-      'position',
-      new THREE.BufferAttribute(buildGridPositions(lonSeg, latSeg), 3),
-    );
-    lineGeom.computeBoundingSphere();
+    // Tear down any previously built lines.
+    for (const line of wireframeLines) {
+      wireframe.remove(line);
+      line.geometry.dispose();
+    }
+    wireframeLines.length = 0;
+    // Build one Line2 per polyline.
+    const polylines = buildGridPolylines(lonSeg, latSeg);
+    for (const pts of polylines) {
+      const geom = new LineGeometry();
+      geom.setPositions(Array.from(pts));
+      const line = new Line2(geom, lineMat);
+      line.frustumCulled = false;
+      wireframe.add(line);
+      wireframeLines.push(line);
+    }
   }
 
   // Markers
@@ -1471,6 +1519,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
     camera.updateProjectionMatrix();
     labelRenderer.setSize(cssW, cssH);
     snake.setResolution(cssW * dpr, cssH * dpr);
+    lineMat.resolution.set(cssW * dpr, cssH * dpr);
   }
 
   // ── Inline DialKit-panel country editor ───────────────────
@@ -1518,8 +1567,16 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       snake.setWidth(params.snakeWidth as number);
 
       // Sync line / cross / label colors
-      lineMat.color.set(params.lineColor as string);
-      lineMat.opacity = params.lineOpacity as number;
+      // Bake the lineOpacity slider into the rendered color (lines are
+      // opaque now to avoid crossing double-blend artefacts).
+      const baseLineCol = new THREE.Color(params.lineColor as string);
+      const lineOp = THREE.MathUtils.clamp(params.lineOpacity as number, 0, 1);
+      lineMat.color.setRGB(
+        baseLineCol.r * lineOp,
+        baseLineCol.g * lineOp,
+        baseLineCol.b * lineOp,
+      );
+      lineMat.linewidth = params.lineWidth as number;
       const cs = params.crossSize as number;
       for (const m of markers) {
         m.setColors(params.crossColor as string, params.labelColor as string);
@@ -1751,7 +1808,10 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       snakeIcon.dispose();
 
       snake.dispose();
-      lineGeom.dispose();
+      for (const line of wireframeLines) {
+        line.geometry.dispose();
+      }
+      wireframeLines.length = 0;
       lineMat.dispose();
       haloGeom.dispose();
       haloMat.dispose();
