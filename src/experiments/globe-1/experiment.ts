@@ -99,6 +99,18 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
     dashed: false,
     alphaToCoverage: true,
   });
+  // Disable LineMaterial's round end-caps. Each polyline segment is
+  // drawn as a screen-space quad with rounded caps at both ends; at
+  // every internal vertex of a polyline, two consecutive caps overlap
+  // and form a small visible "dot". For full-circle wireframe arcs
+  // (meridians pole-to-pole, closed parallels) we don't need endpoint
+  // caps either — discarding the cap region cleanly kills the artifact.
+  lineMat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      /\bvoid main\(\)\s*\{/,
+      'void main() {\n  if (abs(vUv.y) > 1.0) discard;',
+    );
+  };
   lineMat.resolution.set(window.innerWidth, window.innerHeight);
 
   const wireframe = new THREE.Group();
