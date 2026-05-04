@@ -150,6 +150,16 @@ export const controls: ExperimentControls = {
     snakeIconOpacity: 1.0,
     snakeIconRotationOffset: 0,
 
+    // Scroll-driven pitch — when on, scrolling the page pitches the
+    // globe up/down. The wrapper element's intersection with the
+    // viewport is mapped to ±range/2 pitch, applied as a 4th rotation
+    // term on top of base/drag/auto-spin. Designed primarily for the
+    // standalone Webflow embed; in the gallery it's harmless because
+    // the canvas wrapper rarely scrolls.
+    scrollPitchEnabled: false,
+    scrollPitchRangeDeg: 30,
+    scrollPitchSmoothing: 8,
+
     // Country list (JSON)
     countriesJson: JSON.stringify(DEFAULT_COUNTRIES, null, 2),
   },
@@ -232,6 +242,12 @@ export const controls: ExperimentControls = {
       snakeIconSize: [12, 8, 80, 1],
       snakeIconOpacity: [1.0, 0, 1, 0.01],
       snakeIconRotationOffset: [0, -180, 180, 1],
+    },
+    Scroll: {
+      _collapsed: true,
+      scrollPitchEnabled: false,
+      scrollPitchRangeDeg: [30, 0, 90, 1],
+      scrollPitchSmoothing: [8, 1, 30, 0.5],
     },
   },
 

@@ -334,18 +334,27 @@ const CODE_SNAKE_PATH = `function buildSnakePath(start, end, samples = 80) {
   return path;
 }`;
 
-const CODE_TAIL = `// While the head is travelling, the tail trails behind it.
-// Once the head arrives, the tail keeps moving at constant
-// speed until it also reaches the end — that's how the snake
-// "winds up" so the route can complete and the next one begins.
-let headDist, tailDist;
-if (elapsed < journeyDuration) {
-  headDist = easing(elapsed / journeyDuration) * total;
-  tailDist = Math.max(0, headDist - trailLen);
-} else {
-  headDist = total;
-  const tAfter = elapsed - journeyDuration;
-  tailDist = Math.min(total, (total - trailLen) + tAfter * speed);
+const CODE_TAIL = `// The tail is a damped harmonic oscillator pulled toward
+//   target = headDist − minGap   (while travelling / paused)
+//   target = headDist             (during wind-up so the trail closes)
+// Sub-stepped 4× per frame so the spring stays stable when dt spikes.
+const stiffness = 10 + trailFollow * 200;
+const damping   = 0.7 * 2 * Math.sqrt(stiffness);
+const target = phase === 'wind-up' ? headDist : headDist - minGap;
+
+const STEPS = 4;
+const h = dt / STEPS;
+for (let s = 0; s < STEPS; s++) {
+  const error = target - tailDist;
+  const accel = stiffness * error - damping * tailVel;
+  tailVel  += accel * h;
+  tailDist += tailVel * h;
+}
+
+// Clamp gap to [minGap, maxGap] in non-wind-up phases.
+if (phase !== 'wind-up') {
+  if (tailDist > headDist - minGap) tailDist = headDist - minGap;
+  if (tailDist < headDist - maxGap) tailDist = headDist - maxGap;
 }`;
 
 const CODE_SPRING = `// Semi-implicit (symplectic) Euler — update v from x first,
@@ -706,18 +715,25 @@ export function Globe1Article() {
           The trade-off is it costs more — instanced quads with vertex math in the shader — but for one polyline of ~93 points (the trail length) it's negligible. The material has a <code>resolution</code> uniform that <em>must</em> be set whenever the canvas resizes, otherwise the line renders at the wrong width. We do that in the resize handler.
         </p>
 
-        <h3>The tail bug</h3>
+        <h3>How the head and tail are coupled</h3>
         <p>
-          When we first wrote the snake, it would arrive at the destination and then freeze there forever. The next route never started. The bug was a one-line oversight in the completion check: we marked the route "done" when both <code>headDist</code> and <code>tailDist</code> reached the path's total length — but our tail formula was <code>tailDist = headDist - trailLen</code>. Once <code>headDist = totalDistance</code>, <code>tailDist = totalDistance - trailLen</code>, which is forever less than the threshold. The route never closed.
-        </p>
-        <p>
-          The fix is to switch the tail to its own time-driven motion once the head arrives:
+          The trail is a window of N sample points behind a moving head — but the simple "tail = head − fixed length" approach feels robotic when the head accelerates and decelerates. Instead, the tail is a <strong>damped harmonic oscillator</strong> pulled toward the head, with a minimum gap so it never overlaps and a maximum gap so it can't drift arbitrarily far behind. When the head accelerates, the tail can't keep up so the trail visibly stretches; when the head pauses or stops, the tail catches up exponentially-ish, briefly continuing forward before settling — that overshoot is what kills the "rigid" feel.
         </p>
 
-        <CodeBlock code={CODE_TAIL} caption="experiment.ts — tail keeps moving after head arrives" />
+        <CodeBlock code={CODE_TAIL} caption="experiment.ts — spring tail with min/max gap clamping" />
 
         <p>
-          Now the tail catches up at constant speed, the route completes, the next interval is scheduled, and a new random pair is picked. The animation loops forever as intended.
+          Three knobs in the panel control this: <code>snakeTrailMin</code> is the resting gap (the trail can't shrink below it), <code>snakeTrailLength</code> is the stretch cap (it can't grow past it), and <code>snakeTrailFollow</code> is a single tightness slider that maps to a stiffness/damping pair. A higher follow value = stiffer spring = the tail tracks the head closely; lower = lazy/very stretchy.
+        </p>
+
+        <h3>Continuous mode (one path that grows)</h3>
+        <p>
+          When <code>snakeContinuous</code> is on, the snake doesn't wind up and restart between routes. Instead, the head <em>pauses</em> at each destination for a random short interval, then a new leg is appended to the same path array. The trail is a fixed-length window behind the head along the cumulative-length axis, so it flows seamlessly across each leg's join — there's no visible "restart" because nothing actually restarts. After many minutes of operation we periodically prune the front of the path (everything behind the tail is no longer needed) so memory doesn't grow unbounded.
+        </p>
+
+        <h3>The GPS-arrow icon</h3>
+        <p>
+          A small SVG arrow rides at the snake's head, oriented to face the direction of travel. It's a <code>CSS2DObject</code> parented to the same group as the globe, so its position auto-tracks rotation. Each frame we project both the head and a point slightly behind it through the camera matrix, take the screen-space delta, and rotate the SVG by <code>atan2(dx, dy)</code> in CSS rotation convention (clockwise from up). The icon fades out smoothly when the head wraps around to the back hemisphere, using the same limb test as the country crosses.
         </p>
 
         <hr className="article-divider" />

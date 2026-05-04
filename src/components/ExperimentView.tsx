@@ -18,6 +18,7 @@ import { generateExport as generateCelestialFlare } from '../experiments/celesti
 import { generateExport as generateDitherForge } from '../experiments/dither-forge/generateExport.ts';
 import { generateExport as generateDotTrace } from '../experiments/dot-trace/generateExport.ts';
 import { generateExport as generateAuroraDrift } from '../experiments/aurora-drift/generateExport.ts';
+import { generateExport as generateGlobe1 } from '../experiments/globe-1/generateExport.ts';
 import type { GenerateExportOptions } from '../experiments/flow-field/generateExport.ts';
 
 const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string> = {
@@ -27,6 +28,7 @@ const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string>
   'dither-forge': generateDitherForge,
   'dot-trace': generateDotTrace,
   'aurora-drift': generateAuroraDrift,
+  'globe-1': generateGlobe1,
 };
 
 interface ExperimentViewProps {

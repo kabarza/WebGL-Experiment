@@ -28,10 +28,15 @@ export function generateExportHTML(options: ExportOptions): string {
   const { slug, version, sizing, fixedWidth, fixedHeight } = options;
   const bundleUrl = getBundleUrl(slug, version);
 
+  // Responsive default: 1:1 aspect with a min-height so the wrapper
+  // doesn't collapse to zero in flex sections / CMS contexts where
+  // the parent has `height:auto`. `overflow:hidden` clips CSS2D
+  // labels that drift outside during animation. The `aspect-ratio`
+  // can be overridden by the consumer's own CSS.
   const wrapperStyle =
     sizing === 'responsive'
-      ? 'position:relative;width:100%;height:100%;'
-      : `position:relative;width:${fixedWidth ?? 800}px;height:${fixedHeight ?? 600}px;`;
+      ? 'position:relative;width:100%;aspect-ratio:1/1;min-height:320px;overflow:hidden;'
+      : `position:relative;width:${fixedWidth ?? 800}px;height:${fixedHeight ?? 600}px;overflow:hidden;`;
 
   return [
     `<div data-webgl-experiment="${slug}" data-flow-tempo style="${wrapperStyle}">`,

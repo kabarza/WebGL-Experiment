@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
-    "dialkit": "^1.2.0",
+    "dialkit": "1.2.0",
     "lil-gui": "^0.21.0",
     "motion": "^12.38.0",
     "pako": "^2.1.0",
