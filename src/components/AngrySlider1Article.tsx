@@ -111,6 +111,276 @@ function ForkGeometryDiagram() {
   );
 }
 
+function LayerStackDiagram() {
+  const layers = [
+    {
+      y: 20,
+      name: 'FX canvas (2D)',
+      detail: 'trajectory dots · stretch bands · knob · smoke · fallen letters',
+      pe: 'pointer-events: none',
+      fill: 'rgba(226,64,47,0.07)',
+      stroke: 'rgba(226,64,47,0.45)',
+    },
+    {
+      y: 100,
+      name: 'DOM panel',
+      detail: 'labels · tags · values · track capsules · handles',
+      pe: 'pointer-events: auto',
+      fill: 'rgba(255,255,255,0.04)',
+      stroke: 'rgba(255,255,255,0.25)',
+    },
+    {
+      y: 180,
+      name: 'WebGL canvas',
+      detail: 'inert backdrop — clears to the background color, nothing else',
+      pe: 'pointer-events: none',
+      fill: 'rgba(255,255,255,0.02)',
+      stroke: 'rgba(255,255,255,0.15)',
+    },
+  ];
+  return (
+    <svg viewBox="0 0 860 260" fill="none" role="img" aria-label="Layer stack of the stage" style={{ maxWidth: 900 }}>
+      {layers.map((l) => (
+        <g key={l.name}>
+          <rect x="40" y={l.y} width="580" height="56" rx="8" fill={l.fill} stroke={l.stroke} strokeWidth="1.5" />
+          <text x="60" y={l.y + 25} fill="#e8e8e8" fontSize="14" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>{l.name}</text>
+          <text x="60" y={l.y + 43} fill="rgba(255,255,255,0.45)" fontSize="10.5" style={{ fontFamily: 'var(--font-mono)' }}>{l.detail}</text>
+          <text x="640" y={l.y + 25} fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>{l.pe.split(':')[0]}</text>
+          <text x="640" y={l.y + 40} fill="rgba(255,255,255,0.25)" fontSize="9" style={{ fontFamily: 'var(--font-mono)' }}>{l.pe.split(':').slice(1).join(':').trim()}</text>
+        </g>
+      ))}
+      {/* shake annotation */}
+      <path d="M 40 96 Q 20 128 40 176" stroke="rgba(226,64,47,0.5)" strokeWidth="1.2" fill="none" strokeDasharray="3 3" />
+      <text x="8" y="140" fill="rgba(255,138,128,0.7)" fontSize="9" style={{ fontFamily: 'var(--font-mono)' }}>shake = transform on both</text>
+    </svg>
+  );
+}
+
+function FixedTimestepDiagram() {
+  // Frames arrive irregularly (16 / 33 / 12 ms). The accumulator banks
+  // that time and the physics spends it in uniform 1/240s slices.
+  const frames = [
+    { w: 64, ms: '16ms' },
+    { w: 128, ms: '33ms' },
+    { w: 48, ms: '12ms' },
+  ];
+  let fx = 60;
+  const frameRects = frames.map((f) => {
+    const r = { x: fx, w: f.w, ms: f.ms };
+    fx += f.w + 14;
+    return r;
+  });
+  const slices = Array.from({ length: 16 }, (_, i) => 60 + i * 34);
+  return (
+    <svg viewBox="0 0 860 210" fill="none" role="img" aria-label="Fixed timestep accumulator" style={{ maxWidth: 900 }}>
+      <text x="60" y="28" fill="rgba(255,255,255,0.55)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>render frames — uneven by nature</text>
+      {frameRects.map((f) => (
+        <g key={f.ms}>
+          <rect x={f.x} y="40" width={f.w} height="30" rx="4" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+          <text x={f.x + f.w / 2} y="59" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>{f.ms}</text>
+        </g>
+      ))}
+      {/* arrows down */}
+      {frameRects.map((f, i) => (
+        <g key={i}>
+          <line x1={f.x + f.w / 2} y1="74" x2={f.x + f.w / 2} y2="108" stroke="rgba(226,64,47,0.5)" strokeWidth="1.2" strokeDasharray="3 3" />
+          <polygon points={`${f.x + f.w / 2},112 ${f.x + f.w / 2 - 4},104 ${f.x + f.w / 2 + 4},104`} fill="rgba(226,64,47,0.5)" />
+        </g>
+      ))}
+      <text x="60" y="132" fill="rgba(255,138,128,0.75)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>accumulator → fixed 1/240 s slices</text>
+      {slices.map((x) => (
+        <g key={x}>
+          <rect x={x} y="142" width="28" height="26" rx="3" fill="rgba(226,64,47,0.14)" stroke="rgba(226,64,47,0.55)" strokeWidth="1" />
+        </g>
+      ))}
+      <text x="60" y="192" fill="rgba(255,255,255,0.45)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>
+        every slice runs physStep() once — a dropped frame advances the same distance as the prediction modeled
+      </text>
+    </svg>
+  );
+}
+
+function GrabThresholdDiagram() {
+  // Vertical zones around the track: inside ±13px the drag stays a
+  // normal slider; beyond it the slingshot arms.
+  const cx = 380;
+  const trackY = 120;
+  return (
+    <svg viewBox="0 0 760 240" fill="none" role="img" aria-label="Grab threshold zones" style={{ maxWidth: 900 }}>
+      {/* outer zone */}
+      <rect x="60" y="24" width="640" height="192" fill="rgba(226,64,47,0.06)" stroke="rgba(226,64,47,0.3)" strokeWidth="1" strokeDasharray="4 3" />
+      {/* inner zone */}
+      <rect x={cx - 220} y={trackY - 44} width="440" height="88" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="4 3" />
+      {/* track */}
+      <rect x="60" y={trackY - 5} width="640" height="10" rx="5" fill="rgba(90,90,100,0.55)" stroke="rgba(0,0,0,0.6)" strokeWidth="1" />
+      <rect x="60" y={trackY - 5} width="320" height="10" rx="5" fill="rgba(226,64,47,0.85)" stroke="rgba(110,19,12,0.9)" strokeWidth="1" />
+      <circle cx={cx} cy={trackY} r="12" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.45)" strokeWidth="1" />
+      {/* pointer samples */}
+      <circle cx={cx + 60} cy={trackY - 6} r="5" fill="rgba(255,255,255,0.7)" />
+      <text x={cx + 72} y={trackY - 2} fill="rgba(255,255,255,0.5)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>still a slider</text>
+      <circle cx={cx + 130} cy={trackY - 60} r="5" fill="#e2402f" />
+      <text x={cx + 142} y={trackY - 56} fill="rgba(255,138,128,0.85)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>slingshot armed → knob on canvas</text>
+      {/* threshold lines */}
+      <line x1={cx - 220} y1={trackY - 13} x2={cx + 220} y2={trackY - 13} stroke="rgba(226,64,47,0.55)" strokeWidth="1" strokeDasharray="3 3" />
+      <line x1={cx - 220} y1={trackY + 13} x2={cx + 220} y2={trackY + 13} stroke="rgba(226,64,47,0.55)" strokeWidth="1" strokeDasharray="3 3" />
+      <text x={cx + 226} y={trackY - 9} fill="rgba(255,138,128,0.7)" fontSize="9" style={{ fontFamily: 'var(--font-mono)' }}>13px</text>
+      <text x={cx - 214} y={trackY + 28} fill="rgba(255,255,255,0.45)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>±13px — was 26px, halved so the catch feels instant</text>
+    </svg>
+  );
+}
+
+function RopeGeometryDiagram() {
+  const x0 = 60, x1 = 700, lineY = 70;
+  const bend = { x: 380, y: 190 };
+  const knobX = 520;
+  // knob rides the right segment (bend is left of the knob)
+  const t = (knobX - bend.x) / (x1 - bend.x);
+  const knobY = bend.y + (lineY - bend.y) * t;
+  return (
+    <svg viewBox="0 0 760 240" fill="none" role="img" aria-label="Rope bend geometry" style={{ maxWidth: 900 }}>
+      {/* rest position ghost */}
+      <line x1={x0} y1={lineY} x2={x1} y2={lineY} stroke="rgba(255,255,255,0.12)" strokeWidth="2" strokeDasharray="5 5" />
+      <text x={x1} y={lineY - 10} textAnchor="end" fill="rgba(255,255,255,0.3)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>rest position</text>
+      {/* progress side: red */}
+      <line x1={x0} y1={lineY} x2={knobX} y2={knobY} stroke="#d2392c" strokeWidth="3" strokeLinecap="round" />
+      {/* slack side: gray, through the bend */}
+      <polyline points={`${knobX},${knobY} ${bend.x},${bend.y} ${x1},${lineY}`} stroke="#4a4a54" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* bend marker */}
+      <circle cx={bend.x} cy={bend.y} r="5" fill="rgba(255,255,255,0.65)" />
+      <text x={bend.x} y={bend.y + 24} textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>grab point = bend</text>
+      {/* knob */}
+      <circle cx={knobX} cy={knobY} r="12" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.45)" strokeWidth="1" />
+      <text x={knobX + 20} y={knobY - 6} fill="rgba(255,255,255,0.6)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>knob threads the rope —</text>
+      <text x={knobX + 20} y={knobY + 8} fill="rgba(255,255,255,0.6)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>y interpolated on its segment</text>
+      {/* launch vectors */}
+      <line x1={knobX} y1={knobY} x2={knobX - 70} y2={knobY - 110} stroke="rgba(226,64,47,0.8)" strokeWidth="1.5" />
+      <polygon points={`${knobX - 70},${knobY - 110} ${knobX - 64},${knobY - 98} ${knobX - 76},${knobY - 100}`} fill="rgba(226,64,47,0.8)" />
+      <text x={knobX - 96} y={knobY - 118} fill="rgba(255,138,128,0.9)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>launch from HERE</text>
+      <text x={x0} y={lineY - 10} fill="rgba(255,138,128,0.85)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>progress (red)</text>
+    </svg>
+  );
+}
+
+function SCurveDiagram() {
+  // Plots the real easeInOutBack over t 0..1, including the
+  // anticipation dip and the overshoot past the target.
+  const c2 = 1.70158 * 1.525;
+  const ease = (x: number) =>
+    x < 0.5
+      ? (Math.pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
+      : (Math.pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+  const x0 = 70, y0 = 200, w = 600, h = 170;
+  const px = (t: number) => x0 + t * w;
+  const py = (v: number) => y0 - v * h;
+  let path = '';
+  for (let i = 0; i <= 100; i++) {
+    const t = i / 100;
+    path += `${i === 0 ? 'M' : 'L'} ${px(t).toFixed(1)} ${py(ease(t)).toFixed(1)} `;
+  }
+  return (
+    <svg viewBox="0 0 760 260" fill="none" role="img" aria-label="easeInOutBack curve" style={{ maxWidth: 900 }}>
+      {/* axes */}
+      <line x1={x0} y1={y0 + 30} x2={x0 + w + 20} y2={y0 + 30} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <line x1={x0} y1={y0 + 30} x2={x0} y2={py(1.12)} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      {/* target line at 1.0 */}
+      <line x1={x0} y1={py(1)} x2={x0 + w + 20} y2={py(1)} stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeDasharray="4 4" />
+      <text x={x0 + w + 24} y={py(1) + 4} fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>target</text>
+      <text x={x0 - 12} y={py(1) + 4} textAnchor="end" fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>1.0</text>
+      <text x={x0 - 12} y={y0 + 4} textAnchor="end" fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>0</text>
+      {/* zero line */}
+      <line x1={x0} y1={y0} x2={x0 + w} y2={y0} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+      {/* the curve */}
+      <path d={path} stroke="#e2402f" strokeWidth="2.5" fill="none" />
+      {/* phase labels */}
+      <text x={px(0.06)} y={py(-0.14)} fill="rgba(255,138,128,0.85)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>anticipation</text>
+      <text x={px(0.32)} y={py(0.42)} fill="rgba(255,255,255,0.5)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>sweep</text>
+      <text x={px(0.62)} y={py(1.13)} fill="rgba(255,138,128,0.85)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>overshoot</text>
+      <text x={px(0.86)} y={py(0.82)} fill="rgba(255,255,255,0.5)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>settle</text>
+      {/* caption */}
+      <text x={x0 + w + 24} y={y0 + 4} fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>t</text>
+      <text x={x0} y={y0 + 54} fill="rgba(255,255,255,0.45)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>
+        thumb snaps to 1.0 at t=0 — the curve is the fill catching up
+      </text>
+    </svg>
+  );
+}
+
+function LetterLifecycleDiagram() {
+  const steps = [
+    { x: 30, title: 'DOM letter', detail: 'measured rect,\nvisibility: hidden on hit', letter: 'F', rot: 0, particle: false },
+    { x: 240, title: 'particle', detail: 'vx / vy / spin,\ngravity applies', letter: 'F', rot: -0.5, particle: true },
+    { x: 450, title: 'ground pile', detail: 'bounce → rest on\nthe ground line', letter: 'F', rot: 0.6, particle: true, piled: true },
+    { x: 660, title: 'restore', detail: 'alpha fades after\n4s — DOM shows again', letter: 'F', rot: 0, particle: false, ghost: true },
+  ] as const;
+  return (
+    <svg viewBox="0 0 860 190" fill="none" role="img" aria-label="Letter lifecycle" style={{ maxWidth: 900 }}>
+      {steps.map((s, i) => (
+        <g key={s.title}>
+          <rect x={s.x} y="24" width="170" height="110" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+          {/* ground line in the pile cell */}
+          {('piled' in s && s.piled) && <line x1={s.x + 15} y1={110} x2={s.x + 155} y2={110} stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />}
+          {/* the letter */}
+          {('ghost' in s && s.ghost) ? (
+            <text x={s.x + 85} y="92" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="34" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>{s.letter}</text>
+          ) : (
+            <g transform={`translate(${s.x + 85} ${('piled' in s && s.piled) ? 96 : 78}) rotate(${(s.rot * 180) / Math.PI})`}>
+              <text textAnchor="middle" fill={s.particle ? '#e2402f' : '#f4f4f6'} fontSize="34" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>{s.letter}</text>
+            </g>
+          )}
+          {s.particle && (
+            <>
+              <line x1={s.x + 85} y1="78" x2={s.x + 120} y2="48" stroke="rgba(226,64,47,0.8)" strokeWidth="1.5" />
+              <polygon points={`${s.x + 120},48 ${s.x + 110},50 ${s.x + 116},58`} fill="rgba(226,64,47,0.8)" />
+              <text x={s.x + 124} y="46" fill="rgba(255,138,128,0.8)" fontSize="9" style={{ fontFamily: 'var(--font-mono)' }}>vx, vy, spin</text>
+            </>
+          )}
+          <text x={s.x + 85} y="152" textAnchor="middle" fill="#e8e8e8" fontSize="12.5" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>{s.title}</text>
+          {s.detail.split('\n').map((line, j) => (
+            <text key={j} x={s.x + 85} y={166 + j * 12} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="9" style={{ fontFamily: 'var(--font-mono)' }}>{line}</text>
+          ))}
+          {i < steps.length - 1 && (
+            <>
+              <line x1={s.x + 174} y1="79" x2={s.x + 206} y2="79" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+              <polygon points={`${s.x + 210},79 ${s.x + 201},74 ${s.x + 201},84`} fill="rgba(255,255,255,0.3)" />
+            </>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function BoomLayersDiagram() {
+  // Timeline 0..0.7s with the three explosion layers.
+  const x0 = 70, w = 700, t = (s: number) => x0 + (s / 0.7) * w;
+  return (
+    <svg viewBox="0 0 860 250" fill="none" role="img" aria-label="Explosion sound layers" style={{ maxWidth: 900 }}>
+      {/* lane 1: sub drop */}
+      <text x={x0} y="34" fill="rgba(255,255,255,0.6)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>sub sine 160 → 26 Hz</text>
+      <rect x={x0} y="52" width={w} height="74" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+      <path d={`M ${t(0)} 60 Q ${t(0.12)} 100 ${t(0.5)} 118`} stroke="#e2402f" strokeWidth="2.5" fill="none" />
+      {/* lane 2: noise burst */}
+      <text x={x0} y="152" fill="rgba(255,255,255,0.6)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>noise burst 2.6k → 120 Hz</text>
+      <path
+        d={`M ${t(0)} 210 L ${t(0.015)} 168 L ${t(0.1)} 196 L ${t(0.25)} 204 L ${t(0.5)} 210`}
+        stroke="rgba(255,255,255,0.65)"
+        strokeWidth="2"
+        fill="none"
+      />
+      {/* lane 3: crackle pops */}
+      <text x={x0} y="238" fill="rgba(255,255,255,0.6)" fontSize="11" style={{ fontFamily: 'var(--font-mono)' }}>debris crackle ×5</text>
+      {[0.14, 0.21, 0.3, 0.36, 0.46].map((s, i) => (
+        <g key={i}>
+          <line x1={t(s)} y1={244} x2={t(s)} y2={232 - (i % 3) * 4} stroke="#ffd166" strokeWidth="2" />
+          <circle cx={t(s)} cy={230 - (i % 3) * 4} r="2" fill="#ffd166" />
+        </g>
+      ))}
+      {/* detune note */}
+      <text x={x0 + w} y="34" textAnchor="end" fill="rgba(255,209,102,0.75)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>±15% random detune per blast</text>
+    </svg>
+  );
+}
+
 /* ── Code block helper ─────────────────────────────── */
 
 function CodeBlock({ code, caption }: { code: string; caption?: string }) {
@@ -545,6 +815,17 @@ export function AngrySlider1Article() {
         </p>
         <div className="article-breakout">
           <div className="article-diagram">
+            <LayerStackDiagram />
+            <p className="article-diagram-caption">
+              The three-layer stage. Only the DOM panel accepts pointers — the
+              canvases are inert surfaces. The panel shake is a transform on
+              the middle layer mirrored by an offset in the canvas transform,
+              so typography and effects move as one object.
+            </p>
+          </div>
+        </div>
+        <div className="article-breakout">
+          <div className="article-diagram">
             <RowAnatomyDiagram />
             <p className="article-diagram-caption">
               One slider row. The track capsule, red progress fill and shaded
@@ -583,6 +864,18 @@ export function AngrySlider1Article() {
         </p>
 
         <CodeBlock code={CODE_PHYS} caption="The shared integrator + the prediction loop" />
+
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <FixedTimestepDiagram />
+            <p className="article-diagram-caption">
+              Frames arrive unevenly; the accumulator converts them into uniform
+              1/240s slices. Whether a frame is 12ms or 33ms late, the physics
+              advances by exactly the number of slices the banked time buys —
+              so the dots and the flight always travel the same distance.
+            </p>
+          </div>
+        </div>
 
         <p>
           The flight runs on an accumulator — real frame time is banked and
@@ -628,6 +921,19 @@ export function AngrySlider1Article() {
           two bands stretch from a fork on the track to the knob, and a creak
           starts rising in pitch with the pull distance.
         </p>
+
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <GrabThresholdDiagram />
+            <p className="article-diagram-caption">
+              The grab threshold is a vertical zone, not a gesture: inside
+              ±13px of the line the thumb keeps behaving like a slider, past it
+              the slingshot arms and the knob jumps to the canvas. The zone was
+              halved after playtesting — the catch should feel instant.
+            </p>
+          </div>
+        </div>
+
         <p>
           The fork is geometry with an opinion. The left dot sits{' '}
           <em>exactly on the tip of the red progress fill</em> — the slingshot
@@ -676,6 +982,18 @@ export function AngrySlider1Article() {
 
         <CodeBlock code={CODE_ROPEGEOM} caption="Knob-on-rope interpolation" />
 
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <RopeGeometryDiagram />
+            <p className="article-diagram-caption">
+              Grabbing bends the rope through the cursor; the knob threads the
+              opposite segment, sinking as the bend deepens. The red side is
+              the progress, the gray side the slack — and the launch fires
+              from the knob's hanging position, not from the rail.
+            </p>
+          </div>
+        </div>
+
         <p>
           Release fires the knob from its <em>hanging</em> position — not the
           rail — with vertical speed from the pull depth and horizontal speed
@@ -702,6 +1020,18 @@ export function AngrySlider1Article() {
 
         <CodeBlock code={CODE_S_CURVE} caption="The only easing in the panel" />
 
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <SCurveDiagram />
+            <p className="article-diagram-caption">
+              The real easeInOutBack, plotted. The dip below zero is the
+              anticipation (the fill leans back for a frame), the hump past 1.0
+              is the overshoot, and the tail is the settle — the whole
+              personality of the landing in one cubic.
+            </p>
+          </div>
+        </div>
+
         <p>
           The discipline here is negative space: the bar never moves backward
           as a "reset" when you arm a slingshot, never animates while you drag,
@@ -723,6 +1053,19 @@ export function AngrySlider1Article() {
           and rest on the ground line. After a timeout they fade and their DOM
           originals reappear, so the panel always heals.
         </p>
+
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <LetterLifecycleDiagram />
+            <p className="article-diagram-caption">
+              A letter's four lives: measured DOM rect → canvas particle with
+              the impact's velocity and a random spin → rested debris on the
+              ground line → timed fade back into the label. The panel always
+              heals because the DOM original never stopped existing.
+            </p>
+          </div>
+        </div>
+
         <p>
           The world reacts elsewhere too: hard crossings ripple the tracks, a
           ground hit kicks up smoke puffs with buoyancy and shakes the panel,
@@ -759,6 +1102,18 @@ export function AngrySlider1Article() {
         </p>
 
         <CodeBlock code={CODE_BOOMSOUND} caption="The explosion voice — sound.ts" />
+
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <BoomLayersDiagram />
+            <p className="article-diagram-caption">
+              The explosion on a timeline: the sub drop carries the weight, the
+              noise burst is the hit, and the five crackle pops are the debris
+              settling after. Random detuning per blast keeps repetition from
+              flattening it.
+            </p>
+          </div>
+        </div>
 
         {/* ── 09 Prompt ── */}
         <hr className="article-divider" />
