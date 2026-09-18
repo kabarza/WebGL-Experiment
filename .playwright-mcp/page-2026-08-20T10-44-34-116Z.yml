@@ -1,0 +1,430 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - heading "Experiments" [level=1] [ref=f3e5]
+    - paragraph [ref=f3e6]: WebGPU Experiment Showcase
+    - button "Open Brand Tool →" [ref=f3e7] [cursor=pointer]
+  - tablist [ref=f3e8]:
+    - tab "Experiments" [selected] [ref=f3e9] [cursor=pointer]
+    - tab "Vision" [ref=f3e10] [cursor=pointer]
+  - generic [ref=f3e11]:
+    - button "C Experiment is live — click to toggle Coral-1 · Reaction Field Gray-Scott reaction-diffusion grown on the GPU. Feed/kill maps vary across the canvas, diffusion can be steered directionally, and an uploaded image can seed, mask or densify the growth. Flat, outline, emboss, gradient and halftone renders; SVG/PNG export via the Brand Tool. reaction-diffusion gray-scott coral brand pattern webgl2" [ref=f3e12] [cursor=pointer]:
+      - generic [ref=f3e13]:
+        - generic [ref=f3e14]: C
+        - button "Experiment is live — click to toggle" [ref=f3e15]: live
+      - generic [ref=f3e17]:
+        - heading "Coral-1 · Reaction Field" [level=3] [ref=f3e18]
+        - paragraph [ref=f3e19]: Gray-Scott reaction-diffusion grown on the GPU. Feed/kill maps vary across the canvas, diffusion can be steered directionally, and an uploaded image can seed, mask or densify the growth. Flat, outline, emboss, gradient and halftone renders; SVG/PNG export via the Brand Tool.
+        - generic [ref=f3e20]:
+          - generic [ref=f3e21]: reaction-diffusion
+          - generic [ref=f3e22]: gray-scott
+          - generic [ref=f3e23]: coral
+          - generic [ref=f3e24]: brand
+          - generic [ref=f3e25]: pattern
+          - generic [ref=f3e26]: webgl2
+    - 'button "C Experiment is live — click to toggle Coral-2 · Turing Flow Multi-scale Turing patterns (McCabe) solved from the texture mip chain in one pass per step. A flow field — noise, radial, concentric or the edges of an uploaded image — stretches the activator so blobs become oriented stripes: fingerprints, wood grain, engraving. Shares the brand render + export pipeline with Coral-1. turing multi-scale reaction-diffusion coral brand pattern webgl2" [ref=f3e27] [cursor=pointer]':
+      - generic [ref=f3e28]:
+        - generic [ref=f3e29]: C
+        - button "Experiment is live — click to toggle" [ref=f3e30]: live
+      - generic [ref=f3e32]:
+        - heading "Coral-2 · Turing Flow" [level=3] [ref=f3e33]
+        - paragraph [ref=f3e34]: "Multi-scale Turing patterns (McCabe) solved from the texture mip chain in one pass per step. A flow field — noise, radial, concentric or the edges of an uploaded image — stretches the activator so blobs become oriented stripes: fingerprints, wood grain, engraving. Shares the brand render + export pipeline with Coral-1."
+        - generic [ref=f3e35]:
+          - generic [ref=f3e36]: turing
+          - generic [ref=f3e37]: multi-scale
+          - generic [ref=f3e38]: reaction-diffusion
+          - generic [ref=f3e39]: coral
+          - generic [ref=f3e40]: brand
+          - generic [ref=f3e41]: pattern
+          - generic [ref=f3e42]: webgl2
+    - button "F Experiment is live — click to toggle Flow Player 4 Branded video player for Webflow with four source types — Vimeo, YouTube, HLS streaming (.m3u8 via hls.js), and plain MP4/WebM. URL auto-detection picks the right provider. Designer chooses JS-rendered or Webflow-elements UI mode in DialKit. Distributed as a small JSON paste + a CDN-hosted runtime — no project-corrupting tree gymnastics. Consolidates everything learned from v1/v2/v3 plus the working patterns from flowplayplus and Osmo. video vimeo youtube hls webflow player" [ref=f3e43] [cursor=pointer]:
+      - generic [ref=f3e44]:
+        - generic [ref=f3e45]: F
+        - button "Experiment is live — click to toggle" [ref=f3e46]: live
+      - generic [ref=f3e48]:
+        - heading "Flow Player 4" [level=3] [ref=f3e49]
+        - paragraph [ref=f3e50]: Branded video player for Webflow with four source types — Vimeo, YouTube, HLS streaming (.m3u8 via hls.js), and plain MP4/WebM. URL auto-detection picks the right provider. Designer chooses JS-rendered or Webflow-elements UI mode in DialKit. Distributed as a small JSON paste + a CDN-hosted runtime — no project-corrupting tree gymnastics. Consolidates everything learned from v1/v2/v3 plus the working patterns from flowplayplus and Osmo.
+        - generic [ref=f3e51]:
+          - generic [ref=f3e52]: video
+          - generic [ref=f3e53]: vimeo
+          - generic [ref=f3e54]: youtube
+          - generic [ref=f3e55]: hls
+          - generic [ref=f3e56]: webflow
+          - generic [ref=f3e57]: player
+    - button "F Experiment is live — click to toggle Flow Player 3 Branded Vimeo + YouTube player. Toggle between JS-rendered controls (small Webflow tree, theme via CSS variables) and Webflow-elements controls (every button is a tree node, designer-editable). Auto-detects Vimeo account tier via oEmbed and falls back to the native player on free accounts. No SDKs — raw postMessage, ~12 KB gzipped. video vimeo youtube player webflow gdpr" [ref=f3e58] [cursor=pointer]:
+      - generic [ref=f3e59]:
+        - generic [ref=f3e60]: F
+        - button "Experiment is live — click to toggle" [ref=f3e61]: live
+      - generic [ref=f3e63]:
+        - heading "Flow Player 3" [level=3] [ref=f3e64]
+        - paragraph [ref=f3e65]: Branded Vimeo + YouTube player. Toggle between JS-rendered controls (small Webflow tree, theme via CSS variables) and Webflow-elements controls (every button is a tree node, designer-editable). Auto-detects Vimeo account tier via oEmbed and falls back to the native player on free accounts. No SDKs — raw postMessage, ~12 KB gzipped.
+        - generic [ref=f3e66]:
+          - generic [ref=f3e67]: video
+          - generic [ref=f3e68]: vimeo
+          - generic [ref=f3e69]: youtube
+          - generic [ref=f3e70]: player
+          - generic [ref=f3e71]: webflow
+          - generic [ref=f3e72]: gdpr
+    - button "F Experiment is live — click to toggle Flow Player 2 HTML5-native video player whose entire UI lives as Webflow elements — play/pause buttons, progress bar, time labels, settings menu, even both icon states all sit in the canvas as real nodes you can restyle, hide, or replace from the Designer. The runtime script just listens to data-video=\"…\" attributes and flips a data-state on the wrapper; CSS does the rest. Multiple instances on a page are independent. Designed to drop in the Webflow JSON via the paste flow. video html5 player webflow multi-instance" [ref=f3e73] [cursor=pointer]:
+      - generic [ref=f3e74]:
+        - generic [ref=f3e75]: F
+        - button "Experiment is live — click to toggle" [ref=f3e76]: live
+      - generic [ref=f3e78]:
+        - heading "Flow Player 2" [level=3] [ref=f3e79]
+        - paragraph [ref=f3e80]: HTML5-native video player whose entire UI lives as Webflow elements — play/pause buttons, progress bar, time labels, settings menu, even both icon states all sit in the canvas as real nodes you can restyle, hide, or replace from the Designer. The runtime script just listens to data-video="…" attributes and flips a data-state on the wrapper; CSS does the rest. Multiple instances on a page are independent. Designed to drop in the Webflow JSON via the paste flow.
+        - generic [ref=f3e81]:
+          - generic [ref=f3e82]: video
+          - generic [ref=f3e83]: html5
+          - generic [ref=f3e84]: player
+          - generic [ref=f3e85]: webflow
+          - generic [ref=f3e86]: multi-instance
+    - 'button "F Experiment is live — click to toggle Flow Player Branded video player for Vimeo and YouTube — custom controls, accent theming, optional GDPR 2-click consent. No third-party JS library, no streaming/DRM scaffolding (the iframes carry that). Designed for Webflow: pre-play layers (poster, play button, consent notice) live as Webflow elements; the runtime control bar is JS-rendered but every part is a Webflow class so designers can theme it from the Style panel. video vimeo youtube player webflow gdpr" [ref=f3e87] [cursor=pointer]':
+      - generic [ref=f3e88]:
+        - generic [ref=f3e89]: F
+        - button "Experiment is live — click to toggle" [ref=f3e90]: live
+      - generic [ref=f3e92]:
+        - heading "Flow Player" [level=3] [ref=f3e93]
+        - paragraph [ref=f3e94]: "Branded video player for Vimeo and YouTube — custom controls, accent theming, optional GDPR 2-click consent. No third-party JS library, no streaming/DRM scaffolding (the iframes carry that). Designed for Webflow: pre-play layers (poster, play button, consent notice) live as Webflow elements; the runtime control bar is JS-rendered but every part is a Webflow class so designers can theme it from the Style panel."
+        - generic [ref=f3e95]:
+          - generic [ref=f3e96]: video
+          - generic [ref=f3e97]: vimeo
+          - generic [ref=f3e98]: youtube
+          - generic [ref=f3e99]: player
+          - generic [ref=f3e100]: webflow
+          - generic [ref=f3e101]: gdpr
+    - button "P Experiment is live — click to toggle Plyr Vimeo Inline Vimeo video player powered by Plyr.io. Paste any Vimeo URL into the data-flow-vimeo attribute on the Webflow component and the player auto-initializes — supports multiple players per page, custom accent color, and the standard Plyr control set. video vimeo plyr embed webflow" [ref=f3e102] [cursor=pointer]:
+      - generic [ref=f3e103]:
+        - generic [ref=f3e104]: P
+        - button "Experiment is live — click to toggle" [ref=f3e105]: live
+      - generic [ref=f3e107]:
+        - heading "Plyr Vimeo" [level=3] [ref=f3e108]
+        - paragraph [ref=f3e109]: Inline Vimeo video player powered by Plyr.io. Paste any Vimeo URL into the data-flow-vimeo attribute on the Webflow component and the player auto-initializes — supports multiple players per page, custom accent color, and the standard Plyr control set.
+        - generic [ref=f3e110]:
+          - generic [ref=f3e111]: video
+          - generic [ref=f3e112]: vimeo
+          - generic [ref=f3e113]: plyr
+          - generic [ref=f3e114]: embed
+          - generic [ref=f3e115]: webflow
+    - 'button "V Experiment is live — click to toggle Vimeo Native Inline Vimeo player with zero external dependencies. Aspect ratio, autoplay, loop, mute, controls visibility, and accent color are all driven by Vimeo iframe URL params + CSS — no Plyr, no CDN script, no library to load. The Webflow component is ~600 bytes of HTML/CSS plus a tiny init script that reads `data-vimeo-url` from each instance. video vimeo native iframe webflow no-deps" [ref=f3e116] [cursor=pointer]':
+      - generic [ref=f3e117]:
+        - generic [ref=f3e118]: V
+        - button "Experiment is live — click to toggle" [ref=f3e119]: live
+      - generic [ref=f3e121]:
+        - heading "Vimeo Native" [level=3] [ref=f3e122]
+        - paragraph [ref=f3e123]: "Inline Vimeo player with zero external dependencies. Aspect ratio, autoplay, loop, mute, controls visibility, and accent color are all driven by Vimeo iframe URL params + CSS — no Plyr, no CDN script, no library to load. The Webflow component is ~600 bytes of HTML/CSS plus a tiny init script that reads `data-vimeo-url` from each instance."
+        - generic [ref=f3e124]:
+          - generic [ref=f3e125]: video
+          - generic [ref=f3e126]: vimeo
+          - generic [ref=f3e127]: native
+          - generic [ref=f3e128]: iframe
+          - generic [ref=f3e129]: webflow
+          - generic [ref=f3e130]: no-deps
+    - button "G Experiment is live — click to toggle Globe 1 Three.js wireframe globe with country crosshairs snapped to grid intersections, drag-to-spin with spring-back, and a snake-style highlight that traces L-shaped paths along the meridians and parallels between countries. three.js globe wireframe network animation How it works" [ref=f3e131] [cursor=pointer]:
+      - generic [ref=f3e132]:
+        - generic [ref=f3e133]: G
+        - button "Experiment is live — click to toggle" [ref=f3e134]: live
+      - generic [ref=f3e136]:
+        - heading "Globe 1" [level=3] [ref=f3e137]
+        - paragraph [ref=f3e138]: Three.js wireframe globe with country crosshairs snapped to grid intersections, drag-to-spin with spring-back, and a snake-style highlight that traces L-shaped paths along the meridians and parallels between countries.
+        - generic [ref=f3e139]:
+          - generic [ref=f3e140]: three.js
+          - generic [ref=f3e141]: globe
+          - generic [ref=f3e142]: wireframe
+          - generic [ref=f3e143]: network
+          - generic [ref=f3e144]: animation
+        - button "How it works" [ref=f3e145]
+    - button "h Experiment is draft (hidden in production) — click to toggle halftone dots Halftone dot grid effect. Divides a source image into a grid of anti-aliased circles — radius driven by pixel luminance or fixed. Mouse wheel controls grid density. halftone shader image-processing sdf" [ref=f3e148] [cursor=pointer]:
+      - generic [ref=f3e149]:
+        - generic [ref=f3e150]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e151]: draft
+      - generic [ref=f3e153]:
+        - heading "halftone dots" [level=3] [ref=f3e154]
+        - paragraph [ref=f3e155]: Halftone dot grid effect. Divides a source image into a grid of anti-aliased circles — radius driven by pixel luminance or fixed. Mouse wheel controls grid density.
+        - generic [ref=f3e156]:
+          - generic [ref=f3e157]: halftone
+          - generic [ref=f3e158]: shader
+          - generic [ref=f3e159]: image-processing
+          - generic [ref=f3e160]: sdf
+    - button "H Experiment is draft (hidden in production) — click to toggle Halftone Pulse Animated halftone grid — circles pulse, ripple, and flow driven by noise and sine waves with mouse interaction halftone procedural animation sdf interactive" [ref=f3e161] [cursor=pointer]:
+      - generic [ref=f3e162]:
+        - generic [ref=f3e163]: H
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e164]: draft
+      - generic [ref=f3e166]:
+        - heading "Halftone Pulse" [level=3] [ref=f3e167]
+        - paragraph [ref=f3e168]: Animated halftone grid — circles pulse, ripple, and flow driven by noise and sine waves with mouse interaction
+        - generic [ref=f3e169]:
+          - generic [ref=f3e170]: halftone
+          - generic [ref=f3e171]: procedural
+          - generic [ref=f3e172]: animation
+          - generic [ref=f3e173]: sdf
+          - generic [ref=f3e174]: interactive
+    - button "h Experiment is draft (hidden in production) — click to toggle html-in-canvas 1 Selectable HTML typography living inside a WebGL canvas — real DOM elements piped through texElementImage2D over a vertical aurora curtain, with dither, prism and streak text effects. html-in-canvas webgl beta-api typography aurora" [ref=f3e175] [cursor=pointer]:
+      - generic [ref=f3e176]:
+        - generic [ref=f3e177]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e178]: draft
+      - generic [ref=f3e180]:
+        - heading "html-in-canvas 1" [level=3] [ref=f3e181]
+        - paragraph [ref=f3e182]: Selectable HTML typography living inside a WebGL canvas — real DOM elements piped through texElementImage2D over a vertical aurora curtain, with dither, prism and streak text effects.
+        - generic [ref=f3e183]:
+          - generic [ref=f3e184]: html-in-canvas
+          - generic [ref=f3e185]: webgl
+          - generic [ref=f3e186]: beta-api
+          - generic [ref=f3e187]: typography
+          - generic [ref=f3e188]: aurora
+    - button "h Experiment is draft (hidden in production) — click to toggle html-in-canvas 2 A selectable HTML heading and paragraph routed through the html-in-canvas beta API, then filtered with live WebGL effects over an aurora drift field. html-in-canvas webgl beta-api typography" [ref=f3e189] [cursor=pointer]:
+      - generic [ref=f3e190]:
+        - generic [ref=f3e191]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e192]: draft
+      - generic [ref=f3e194]:
+        - heading "html-in-canvas 2" [level=3] [ref=f3e195]
+        - paragraph [ref=f3e196]: A selectable HTML heading and paragraph routed through the html-in-canvas beta API, then filtered with live WebGL effects over an aurora drift field.
+        - generic [ref=f3e197]:
+          - generic [ref=f3e198]: html-in-canvas
+          - generic [ref=f3e199]: webgl
+          - generic [ref=f3e200]: beta-api
+          - generic [ref=f3e201]: typography
+    - button "H Experiment is draft (hidden in production) — click to toggle HTML-in-Canvas 3 Aurora-drift background with live DOM text rendered through WebGL shaders — dither, scanline, ghost, pixelate, and glitch effects on selectable typography. glsl html-in-canvas typography dither glitch" [ref=f3e202] [cursor=pointer]:
+      - generic [ref=f3e203]:
+        - generic [ref=f3e204]: H
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e205]: draft
+      - generic [ref=f3e207]:
+        - heading "HTML-in-Canvas 3" [level=3] [ref=f3e208]
+        - paragraph [ref=f3e209]: Aurora-drift background with live DOM text rendered through WebGL shaders — dither, scanline, ghost, pixelate, and glitch effects on selectable typography.
+        - generic [ref=f3e210]:
+          - generic [ref=f3e211]: glsl
+          - generic [ref=f3e212]: html-in-canvas
+          - generic [ref=f3e213]: typography
+          - generic [ref=f3e214]: dither
+          - generic [ref=f3e215]: glitch
+    - button "h Experiment is draft (hidden in production) — click to toggle html-in-canvas 4 Aurora drift background with selectable DOM text rendered through the html-in-canvas beta API, filtered by switchable WebGL effects — dither, scanline, ghost, pixelate, glitch — with grain overlay. html-in-canvas webgl beta-api typography aurora" [ref=f3e216] [cursor=pointer]:
+      - generic [ref=f3e217]:
+        - generic [ref=f3e218]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e219]: draft
+      - generic [ref=f3e221]:
+        - heading "html-in-canvas 4" [level=3] [ref=f3e222]
+        - paragraph [ref=f3e223]: Aurora drift background with selectable DOM text rendered through the html-in-canvas beta API, filtered by switchable WebGL effects — dither, scanline, ghost, pixelate, glitch — with grain overlay.
+        - generic [ref=f3e224]:
+          - generic [ref=f3e225]: html-in-canvas
+          - generic [ref=f3e226]: webgl
+          - generic [ref=f3e227]: beta-api
+          - generic [ref=f3e228]: typography
+          - generic [ref=f3e229]: aurora
+    - 'button "h Experiment is draft (hidden in production) — click to toggle html-in-canvas 5 Three.js + html-in-canvas beta API: Aurora drift background with real selectable DOM text rendered through switchable WebGL post-processing effects — dither, scanline, ghost, pixelate, glitch, halftone, wave — controlled via lil-gui. html-in-canvas three.js webgl beta-api typography aurora" [ref=f3e230] [cursor=pointer]':
+      - generic [ref=f3e231]:
+        - generic [ref=f3e232]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e233]: draft
+      - generic [ref=f3e235]:
+        - heading "html-in-canvas 5" [level=3] [ref=f3e236]
+        - paragraph [ref=f3e237]: "Three.js + html-in-canvas beta API: Aurora drift background with real selectable DOM text rendered through switchable WebGL post-processing effects — dither, scanline, ghost, pixelate, glitch, halftone, wave — controlled via lil-gui."
+        - generic [ref=f3e238]:
+          - generic [ref=f3e239]: html-in-canvas
+          - generic [ref=f3e240]: three.js
+          - generic [ref=f3e241]: webgl
+          - generic [ref=f3e242]: beta-api
+          - generic [ref=f3e243]: typography
+          - generic [ref=f3e244]: aurora
+    - button "h Experiment is draft (hidden in production) — click to toggle html-in-canvas 6 Three.js-powered aurora drift background with selectable DOM text rendered through the html-in-canvas beta API, filtered by switchable WebGL effects — dither, scanline, ghost, pixelate, glitch — with grain overlay. html-in-canvas three.js webgl beta-api typography aurora" [ref=f3e245] [cursor=pointer]:
+      - generic [ref=f3e246]:
+        - generic [ref=f3e247]: h
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e248]: draft
+      - generic [ref=f3e250]:
+        - heading "html-in-canvas 6" [level=3] [ref=f3e251]
+        - paragraph [ref=f3e252]: Three.js-powered aurora drift background with selectable DOM text rendered through the html-in-canvas beta API, filtered by switchable WebGL effects — dither, scanline, ghost, pixelate, glitch — with grain overlay.
+        - generic [ref=f3e253]:
+          - generic [ref=f3e254]: html-in-canvas
+          - generic [ref=f3e255]: three.js
+          - generic [ref=f3e256]: webgl
+          - generic [ref=f3e257]: beta-api
+          - generic [ref=f3e258]: typography
+          - generic [ref=f3e259]: aurora
+    - 'button "F Experiment is live — click to toggle Flare-1 Dark cinematic atmosphere: aurora noise gradient, twinkling particle ring, soft lens-flare rainbows, and film grain — all as separate controllable layers noise aurora lens-flare particles grain glsl cinematic" [ref=f3e260] [cursor=pointer]':
+      - generic [ref=f3e261]:
+        - generic [ref=f3e262]: F
+        - button "Experiment is live — click to toggle" [ref=f3e263]: live
+      - generic [ref=f3e265]:
+        - heading "Flare-1" [level=3] [ref=f3e266]
+        - paragraph [ref=f3e267]: "Dark cinematic atmosphere: aurora noise gradient, twinkling particle ring, soft lens-flare rainbows, and film grain — all as separate controllable layers"
+        - generic [ref=f3e268]:
+          - generic [ref=f3e269]: noise
+          - generic [ref=f3e270]: aurora
+          - generic [ref=f3e271]: lens-flare
+          - generic [ref=f3e272]: particles
+          - generic [ref=f3e273]: grain
+          - generic [ref=f3e274]: glsl
+          - generic [ref=f3e275]: cinematic
+    - button "F Experiment is draft (hidden in production) — click to toggle Flare-2 A layered flare composition with a dark purple ember base, aurora drift, subtle ring particles, softened chromatic haze, and a single film grain pass glsl flare aurora chromatic particles grain webgl2" [ref=f3e276] [cursor=pointer]:
+      - generic [ref=f3e277]:
+        - generic [ref=f3e278]: F
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e279]: draft
+      - generic [ref=f3e281]:
+        - heading "Flare-2" [level=3] [ref=f3e282]
+        - paragraph [ref=f3e283]: A layered flare composition with a dark purple ember base, aurora drift, subtle ring particles, softened chromatic haze, and a single film grain pass
+        - generic [ref=f3e284]:
+          - generic [ref=f3e285]: glsl
+          - generic [ref=f3e286]: flare
+          - generic [ref=f3e287]: aurora
+          - generic [ref=f3e288]: chromatic
+          - generic [ref=f3e289]: particles
+          - generic [ref=f3e290]: grain
+          - generic [ref=f3e291]: webgl2
+    - 'button "F Experiment is draft (hidden in production) — click to toggle Flare-3 Composite analog lens-flare effect: smoky base gradient, aurora noise drift, particle ring, chromatic dispersion accents, and film grain composite lens-flare aurora particles grain glsl" [ref=f3e292] [cursor=pointer]':
+      - generic [ref=f3e293]:
+        - generic [ref=f3e294]: F
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e295]: draft
+      - generic [ref=f3e297]:
+        - heading "Flare-3" [level=3] [ref=f3e298]
+        - paragraph [ref=f3e299]: "Composite analog lens-flare effect: smoky base gradient, aurora noise drift, particle ring, chromatic dispersion accents, and film grain"
+        - generic [ref=f3e300]:
+          - generic [ref=f3e301]: composite
+          - generic [ref=f3e302]: lens-flare
+          - generic [ref=f3e303]: aurora
+          - generic [ref=f3e304]: particles
+          - generic [ref=f3e305]: grain
+          - generic [ref=f3e306]: glsl
+    - 'button "F Experiment is draft (hidden in production) — click to toggle Flare-4 Layered composite with reorderable z-stack: aurora drift blobs, user image, particle circle, and film grain — dark analog aesthetic with drag-to-reorder layers composite layers aurora particles grain image glsl" [ref=f3e307] [cursor=pointer]':
+      - generic [ref=f3e308]:
+        - generic [ref=f3e309]: F
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e310]: draft
+      - generic [ref=f3e312]:
+        - heading "Flare-4" [level=3] [ref=f3e313]
+        - paragraph [ref=f3e314]: "Layered composite with reorderable z-stack: aurora drift blobs, user image, particle circle, and film grain — dark analog aesthetic with drag-to-reorder layers"
+        - generic [ref=f3e315]:
+          - generic [ref=f3e316]: composite
+          - generic [ref=f3e317]: layers
+          - generic [ref=f3e318]: aurora
+          - generic [ref=f3e319]: particles
+          - generic [ref=f3e320]: grain
+          - generic [ref=f3e321]: image
+          - generic [ref=f3e322]: glsl
+    - 'button "F Experiment is draft (hidden in production) — click to toggle Flare-5 Layered analog-light composition: aurora drift veils, uploaded image plate, celestial particle circle, and reorderable film grain in a subdued rose-and-amber palette glsl aurora particles image grain layers webgl2" [ref=f3e323] [cursor=pointer]':
+      - generic [ref=f3e324]:
+        - generic [ref=f3e325]: F
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e326]: draft
+      - generic [ref=f3e328]:
+        - heading "Flare-5" [level=3] [ref=f3e329]
+        - paragraph [ref=f3e330]: "Layered analog-light composition: aurora drift veils, uploaded image plate, celestial particle circle, and reorderable film grain in a subdued rose-and-amber palette"
+        - generic [ref=f3e331]:
+          - generic [ref=f3e332]: glsl
+          - generic [ref=f3e333]: aurora
+          - generic [ref=f3e334]: particles
+          - generic [ref=f3e335]: image
+          - generic [ref=f3e336]: grain
+          - generic [ref=f3e337]: layers
+          - generic [ref=f3e338]: webgl2
+    - 'button "F Experiment is live — click to toggle Flare-6 Layered analog aurora composite: aurora drift field, user image layer, celestial particle circle, and film grain with draggable stack ordering glsl aurora layers image particles grain dialkit" [ref=f3e339] [cursor=pointer]':
+      - generic [ref=f3e340]:
+        - generic [ref=f3e341]: F
+        - button "Experiment is live — click to toggle" [ref=f3e342]: live
+      - generic [ref=f3e344]:
+        - heading "Flare-6" [level=3] [ref=f3e345]
+        - paragraph [ref=f3e346]: "Layered analog aurora composite: aurora drift field, user image layer, celestial particle circle, and film grain with draggable stack ordering"
+        - generic [ref=f3e347]:
+          - generic [ref=f3e348]: glsl
+          - generic [ref=f3e349]: aurora
+          - generic [ref=f3e350]: layers
+          - generic [ref=f3e351]: image
+          - generic [ref=f3e352]: particles
+          - generic [ref=f3e353]: grain
+          - generic [ref=f3e354]: dialkit
+    - button "t Experiment is draft (hidden in production) — click to toggle type are HTML-in-Canvas dithered typography — real CSS-styled text captured via the drawElementImage API, then shattered through halftone, ordered, noise, crosshatch, and scanline dithering shaders. glsl dither typography html-in-canvas css" [ref=f3e355] [cursor=pointer]:
+      - generic [ref=f3e356]:
+        - generic [ref=f3e357]: t
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e358]: draft
+      - generic [ref=f3e360]:
+        - heading "type are" [level=3] [ref=f3e361]
+        - paragraph [ref=f3e362]: HTML-in-Canvas dithered typography — real CSS-styled text captured via the drawElementImage API, then shattered through halftone, ordered, noise, crosshatch, and scanline dithering shaders.
+        - generic [ref=f3e363]:
+          - generic [ref=f3e364]: glsl
+          - generic [ref=f3e365]: dither
+          - generic [ref=f3e366]: typography
+          - generic [ref=f3e367]: html-in-canvas
+          - generic [ref=f3e368]: css
+    - button "t Experiment is live — click to toggle type dither Dithered typography — render custom text through halftone, ordered, noise, crosshatch, and scanline dithering filters with animated distortion. glsl dither typography text" [ref=f3e369] [cursor=pointer]:
+      - generic [ref=f3e370]:
+        - generic [ref=f3e371]: t
+        - button "Experiment is live — click to toggle" [ref=f3e372]: live
+      - generic [ref=f3e374]:
+        - heading "type dither" [level=3] [ref=f3e375]
+        - paragraph [ref=f3e376]: Dithered typography — render custom text through halftone, ordered, noise, crosshatch, and scanline dithering filters with animated distortion.
+        - generic [ref=f3e377]:
+          - generic [ref=f3e378]: glsl
+          - generic [ref=f3e379]: dither
+          - generic [ref=f3e380]: typography
+          - generic [ref=f3e381]: text
+    - button "a Experiment is live — click to toggle aurora drift Flowing aurora ribbons built from FBM-displaced blob fields with five cursor interaction modes, click shockwaves, and film grain glsl noise fbm interactive How it works" [ref=f3e382] [cursor=pointer]:
+      - generic [ref=f3e383]:
+        - generic [ref=f3e384]: a
+        - button "Experiment is live — click to toggle" [ref=f3e385]: live
+      - generic [ref=f3e387]:
+        - heading "aurora drift" [level=3] [ref=f3e388]
+        - paragraph [ref=f3e389]: Flowing aurora ribbons built from FBM-displaced blob fields with five cursor interaction modes, click shockwaves, and film grain
+        - generic [ref=f3e390]:
+          - generic [ref=f3e391]: glsl
+          - generic [ref=f3e392]: noise
+          - generic [ref=f3e393]: fbm
+          - generic [ref=f3e394]: interactive
+        - button "How it works" [ref=f3e395]
+    - button "B Experiment is draft (hidden in production) — click to toggle Bloom Dither Generative cherry blossom branches with progressive bloom animation and halftone dot dithering glsl generative dither bloom" [ref=f3e398] [cursor=pointer]:
+      - generic [ref=f3e399]:
+        - generic [ref=f3e400]: B
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e401]: draft
+      - generic [ref=f3e403]:
+        - heading "Bloom Dither" [level=3] [ref=f3e404]
+        - paragraph [ref=f3e405]: Generative cherry blossom branches with progressive bloom animation and halftone dot dithering
+        - generic [ref=f3e406]:
+          - generic [ref=f3e407]: glsl
+          - generic [ref=f3e408]: generative
+          - generic [ref=f3e409]: dither
+          - generic [ref=f3e410]: bloom
+    - button "d Experiment is draft (hidden in production) — click to toggle dither forge Halftone dot dithering shader with colour palette mapping, edge detection, and image upload. Turn any image into a stylised dot-matrix aesthetic. glsl dither halftone image-processing" [ref=f3e411] [cursor=pointer]:
+      - generic [ref=f3e412]:
+        - generic [ref=f3e413]: d
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e414]: draft
+      - generic [ref=f3e416]:
+        - heading "dither forge" [level=3] [ref=f3e417]
+        - paragraph [ref=f3e418]: Halftone dot dithering shader with colour palette mapping, edge detection, and image upload. Turn any image into a stylised dot-matrix aesthetic.
+        - generic [ref=f3e419]:
+          - generic [ref=f3e420]: glsl
+          - generic [ref=f3e421]: dither
+          - generic [ref=f3e422]: halftone
+          - generic [ref=f3e423]: image-processing
+    - button "d Experiment is draft (hidden in production) — click to toggle dot trace Progressive SVG path animation. Upload a dot-art SVG and watch it draw itself — branches grow outward from a configurable origin, then flowers bloom. Scrub or auto-play the reveal. svg animation progressive-reveal dot-art" [ref=f3e424] [cursor=pointer]:
+      - generic [ref=f3e425]:
+        - generic [ref=f3e426]: d
+        - button "Experiment is draft (hidden in production) — click to toggle" [ref=f3e427]: draft
+      - generic [ref=f3e429]:
+        - heading "dot trace" [level=3] [ref=f3e430]
+        - paragraph [ref=f3e431]: Progressive SVG path animation. Upload a dot-art SVG and watch it draw itself — branches grow outward from a configurable origin, then flowers bloom. Scrub or auto-play the reveal.
+        - generic [ref=f3e432]:
+          - generic [ref=f3e433]: svg
+          - generic [ref=f3e434]: animation
+          - generic [ref=f3e435]: progressive-reveal
+          - generic [ref=f3e436]: dot-art
+    - button "C Experiment is live — click to toggle Celestial Flare Layered noise wave gradient with particle circle, chromatic lens flares, and film grain noise fbm domain-warp lens-flare particles grain glsl How it works" [ref=f3e437] [cursor=pointer]:
+      - generic [ref=f3e438]:
+        - generic [ref=f3e439]: C
+        - button "Experiment is live — click to toggle" [ref=f3e440]: live
+      - generic [ref=f3e442]:
+        - heading "Celestial Flare" [level=3] [ref=f3e443]
+        - paragraph [ref=f3e444]: Layered noise wave gradient with particle circle, chromatic lens flares, and film grain
+        - generic [ref=f3e445]:
+          - generic [ref=f3e446]: noise
+          - generic [ref=f3e447]: fbm
+          - generic [ref=f3e448]: domain-warp
+          - generic [ref=f3e449]: lens-flare
+          - generic [ref=f3e450]: particles
+          - generic [ref=f3e451]: grain
+          - generic [ref=f3e452]: glsl
+        - button "How it works" [ref=f3e453]
+    - button "Flow Field Experiment is live — click to toggle Flow Field Organic domain-warped noise with smooth color blending and grain texture noise fbm domain-warp glsl How it works" [ref=f3e456] [cursor=pointer]:
+      - generic [ref=f3e457]:
+        - img "Flow Field" [ref=f3e458]
+        - button "Experiment is live — click to toggle" [ref=f3e459]: live
+      - generic [ref=f3e461]:
+        - heading "Flow Field" [level=3] [ref=f3e462]
+        - paragraph [ref=f3e463]: Organic domain-warped noise with smooth color blending and grain texture
+        - generic [ref=f3e464]:
+          - generic [ref=f3e465]: noise
+          - generic [ref=f3e466]: fbm
+          - generic [ref=f3e467]: domain-warp
+          - generic [ref=f3e468]: glsl
+        - button "How it works" [ref=f3e469]

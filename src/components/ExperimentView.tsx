@@ -19,7 +19,33 @@ import { generateExport as generateDitherForge } from '../experiments/dither-for
 import { generateExport as generateDotTrace } from '../experiments/dot-trace/generateExport.ts';
 import { generateExport as generateAuroraDrift } from '../experiments/aurora-drift/generateExport.ts';
 import { generateExport as generateGlobe1 } from '../experiments/globe-1/generateExport.ts';
+import {
+  generateExport as generatePlyrVimeo,
+  generateWebflowJSON as generatePlyrVimeoJSON,
+} from '../experiments/plyr-vimeo/generateExport.ts';
+import {
+  generateExport as generateVimeoNative,
+  generateWebflowJSON as generateVimeoNativeJSON,
+} from '../experiments/vimeo-native/generateExport.ts';
+import {
+  generateExport as generateFlowPlayer,
+  generateWebflowJSON as generateFlowPlayerJSON,
+} from '../experiments/flow-player/generateExport.ts';
+import {
+  generateExport as generateFlowPlayer2,
+  generateWebflowJSON as generateFlowPlayer2JSON,
+} from '../experiments/flow-player-2/generateExport.ts';
+import {
+  generateExport as generateFlowPlayer3,
+  generateWebflowJSON as generateFlowPlayer3JSON,
+} from '../experiments/flow-player-3/generateExport.ts';
+import {
+  generateExport as generateFlowPlayer4,
+  generateWebflowJSON as generateFlowPlayer4JSON,
+} from '../experiments/flow-player-4/generateExport.ts';
 import type { GenerateExportOptions } from '../experiments/flow-field/generateExport.ts';
+import type { PromptVariant } from '../core/promptVariant.ts';
+import { promptVariants as auroraDriftPromptVariants } from '../experiments/aurora-drift/prompt.ts';
 
 const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string> = {
   'flow-field': generateFlowField,
@@ -29,6 +55,75 @@ const EXPORT_GENERATORS: Record<string, (opts: GenerateExportOptions) => string>
   'dot-trace': generateDotTrace,
   'aurora-drift': generateAuroraDrift,
   'globe-1': generateGlobe1,
+  'plyr-vimeo': generatePlyrVimeo,
+  'vimeo-native': generateVimeoNative,
+  'flow-player': generateFlowPlayer,
+  'flow-player-2': generateFlowPlayer2,
+  'flow-player-3': generateFlowPlayer3,
+  'flow-player-4': generateFlowPlayer4,
+};
+
+/**
+ * Per-experiment full Webflow JSON generators. When an experiment
+ * registers here, the export panel uses this builder instead of the
+ * canvas-shaped wrapper. Use for DOM-based experiments.
+ */
+const FULL_JSON_GENERATORS: Record<
+  string,
+  (
+    params: Record<string, unknown>,
+    options: { sizing: 'responsive' | 'fixed'; fixedWidth: number; fixedHeight: number },
+  ) => string
+> = {
+  'plyr-vimeo': (params, opts) =>
+    generatePlyrVimeoJSON({
+      params,
+      dialConfig: {},
+      sizing: opts.sizing,
+      fixedWidth: opts.fixedWidth,
+      fixedHeight: opts.fixedHeight,
+    }),
+  'vimeo-native': (params, opts) =>
+    generateVimeoNativeJSON({
+      params,
+      dialConfig: {},
+      sizing: opts.sizing,
+      fixedWidth: opts.fixedWidth,
+      fixedHeight: opts.fixedHeight,
+    }),
+  'flow-player': (params, opts) =>
+    generateFlowPlayerJSON({
+      params,
+      dialConfig: {},
+      sizing: opts.sizing,
+      fixedWidth: opts.fixedWidth,
+      fixedHeight: opts.fixedHeight,
+    }),
+  'flow-player-2': (params, opts) =>
+    generateFlowPlayer2JSON({
+      params,
+      dialConfig: {},
+      sizing: opts.sizing,
+      fixedWidth: opts.fixedWidth,
+      fixedHeight: opts.fixedHeight,
+    }),
+  'flow-player-3': (params, opts) =>
+    generateFlowPlayer3JSON({
+      params,
+      dialConfig: {},
+      sizing: opts.sizing,
+      fixedWidth: opts.fixedWidth,
+      fixedHeight: opts.fixedHeight,
+    }),
+  'flow-player-4': (params, _opts) =>
+    generateFlowPlayer4JSON({
+      params,
+      dialConfig: {},
+    }),
+};
+
+const PROMPT_VARIANTS: Record<string, PromptVariant[]> = {
+  'aurora-drift': auroraDriftPromptVariants,
 };
 
 interface ExperimentViewProps {
@@ -56,7 +151,11 @@ export function ExperimentView({
   const [store] = useState(() => {
     const s = new VersionStore(slug);
     if (experiment && s.getVersions().length === 0) {
-      s.seedFromPresets(experiment.controls.defaults, experiment.controls.presets);
+      s.seedFromPresets(
+        experiment.controls.defaults,
+        experiment.controls.presets,
+        { skipDefaults: experiment.controls.skipDefaultsVersion },
+      );
     }
     return s;
   });
@@ -172,6 +271,19 @@ export function ExperimentView({
     [slug, experiment],
   );
 
+  const hasFullJSONGenerator = slug in FULL_JSON_GENERATORS;
+  const getFullWebflowJSON = useCallback(
+    (
+      currentParams: Record<string, unknown>,
+      opts: { sizing: 'responsive' | 'fixed'; fixedWidth: number; fixedHeight: number },
+    ) => {
+      const gen = FULL_JSON_GENERATORS[slug];
+      if (!gen) return '';
+      return gen(currentParams, opts);
+    },
+    [slug],
+  );
+
   if (!experiment) {
     return (
       <div className="error-screen">
@@ -223,6 +335,8 @@ export function ExperimentView({
             activeVersionId={activeVersionId}
             onClose={() => setExportOpen(false)}
             generateInlineScript={hasExportGenerator ? getInlineScript : undefined}
+            generateFullWebflowJSON={hasFullJSONGenerator ? getFullWebflowJSON : undefined}
+            promptVariants={PROMPT_VARIANTS[slug]}
           />
         )}
 

@@ -1,0 +1,18 @@
+[     344ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:20102
+[     415ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5177/favicon.ico:0
+[  108401ms] ReferenceError: setFlat is not defined
+    at BrandToolView (http://localhost:5177/src/brand/BrandToolView.tsx?t=1787233633131:437:94)
+    at Object.react_stack_bottom_frame (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:18509:20)
+    at renderWithHooks (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:5654:24)
+    at updateFunctionComponent (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:7475:21)
+    at beginWork (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:8525:20)
+    at runWithFiberInDEV (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:997:72)
+    at performUnitOfWork (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:12561:98)
+    at workLoopSync (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:12424:43)
+    at renderRootSync (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:12408:13)
+    at performWorkOnRoot (http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:11827:37)
+[  108400ms] [WARNING] %s
+
+%s
+ An error occurred in the <BrandToolView> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:6965

@@ -1,0 +1,295 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img
+          - img
+        - generic:
+          - generic: Drag
+  - main [ref=e5]:
+    - generic [ref=e9]:
+      - link "Locked" [ref=e11] [cursor=pointer]:
+        - /url: /plans
+        - generic [ref=e12]:
+          - img [ref=e15]
+          - generic [ref=e18]: Locked
+      - heading "Custom Bunny HLS Player (Advanced)" [level=1] [ref=e20]
+    - generic [ref=e23]:
+      - generic [ref=e25]:
+        - generic [ref=e27]: 36 weeks ago
+        - generic [ref=e29]: Video & Audio
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic:
+            - img
+        - generic [ref=e36]:
+          - link "Login" [ref=e37] [cursor=pointer]:
+            - /url: /login
+            - generic [ref=e38]:
+              - generic [ref=e40]: Login
+              - generic [ref=e42]: Login
+          - link "Join Osmo" [ref=e43] [cursor=pointer]:
+            - /url: /plans
+            - generic [ref=e44]:
+              - generic [ref=e46]: Join Osmo
+              - generic [ref=e48]: Join Osmo
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e55]: Try for free
+        - generic [ref=e56]:
+          - paragraph [ref=e57]: Want a taste before you buy?
+          - heading "Try the Osmo Demo Vault" [level=2] [ref=e58]
+          - link "Unlock the demo" [ref=e60] [cursor=pointer]:
+            - /url: /try
+            - generic [ref=e61]:
+              - generic [ref=e63]: Unlock the demo
+              - generic [ref=e65]: Unlock the demo
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - paragraph [ref=e69]:
+              - generic [ref=e70]: Try 20
+              - text: Resources for Free
+      - generic [ref=e71]:
+        - img
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - button:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                - generic:
+                  - img
+          - button [ref=e75] [cursor=pointer]:
+            - generic [ref=e76]:
+              - img [ref=e78]
+              - img [ref=e85]
+              - img [ref=e96]
+    - generic [ref=e110]:
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - heading "Subscribe to the Osmo Newsletter" [level=4] [ref=e114]:
+              - strong [ref=e115]: Subscribe to the Osmo Newsletter
+            - form "Newsletter Footer" [ref=e117]:
+              - generic [ref=e118]:
+                - textbox "First name" [ref=e121]
+                - textbox "yourname@email.com" [ref=e124]
+              - generic [ref=e125]:
+                - generic [ref=e128]:
+                  - checkbox "I agree to the Privacy Policy"
+                  - generic [ref=e129] [cursor=pointer]:
+                    - text: I agree to the
+                    - link "Privacy Policy" [ref=e130]:
+                      - /url: /legal/privacy-policy
+                  - generic:
+                    - img
+                - generic [ref=e133] [cursor=pointer]:
+                  - button "Get updates":
+                    - generic:
+                      - generic:
+                        - generic: Get updates
+                      - generic:
+                        - generic: Get updates
+                      - generic:
+                        - generic: Get updates
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - heading "Product" [level=4] [ref=e137] [cursor=pointer]
+              - list [ref=e141]:
+                - listitem [ref=e142]:
+                  - link "The Vault" [ref=e143] [cursor=pointer]:
+                    - /url: /product/vault
+                - listitem [ref=e144]:
+                  - link "Page Transition Course" [ref=e145] [cursor=pointer]:
+                    - /url: /product/page-transition-course
+                - listitem [ref=e146]:
+                  - link "Button Pack" [ref=e147] [cursor=pointer]:
+                    - /url: /product/button-pack
+                  - generic [ref=e150]: NEW
+                - listitem [ref=e151]:
+                  - link "Icon Library" [ref=e152] [cursor=pointer]:
+                    - /url: /product/icons
+                - listitem [ref=e153]:
+                  - link "Community" [ref=e154] [cursor=pointer]:
+                    - /url: /product/community
+                - listitem [ref=e155]:
+                  - paragraph [ref=e156]: Easings
+                  - generic [ref=e159]: new
+            - generic [ref=e160]:
+              - heading "Community" [level=4] [ref=e162] [cursor=pointer]
+              - list [ref=e166]:
+                - listitem [ref=e167]:
+                  - link "Showcase" [ref=e168] [cursor=pointer]:
+                    - /url: /showcase
+                - listitem [ref=e169]:
+                  - button "About Osmo" [ref=e170] [cursor=pointer]
+                - listitem [ref=e171]:
+                  - link "Updates" [ref=e172] [cursor=pointer]:
+                    - /url: /updates
+            - generic [ref=e173]:
+              - heading "Membership" [level=4] [ref=e175] [cursor=pointer]
+              - list [ref=e179]:
+                - listitem [ref=e180]:
+                  - link "Collection" [ref=e181] [cursor=pointer]:
+                    - /url: /collection
+                - listitem [ref=e182]:
+                  - link "Pricing" [ref=e183] [cursor=pointer]:
+                    - /url: /plans
+                - listitem [ref=e184]:
+                  - link "FAQs" [ref=e185] [cursor=pointer]:
+                    - /url: /faq
+                - listitem [ref=e186]:
+                  - link "Support" [ref=e187] [cursor=pointer]:
+                    - /url: "#"
+        - generic [ref=e189]:
+          - generic [ref=e191]:
+            - link "Login" [ref=e192] [cursor=pointer]:
+              - /url: /login
+              - generic [ref=e193]:
+                - generic [ref=e195]: Login
+                - generic [ref=e197]: Login
+            - link "Join Osmo" [ref=e198] [cursor=pointer]:
+              - /url: /plans
+              - generic [ref=e199]:
+                - generic [ref=e201]: Join Osmo
+                - generic [ref=e203]: Join Osmo
+          - generic [ref=e205]:
+            - link "linkedin" [ref=e206] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/osmosupply/
+              - generic [ref=e207]:
+                - img [ref=e209]
+                - img [ref=e212]
+            - link "instagram" [ref=e214] [cursor=pointer]:
+              - /url: https://www.instagram.com/osmo.supply/
+              - generic [ref=e215]:
+                - img [ref=e217]
+                - img [ref=e222]
+            - link "x/twitter" [ref=e226] [cursor=pointer]:
+              - /url: https://twitter.com/osmosupply
+              - generic [ref=e227]:
+                - img [ref=e229]
+                - img [ref=e232]
+      - generic [ref=e234]:
+        - img [ref=e236]
+        - generic [ref=e244]:
+          - list [ref=e247]:
+            - listitem [ref=e248]:
+              - link "Licensing" [ref=e249] [cursor=pointer]:
+                - /url: /legal/licensing-agreement
+                - generic [ref=e250]:
+                  - generic [ref=e251]: Licensing
+                  - generic [ref=e252]: Licensing
+            - listitem [ref=e253]:
+              - link "T&CS" [ref=e254] [cursor=pointer]:
+                - /url: /legal/terms-and-conditions
+                - generic [ref=e255]:
+                  - generic [ref=e256]: T&CS
+                  - generic [ref=e257]: T&CS
+            - listitem [ref=e258]:
+              - link "Privacy" [ref=e259] [cursor=pointer]:
+                - /url: /legal/privacy-policy
+                - generic [ref=e260]:
+                  - generic [ref=e261]: Privacy
+                  - generic [ref=e262]: Privacy
+            - listitem [ref=e263]:
+              - link "Cookies" [ref=e264] [cursor=pointer]:
+                - /url: /legal/cookie-policy
+                - generic [ref=e265]:
+                  - generic [ref=e266]: Cookies
+                  - generic [ref=e267]: Cookies
+          - paragraph [ref=e269]: © 2026 osmo supply b.v.
+          - generic [ref=e270]:
+            - generic [ref=e271]: created by
+            - generic [ref=e272]:
+              - link "dennis" [ref=e273] [cursor=pointer]:
+                - /url: https://dennissnellenberg.com/
+                - generic [ref=e274]:
+                  - generic [ref=e275]: dennis
+                  - generic [ref=e276]: dennis
+              - link "ilja" [ref=e277] [cursor=pointer]:
+                - /url: https://www.iljavaneck.com/
+                - generic [ref=e278]:
+                  - generic [ref=e279]: ilja
+                  - generic [ref=e280]: ilja
+  - generic [ref=e282]:
+    - button [ref=e284] [cursor=pointer]:
+      - img [ref=e286]
+      - generic [ref=e289]:
+        - generic [ref=e290]: Close
+        - generic [ref=e291]: Close
+        - generic [ref=e292]: Close
+    - generic [ref=e294]:
+      - img [ref=e297]
+      - generic [ref=e301]:
+        - heading [level=2] [ref=e302]: A platform by...
+        - generic [ref=e303]:
+          - generic [ref=e305]:
+            - generic [ref=e306]:
+              - generic [ref=e307]:
+                - img
+              - heading [level=3] [ref=e308]:
+                - text: Dennis
+                - text: Snellenberg
+            - generic [ref=e312]:
+              - link [ref=e313] [cursor=pointer]:
+                - /url: https://www.instagram.com/codebydennis/
+                - generic [ref=e314]:
+                  - img [ref=e316]
+                  - img [ref=e321]
+              - link [ref=e325] [cursor=pointer]:
+                - /url: https://www.linkedin.com/in/dennissnellenberg/
+                - generic [ref=e326]:
+                  - img [ref=e328]
+                  - img [ref=e331]
+              - link [ref=e333] [cursor=pointer]:
+                - /url: https://x.com/codebydennis
+                - generic [ref=e334]:
+                  - img [ref=e336]
+                  - img [ref=e339]
+          - generic [ref=e342]:
+            - generic [ref=e343]:
+              - generic [ref=e344]:
+                - img
+              - heading [level=3] [ref=e345]:
+                - text: Ilja
+                - text: van Eck
+            - generic [ref=e349]:
+              - link [ref=e350] [cursor=pointer]:
+                - /url: https://www.instagram.com/by.ilja/
+                - generic [ref=e351]:
+                  - img [ref=e353]
+                  - img [ref=e358]
+              - link [ref=e362] [cursor=pointer]:
+                - /url: https://www.linkedin.com/in/ilja-van-eck/
+                - generic [ref=e363]:
+                  - img [ref=e365]
+                  - img [ref=e368]
+              - link [ref=e370] [cursor=pointer]:
+                - /url: https://x.com/iljavaneck
+                - generic [ref=e371]:
+                  - img [ref=e373]
+                  - img [ref=e376]
+      - img [ref=e381]
+      - paragraph [ref=e384]: Based in Netherlands and Belgium, and with a combined total of 38 Site of the Day awards on Awwwards, we’ve put our years of experience in to a platform that empowers you to create interactive, animated, one-of-a-kind websites.
+    - generic [ref=e386]:
+      - generic [ref=e387]:
+        - heading [level=3] [ref=e388]: 120+
+        - heading [level=4] [ref=e389]: Sites Pushed Live
+      - generic [ref=e390]:
+        - heading [level=3] [ref=e391]: "38"
+        - heading [level=4] [ref=e392]: Site of the Day Awards
+    - generic [ref=e400]:
+      - link [ref=e401] [cursor=pointer]:
+        - /url: /plans
+        - generic [ref=e402]:
+          - generic [ref=e404]: Join Osmo
+          - generic [ref=e406]: Join Osmo
+      - link [ref=e407] [cursor=pointer]:
+        - /url: /product/community
+        - generic [ref=e408]:
+          - generic [ref=e410]: Community
+          - generic [ref=e412]: Community
+    - img [ref=e415]

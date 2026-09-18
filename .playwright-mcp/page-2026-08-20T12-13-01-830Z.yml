@@ -1,0 +1,50 @@
+- generic [active] [ref=f1e1]:
+  - navigation [ref=f1e4]:
+    - button "Back to gallery" [ref=f1e5] [cursor=pointer]
+    - button "Copy link" [ref=f1e8] [cursor=pointer]
+    - button "Export" [ref=f1e14] [cursor=pointer]
+    - button "Brand Tool" [ref=f1e19] [cursor=pointer]
+    - generic "Frames per second" [ref=f1e25]:
+      - generic [ref=f1e26]: "0"
+      - generic [ref=f1e27]: fps
+  - generic [ref=f1e33]:
+    - generic [ref=f1e34] [cursor=pointer]:
+      - generic [ref=f1e35]: Coral-1 · Reaction Field
+      - generic [ref=f1e43]:
+        - button "Add preset" [ref=f1e44]
+        - button "Default" [ref=f1e47]
+        - button "Copy parameters" [ref=f1e51]
+    - generic [ref=f1e58]:
+      - generic [ref=f1e59]: Reaction
+      - generic [ref=f1e66]: Render
+      - generic [ref=f1e73]: Image
+      - generic [ref=f1e80]: Variation
+      - generic [ref=f1e87]: Direction
+      - generic [ref=f1e94]: Colour
+      - generic [ref=f1e101]: Brush
+      - generic [ref=f1e108]:
+        - generic [ref=f1e109] [cursor=pointer]: Engine
+        - generic [ref=f1e116]:
+          - button "Quality Standard 1×" [ref=f1e118] [cursor=pointer]:
+            - generic [ref=f1e119]: Quality
+            - generic [ref=f1e120]: Standard 1×
+          - generic [ref=f1e125] [cursor=pointer]:
+            - generic: Pattern Scale
+            - generic [ref=f1e126]: "1.00"
+          - generic [ref=f1e127]:
+            - generic [ref=f1e128]: Auto Regrow
+            - generic [ref=f1e129]:
+              - button "Off" [ref=f1e130] [cursor=pointer]
+              - button "On" [ref=f1e131] [cursor=pointer]
+          - generic [ref=f1e132]:
+            - generic [ref=f1e133]: Paused
+            - generic [ref=f1e134]:
+              - button "Off" [ref=f1e135] [cursor=pointer]
+              - button "On" [ref=f1e136] [cursor=pointer]
+          - button "Reseed" [ref=f1e137] [cursor=pointer]
+          - button "Random Spots" [ref=f1e138] [cursor=pointer]
+          - button "Clear" [ref=f1e139] [cursor=pointer]
+          - button "Reset All" [ref=f1e140] [cursor=pointer]
+      - generic [ref=f1e141]:
+        - generic [ref=f1e142] [cursor=pointer]: Settings
+        - button "Reset to Defaults" [ref=f1e150] [cursor=pointer]

@@ -19,6 +19,7 @@ import { controls, DEFAULT_COUNTRIES, type Country, type SnapMode } from './para
 import {
   GLOBE_RADIUS,
   buildGridPolylines,
+  getMobileCaps,
   makeCrossTexture,
   makeEaseFn,
   parseCountries,
@@ -199,7 +200,14 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   lastSnapMode = (params.snapMode as SnapMode) ?? 'nearest line';
 
   // ── Drag interaction ──
+  // Apple-Maps-style threshold capture: don't take over the gesture
+  // until the pointer has moved >8 px and the movement is horizontal-
+  // dominant. Vertical-dominant movement is released back to the
+  // browser so the page can scroll on mobile.
+  const DRAG_THRESHOLD = 8;
   let isDragging = false;
+  let pendingPointer: { id: number; x: number; y: number } | null = null;
+  let activePointerId: number | null = null;
   const lastPointer = { x: 0, y: 0 };
   let yawOffset = 0;
   let pitchOffset = 0;
@@ -209,28 +217,45 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   let autoPitch = 0;
 
   const handlePointerDown = (e: PointerEvent) => {
-    isDragging = true;
-    lastPointer.x = e.clientX;
-    lastPointer.y = e.clientY;
+    pendingPointer = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    isDragging = false;
     yawVel = 0;
     pitchVel = 0;
-    canvas.setPointerCapture?.(e.pointerId);
-    canvas.style.cursor = 'grabbing';
   };
   const handlePointerMove = (e: PointerEvent) => {
-    if (!isDragging) return;
-    const dx = e.clientX - lastPointer.x;
-    const dy = e.clientY - lastPointer.y;
-    lastPointer.x = e.clientX;
-    lastPointer.y = e.clientY;
-    const sens = (params.dragSensitivity as number) * 0.005;
-    yawOffset += dx * sens;
-    pitchOffset += dy * sens;
-    pitchOffset = THREE.MathUtils.clamp(pitchOffset, -Math.PI * 0.55, Math.PI * 0.55);
+    if (isDragging) {
+      if (e.pointerId !== activePointerId) return;
+      const dx = e.clientX - lastPointer.x;
+      const dy = e.clientY - lastPointer.y;
+      lastPointer.x = e.clientX;
+      lastPointer.y = e.clientY;
+      const sens = (params.dragSensitivity as number) * 0.005;
+      yawOffset += dx * sens;
+      pitchOffset += dy * sens;
+      pitchOffset = THREE.MathUtils.clamp(pitchOffset, -Math.PI * 0.55, Math.PI * 0.55);
+      return;
+    }
+    if (!pendingPointer || e.pointerId !== pendingPointer.id) return;
+    const totalDx = e.clientX - pendingPointer.x;
+    const totalDy = e.clientY - pendingPointer.y;
+    if (Math.hypot(totalDx, totalDy) < DRAG_THRESHOLD) return;
+    if (Math.abs(totalDx) > Math.abs(totalDy)) {
+      isDragging = true;
+      activePointerId = pendingPointer.id;
+      lastPointer.x = e.clientX;
+      lastPointer.y = e.clientY;
+      pendingPointer = null;
+      canvas.setPointerCapture?.(e.pointerId);
+      canvas.style.cursor = 'grabbing';
+    } else {
+      pendingPointer = null;
+    }
   };
   const handlePointerUp = (e: PointerEvent) => {
-    if (!isDragging) return;
+    pendingPointer = null;
+    if (e.pointerId !== activePointerId) return;
     isDragging = false;
+    activePointerId = null;
     canvas.style.cursor = 'grab';
     try {
       canvas.releasePointerCapture?.(e.pointerId);
@@ -275,17 +300,20 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
   }
 
   // ── Resize ──
+  // The framework calls this with the device DPR; we cap it on mobile
+  // so phones don't render at the native 3× ratio for no visible gain.
   function doResize(w: number, h: number, dpr: number) {
+    const cappedDpr = Math.min(dpr, getMobileCaps().dprCap);
     const cssW = w / dpr;
     const cssH = h / dpr;
-    if (cssW < 1 || cssH < 1) return; // zero-size guard (Webflow flex / hidden tabs)
-    renderer.setPixelRatio(dpr);
+    if (cssW < 1 || cssH < 1) return; // zero-size guard
+    renderer.setPixelRatio(cappedDpr);
     renderer.setSize(cssW, cssH, false);
     camera.aspect = cssW / Math.max(1, cssH);
     camera.updateProjectionMatrix();
     labelRenderer.setSize(cssW, cssH);
-    snake.setResolution(cssW * dpr, cssH * dpr);
-    lineMat.resolution.set(cssW * dpr, cssH * dpr);
+    snake.setResolution(cssW * cappedDpr, cssH * cappedDpr);
+    lineMat.resolution.set(cssW * cappedDpr, cssH * cappedDpr);
   }
 
   // ── Inline DialKit-panel country editor ──
@@ -315,9 +343,18 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       const dt = lastTime < 0 ? 1 / 60 : Math.min(time - lastTime, 0.1);
       lastTime = time;
 
-      // Sync grid density / snap mode / country list (rebuild on change)
-      const lonSeg = Math.max(3, Math.round(params.lonSegments as number));
-      const latSeg = Math.max(2, Math.round(params.latSegments as number));
+      // Sync grid density / snap mode / country list (rebuild on change).
+      // Mobile caps lower the ceiling on small viewports so phones don't
+      // melt at 30×30 grids — values below the cap are respected.
+      const caps = getMobileCaps();
+      const lonSeg = Math.min(
+        Math.max(3, Math.round(params.lonSegments as number)),
+        caps.segCap,
+      );
+      const latSeg = Math.min(
+        Math.max(2, Math.round(params.latSegments as number)),
+        caps.segCap,
+      );
       const snapMode = ((params.snapMode as SnapMode) ?? 'nearest line') as SnapMode;
       const currentJson = params.countriesJson as string;
       let needsMarkers = false;
@@ -356,7 +393,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       // material is opaque) and width.
       const lineColor = params.lineColor as string;
       const lineOpacity = THREE.MathUtils.clamp(params.lineOpacity as number, 0, 1);
-      const lineWidth = params.lineWidth as number;
+      const lineWidth = Math.min(params.lineWidth as number, caps.lineWidthCap);
       if (lineColor !== lastLineColor || lineOpacity !== lastLineOpacity) {
         _baseLineCol.set(lineColor);
         lineMat.color.setRGB(
@@ -381,7 +418,7 @@ async function initGL(ctx: ExperimentGLContext): Promise<ExperimentInstance> {
       }
       ensureLabelStyles(
         labelColor,
-        params.labelSize as number,
+        Math.min(params.labelSize as number, caps.labelSizeCap),
         params.labelOffsetY as number,
       );
 

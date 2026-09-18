@@ -1,0 +1,48 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - paragraph [ref=e5]: Vault Resource
+    - heading "Custom Bunny HLS Player (Advanced)" [level=1] [ref=e6]
+    - paragraph [ref=e7]: A fully custom HLS video player for Bunny.net streams with smart lazy-loading, in-view autoplay, aspect-ratio detection, scrubbing, fullscreen, mute, and keyboard-friendly controls.
+  - generic [ref=e9]:
+    - generic [ref=e12]:
+      - img [ref=e13]
+      - img [ref=e14]
+    - generic [ref=e17]:
+      - img [ref=e19]
+      - generic [ref=e21]:
+        - paragraph [ref=e22]: 00:00
+        - paragraph [ref=e23]: /
+        - paragraph [ref=e24]: 00:00
+      - generic [ref=e25]:
+        - img [ref=e27]
+        - img [ref=e30]
+    - img [ref=e40]
+  - generic [ref=e42]:
+    - link "Copy to Webflow" [ref=e43] [cursor=pointer]:
+      - /url: "#"
+      - generic [ref=e44]: Copy to Webflow
+    - link "Open Preview" [ref=e45] [cursor=pointer]:
+      - /url: https://osmo-custom-bunny-hls-player-advanced.webflow.io/
+      - generic [ref=e46]: Open Preview
+  - generic [ref=e47]:
+    - paragraph [ref=e48]: Dependencies
+    - code [ref=e49]: hls.js@1.6.11
+  - generic [ref=e50]:
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]: HTML
+        - link "Copy" [ref=e54] [cursor=pointer]:
+          - /url: "#"
+      - code [ref=e56]: <div class="bunny-player" data-bunny-player-init data-player-src="https://YOUR-CDN.b-cdn.net/YOUR-ID/playlist.m3u8" data-player-status="idle" data-player-hover="idle" data-player-activated="false" data-player-fullscreen="false" data-player-muted="false" data-player-autoplay="false" data-player-update-size="true" data-player-lazy="meta" > <div data-player-before class="bunny-player__before"></div> <video preload="auto" width="1920" height="1080" playsinline class="bunny-player__video"></video> <img src="YOUR-PLACEHOLDER.jpg" loading="lazy" alt="" class="bunny-player__placeholder" /> <div class="bunny-player__dark"></div> <div data-player-control="playpause" class="bunny-player__playpause"> <div class="bunny-player__big-btn"><!-- play/pause SVGs --></div> </div> <div class="bunny-player__interface"> <div class="bunny-player__interface-fade"></div> <div class="bunny-player__interface-bottom"> <div data-player-control="playpause" class="bunny-player__toggle-playpause"></div> <div class="bunny-player__time"> <p data-player-time-progress class="bunny-player__text">00:00</p> <p class="bunny-player__text is--transparent">/</p> <p data-player-time-duration class="bunny-player__text is--transparent">00:00</p> </div> <div data-player-timeline class="bunny-player__timeline">...</div> <div class="bunny-player__interface-btns"> <div data-player-control="mute" class="bunny-player__toggle-mute"></div> <div data-player-control="fullscreen" class="bunny-player__toggle-fullscreen"></div> </div> </div> </div> <div class="bunny-player__loading"><!-- spinner SVG --></div> </div>
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]: CSS
+        - link "Copy" [ref=e60] [cursor=pointer]:
+          - /url: "#"
+      - code [ref=e62]: "/* Animation */ [data-bunny-player-init] :is(.bunny-player__placeholder, .bunny-player__dark, .bunny-player__playpause, .bunny-player__loading) { transition: opacity 0.3s linear, visibility 0.3s linear; } /* Placeholder */ [data-bunny-player-init][data-player-status=\"playing\"] .bunny-player__placeholder, [data-bunny-player-init][data-player-status=\"paused\"] .bunny-player__placeholder, [data-bunny-player-init][data-player-activated=\"true\"][data-player-status=\"ready\"] .bunny-player__placeholder { opacity: 0; visibility: hidden; } /* Dark Overlay */ [data-bunny-player-init][data-player-status=\"paused\"] .bunny-player__dark, [data-bunny-player-init][data-player-status=\"playing\"][data-player-hover=\"active\"] .bunny-player__dark{ opacity: 0.3; } [data-bunny-player-init][data-player-status=\"playing\"] .bunny-player__dark { opacity: 0; } /* Play/Pause */ [data-bunny-player-init][data-player-status=\"playing\"] .bunny-player__playpause, [data-bunny-player-init][data-player-status=\"loading\"] .bunny-player__playpause { opacity: 0; } [data-bunny-player-init][data-player-status=\"playing\"][data-player-hover=\"active\"] .bunny-player__playpause { opacity: 1; } /* Loading */ [data-bunny-player-init][data-player-status=\"loading\"] .bunny-player__loading { opacity: 1; visibility: visible; } /* Interface */ .bunny-player__interface { transition: all 0.6s cubic-bezier(0.625, 0.05, 0, 1); } [data-bunny-player-init][data-player-status=\"playing\"] .bunny-player__interface, [data-bunny-player-init][data-player-status=\"loading\"] .bunny-player__interface{ opacity: 0; transform: translateY(1em) rotate(0.001deg); } [data-bunny-player-init][data-player-status=\"playing\"][data-player-hover=\"active\"] .bunny-player__interface, [data-bunny-player-init][data-player-status=\"loading\"][data-player-hover=\"active\"] .bunny-player__interface { opacity: 1; transform: translateY(0em) rotate(0.001deg); } /* Timeline Handle */ [data-bunny-player-init] .bunny-player__timeline-handle { transition: transform 0.15s ease-in-out; } [data-bunny-player-init][data-timeline-drag=\"true\"] .bunny-player__timeline-handle { transform: translate(-50%, -50%) scale(1); } /* Fullscreen */ [data-bunny-player-init][data-player-fullscreen=\"true\"] .bunny-player__fullscreen-shrink-svg { display: block; } [data-bunny-player-init][data-player-fullscreen=\"true\"] .bunny-player__fullscreen-scale-svg { display: none; } /* Mute */ [data-bunny-player-init][data-player-muted=\"true\"] .bunny-player__volume-mute-svg { display: block; } [data-bunny-player-init][data-player-muted=\"true\"] .bunny-player__volume-up-svg { display: none; } /* Cover Mode */ [data-bunny-player-init][data-player-update-size=\"cover\"] { height: 100%; top: 0; left: 0; position: absolute; } [data-bunny-player-init][data-player-update-size=\"cover\"] [data-player-before] { display: none; } [data-bunny-player-init][data-player-update-size=\"cover\"][data-player-fullscreen=\"false\"] .bunny-player__video { object-fit: cover; }"
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]: JavaScript
+        - link "Copy" [ref=e66] [cursor=pointer]:
+          - /url: "#"
+      - code [ref=e68]: "// Bunny HLS Player (Advanced) — full source, ~660 lines // Click \"Copy\" above to grab the entire implementation. // // Dependency: <script src=\"https://cdn.jsdelivr.net/npm/hls.js@1.6.11\"></script> // // Preview: function initBunnyPlayer() { document.querySelectorAll('[data-bunny-player-init]').forEach(function(player) { var src = player.getAttribute('data-player-src'); if (!src) return; var video = player.querySelector('video'); if (!video) return; // ... attribute helpers (setStatus, setMutedState, setFsAttr, setActivated) // ... element refs (timeline, progressBar, bufferedBar, handle, time displays) // ... lazy modes (\"true\" | \"meta\" | none) + autoplay detection // ... hls.js attach vs Safari native HLS branch // ... togglePlay / toggleMute / toggleFullscreen // ... time text updates + rAF visual loop // ... pointer-based scrubbing with seek throttling // ... hover/idle detection + auto-hide controls // ... IntersectionObserver-driven in-view auto play/pause }); // Helpers: pad2, formatTime, setText, bestLevel, safePlay, // readyIfIdle, setBeforeRatio, maybeSetRatioFromVideo, // resolveUrl, getSourceMeta (HLS.js OR raw fetch fallback) } // Initialize Bunny HTML HLS Player (Advanced) document.addEventListener('DOMContentLoaded', function() { initBunnyPlayer(); });"

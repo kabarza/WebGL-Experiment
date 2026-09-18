@@ -46,6 +46,12 @@ export interface ExperimentControls {
   visibility?: Record<string, VisibilityRule>;
   /** Draggable layer stack config — when present, the LayerStack UI is shown. */
   layerOrder?: LayerOrderEntry[];
+  /**
+   * When true, skip the auto-seeded "Defaults" version on first load —
+   * the dial's version selector shows only the presets. The first
+   * preset becomes active by default.
+   */
+  skipDefaultsVersion?: boolean;
 }
 
 export interface ExperimentContext {

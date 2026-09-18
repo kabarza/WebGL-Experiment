@@ -1,0 +1,3 @@
+[     222ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/react-dom_client.js?v=d1be6a54:20102
+[     241ms] [WARNING] Experiment is WebGL-only @ http://localhost:5177/src/hooks/useExperiment.ts:43
+[     262ms] [WARNING] Experiment is WebGL-only @ http://localhost:5177/src/hooks/useExperiment.ts:43

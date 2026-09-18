@@ -1,0 +1,134 @@
+- generic [ref=e207]:
+  - banner [ref=e208]:
+    - generic [ref=e209]:
+      - button "Back to gallery (Esc)" [ref=e210] [cursor=pointer]
+      - generic [ref=e213]:
+        - generic [ref=e214]: Brand Tool
+        - generic [ref=e215]: Multi-scale Turing · mip-chain blur · flow-aligned stripes
+      - navigation "Generators" [ref=e216]:
+        - button "Reaction Field" [ref=e217] [cursor=pointer]
+        - button "Turing Flow" [ref=e218] [cursor=pointer]
+    - generic [ref=e219]:
+      - generic [ref=e220]: 114 fps
+      - button "Upload image" [ref=e221] [cursor=pointer]
+      - button "Pause" [ref=e223] [cursor=pointer]
+      - button "Regrow" [ref=e224] [cursor=pointer]
+      - button "Scatter" [ref=e225] [cursor=pointer]
+      - button "Clear" [ref=e226] [cursor=pointer]
+  - generic [ref=e227]:
+    - main [ref=e228]:
+      - generic [ref=e229]:
+        - generic [ref=e230]: Presets
+        - generic [ref=e231]:
+          - button "Fingerprint" [ref=e232] [cursor=pointer]
+          - button "Brain Coral" [ref=e233] [cursor=pointer]
+          - button "Wood Grain" [ref=e234] [cursor=pointer]
+          - button "Ripple" [ref=e235] [cursor=pointer]
+          - button "Starburst" [ref=e236] [cursor=pointer]
+          - button "Engraving" [ref=e237] [cursor=pointer]
+          - button "Halftone Cells" [ref=e238] [cursor=pointer]
+          - button "+ Save current" [ref=e239] [cursor=pointer]
+          - button "Copy JSON" [ref=e240] [cursor=pointer]
+          - button "Paste JSON" [ref=e241] [cursor=pointer]
+      - generic [ref=e242]:
+        - generic [ref=e243]: Themes
+        - generic [ref=e244]:
+          - button "Mono Dark" [ref=e245] [cursor=pointer]
+          - button "Paper" [ref=e247] [cursor=pointer]
+          - button "Walnut" [ref=e249] [cursor=pointer]
+          - button "Blueprint" [ref=e251] [cursor=pointer]
+          - button "Ember" [ref=e253] [cursor=pointer]
+          - button "Lavender" [ref=e255] [cursor=pointer]
+          - generic [ref=e257]:
+            - generic [ref=e258]:
+              - text: BG
+              - textbox "BG" [ref=e259] [cursor=pointer]: "#0b0b0d"
+            - generic [ref=e260]:
+              - text: FG
+              - textbox "FG" [ref=e261] [cursor=pointer]: "#f2efe8"
+            - generic [ref=e262]:
+              - text: Accent
+              - textbox "Accent" [ref=e263] [cursor=pointer]: "#c8a2ff"
+            - button "Swap" [ref=e264] [cursor=pointer]
+      - generic [ref=e265]: 1082×608 · sim 768 px · drag on canvas to paint
+      - generic [ref=e267]:
+        - generic [ref=e268]:
+          - generic [ref=e269]: Canvas
+          - 'button "16 : 9" [ref=e270] [cursor=pointer]'
+          - 'button "3 : 2" [ref=e271] [cursor=pointer]'
+          - 'button "1 : 1" [ref=e272] [cursor=pointer]'
+          - 'button "4 : 5" [ref=e273] [cursor=pointer]'
+          - 'button "9 : 16" [ref=e274] [cursor=pointer]'
+          - 'button "21 : 9" [ref=e275] [cursor=pointer]'
+        - generic [ref=e276]:
+          - generic [ref=e277]: Export
+          - combobox "Flattened render, exactly what you see" [ref=e278] [cursor=pointer]:
+            - option "PNG" [selected]
+            - option "PNG · transparent"
+            - option "SVG · shapes"
+            - option "SVG · lines"
+            - option "SVG · mask"
+            - option "CSS background"
+          - combobox [ref=e279] [cursor=pointer]:
+            - option "1080 × 608"
+            - option "1600 × 900"
+            - option "1920 × 1080" [selected]
+            - option "2560 × 1440"
+            - option "3840 × 2160"
+          - button "Download" [ref=e280] [cursor=pointer]
+    - complementary [ref=e281]:
+      - generic [ref=e286]:
+        - generic [ref=e287] [cursor=pointer]:
+          - generic [ref=e288]: Turing Flow
+          - generic [ref=e291]:
+            - button "Add preset" [ref=e292]
+            - button "Version 1" [ref=e295]
+            - button "Copy parameters" [ref=e299]
+        - generic [ref=e306]:
+          - generic [ref=e307]:
+            - generic [ref=e308] [cursor=pointer]: Scales
+            - generic [ref=e315]:
+              - generic [ref=e317] [cursor=pointer]:
+                - generic: Num Scales
+                - generic [ref=e318]: "4"
+              - generic [ref=e320] [cursor=pointer]:
+                - generic: Base Radius
+                - generic [ref=e321]: "1.6"
+              - generic [ref=e323] [cursor=pointer]:
+                - generic: Radius Ratio
+                - generic [ref=e324]: "2.00"
+              - generic [ref=e326] [cursor=pointer]:
+                - generic: Inhibitor Ratio
+                - generic [ref=e327]: "2.00"
+              - generic [ref=e329] [cursor=pointer]:
+                - generic: Step Amount
+                - generic [ref=e330]: "0.050"
+              - generic [ref=e332] [cursor=pointer]:
+                - generic: Amount Falloff
+                - generic [ref=e333]: "0.70"
+              - generic [ref=e335] [cursor=pointer]:
+                - generic: Decay
+                - generic [ref=e336]: "0.0000"
+              - generic [ref=e338] [cursor=pointer]:
+                - generic: Steps Per Frame
+                - generic [ref=e339]: "2"
+          - generic [ref=e340]:
+            - generic [ref=e341] [cursor=pointer]: Flow
+            - generic [ref=e348]:
+              - button "Flow Mode Noise" [ref=e350] [cursor=pointer]:
+                - generic [ref=e351]: Flow Mode
+                - generic [ref=e352]: Noise
+              - generic [ref=e357] [cursor=pointer]:
+                - generic: Flow Stretch
+                - generic [ref=e358]: "0.50"
+              - generic [ref=e360] [cursor=pointer]:
+                - generic: Flow Scale
+                - generic [ref=e361]: "1.00"
+              - generic [ref=e363] [cursor=pointer]:
+                - generic: Flow Speed
+                - generic [ref=e364]: "0.00"
+          - generic [ref=e365]: Render
+          - generic [ref=e372]: Colour
+          - generic [ref=e379]: Image
+          - generic [ref=e386]: Brush
+          - generic [ref=e393]: Engine

@@ -263,3 +263,44 @@ export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
+
+// ── Mobile / small-viewport caps ─────────────────────────────
+//
+// Soft caps applied on top of the dial's user-set values so the
+// component degrades gracefully on phones. We only ever LOWER values
+// — if the user's dial setting is already below the cap, we respect
+// it. Read on every relevant frame (cheap), so rotating a phone or
+// resizing the browser adapts at runtime.
+
+export interface MobileCaps {
+  isMobile: boolean;     // < 768 px wide — phones in portrait, smaller tablets
+  isSmall: boolean;      // < 480 px wide — narrow phones
+  dprCap: number;        // 2 on desktop, 1.5 on mobile
+  segCap: number;        // grid sub-division ceiling
+  lineWidthCap: number;  // wireframe linewidth ceiling
+  labelSizeCap: number;  // CSS2D label font-size ceiling
+}
+
+export function getMobileCaps(): MobileCaps {
+  if (typeof window === 'undefined') {
+    return {
+      isMobile: false,
+      isSmall: false,
+      dprCap: 2,
+      segCap: Infinity,
+      lineWidthCap: Infinity,
+      labelSizeCap: Infinity,
+    };
+  }
+  const w = window.innerWidth;
+  const isSmall = w < 480;
+  const isMobile = w < 768;
+  return {
+    isMobile,
+    isSmall,
+    dprCap: isMobile ? 1.5 : 2,
+    segCap: isSmall ? 18 : isMobile ? 24 : Infinity,
+    lineWidthCap: isMobile ? 1.5 : Infinity,
+    labelSizeCap: isSmall ? 8 : isMobile ? 9 : Infinity,
+  };
+}

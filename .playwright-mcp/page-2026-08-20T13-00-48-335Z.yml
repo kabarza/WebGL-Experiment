@@ -1,0 +1,9 @@
+- generic [ref=e2]:
+  - navigation [ref=e4]:
+    - button "Back to gallery" [ref=e5] [cursor=pointer]
+    - button "Copy link" [ref=e8] [cursor=pointer]
+    - button "Experiment" [ref=e14] [cursor=pointer]
+    - generic "Frames per second" [ref=e20]:
+      - generic [ref=e21]: "0"
+      - generic [ref=e22]: fps
+  - paragraph [ref=e24]: Loading brand tool…

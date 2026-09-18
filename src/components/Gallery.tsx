@@ -10,7 +10,11 @@ import { ExperimentCard } from './ExperimentCard.tsx';
 
 type Tab = 'experiments' | 'vision';
 
-export function Gallery() {
+interface GalleryProps {
+  onOpenBrand?: () => void;
+}
+
+export function Gallery({ onOpenBrand }: GalleryProps = {}) {
   const [tab, setTab] = useState<Tab>('experiments');
 
   const items = tab === 'experiments' ? experiments : visionExperiments;
@@ -27,6 +31,11 @@ export function Gallery() {
       <header className="gallery-header">
         <h1 className="gallery-title">Experiments</h1>
         <p className="gallery-subtitle">WebGPU Experiment Showcase</p>
+        {onOpenBrand && (
+          <button className="gallery-brand-link" onClick={onOpenBrand}>
+            Open Brand Tool →
+          </button>
+        )}
       </header>
       <div className="gallery-tabs" role="tablist">
         <button

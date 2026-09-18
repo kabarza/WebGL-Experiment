@@ -101,20 +101,31 @@ export class VersionStore {
   /**
    * Seed the version store with a "Defaults" version and built-in presets.
    * Called once on first load when no versions exist yet.
+   *
+   * Pass `skipDefaults: true` to omit the "Defaults" version — the
+   * first preset becomes active. Used by experiments whose dial
+   * should only surface curated states (e.g., flow-player-2's
+   * Vimeo / YouTube versions).
    */
   seedFromPresets(
     defaults: Record<string, unknown>,
     presets?: Record<string, Partial<Record<string, unknown>>>,
+    options: { skipDefaults?: boolean } = {},
   ): void {
-    // "Defaults" version — the experiment's original params
-    const defaultsVersion = this.saveVersion('Defaults', { ...defaults });
-    this.setActiveVersion(defaultsVersion.id);
+    let firstActiveId: string | null = null;
 
-    // Preset versions
+    if (!options.skipDefaults) {
+      const defaultsVersion = this.saveVersion('Defaults', { ...defaults });
+      firstActiveId = defaultsVersion.id;
+    }
+
     if (presets) {
       for (const [name, overrides] of Object.entries(presets)) {
-        this.saveVersion(name, { ...defaults, ...overrides });
+        const v = this.saveVersion(name, { ...defaults, ...overrides });
+        if (firstActiveId === null) firstActiveId = v.id;
       }
     }
+
+    if (firstActiveId !== null) this.setActiveVersion(firstActiveId);
   }
 }

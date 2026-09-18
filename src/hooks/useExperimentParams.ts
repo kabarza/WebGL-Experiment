@@ -348,7 +348,24 @@ export function useExperimentParams(
   // ── "Reset to Defaults" action ─────────────────────────────
   const handleAction = useCallback(
     (action: string) => {
-      if (action !== 'Settings.Reset to Defaults') {
+      const leaf = action.split('.').pop() ?? action;
+      const isResetAll = action === 'Settings.Reset to Defaults' || leaf === 'Reset All';
+
+      // "Reset <Folder>" — restore just that folder's controls.
+      if (!isResetAll && /^Reset /.test(leaf)) {
+        const folder = leaf.slice(6).trim();
+        const panel = DialStore.getPanels().find((p) => p.name === title);
+        if (!panel) return;
+        for (const [key, path] of pathMap) {
+          if (path.split('.')[0] === folder && key in dialDefaults) {
+            DialStore.updateValue(panel.id, path, dialDefaults[key] as import('dialkit').DialValue);
+          }
+        }
+        paramsRef.current._resetTs = Date.now();
+        return;
+      }
+
+      if (!isResetAll) {
         // Forward experiment-specific actions via the mutable params object
         // so the experiment's render loop can react to them.
         paramsRef.current._action = action;

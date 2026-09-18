@@ -257,6 +257,20 @@
   color: rgba(255, 255, 255, 0.95);
 }
 
+.dock-btn--labeled {
+  width: auto;
+  padding: 0 10px 0 8px;
+  border-radius: 100px;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.dock-btn--labeled svg {
+  flex-shrink: 0;
+}
+
 .dock-divider {
   width: 1px;
   height: 16px;

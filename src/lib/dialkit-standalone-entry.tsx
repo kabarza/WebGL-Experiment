@@ -26,7 +26,7 @@ function DialKitBridge({
   config: DialConfig;
   onChange?: (updated: Record<string, unknown>) => void;
 }) {
-  const values = useDialKit('Flow Tempo', config as Parameters<typeof useDialKit>[1]);
+  const values = useDialKit('WebGL Experiments', config as Parameters<typeof useDialKit>[1]);
 
   // Flatten nested folder values and sync to params + call onChange
   React.useEffect(() => {

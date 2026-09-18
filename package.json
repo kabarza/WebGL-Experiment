@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "tsx scripts/build-export-esm.ts --experiment=globe-1",
+    "predev": "tsx scripts/build-export-esm.ts --experiment=globe-1 && tsx scripts/build-export-esm.ts --experiment=flow-player && tsx scripts/build-export-esm.ts --experiment=flow-player-2 && tsx scripts/build-export-esm.ts --experiment=flow-player-3 && tsx scripts/build-export-esm.ts --experiment=flow-player-4",
     "dev": "vite",
-    "prebuild": "tsx scripts/build-export-esm.ts --experiment=globe-1",
+    "prebuild": "tsx scripts/build-export-esm.ts --experiment=globe-1 && tsx scripts/build-export-esm.ts --experiment=flow-player && tsx scripts/build-export-esm.ts --experiment=flow-player-2 && tsx scripts/build-export-esm.ts --experiment=flow-player-3 && tsx scripts/build-export-esm.ts --experiment=flow-player-4",
     "build": "tsc --noEmit && vite build && tsx scripts/build-dialkit-standalone.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -14,11 +14,12 @@
     "build:export-esm": "tsx scripts/build-export-esm.ts",
     "build:dialkit": "tsx scripts/build-dialkit-standalone.ts",
     "new-experiment": "tsx scripts/new-experiment.ts",
-    "postinstall": "sh scripts/patch-dialkit.sh && tsx scripts/copy-mediapipe-assets.ts && tsx scripts/build-export-esm.ts --experiment=globe-1"
+    "postinstall": "sh scripts/patch-dialkit.sh && tsx scripts/copy-mediapipe-assets.ts && tsx scripts/build-export-esm.ts --experiment=globe-1 && tsx scripts/build-export-esm.ts --experiment=flow-player && tsx scripts/build-export-esm.ts --experiment=flow-player-2 && tsx scripts/build-export-esm.ts --experiment=flow-player-3 && tsx scripts/build-export-esm.ts --experiment=flow-player-4"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
     "dialkit": "1.2.0",
+    "dialkit-next": "npm:dialkit@^1.4.3",
     "lil-gui": "^0.21.0",
     "motion": "^12.38.0",
     "pako": "^2.1.0",

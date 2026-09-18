@@ -1,130 +1,150 @@
-var Yt = Object.defineProperty;
-var jt = (l, t, e) => t in l ? Yt(l, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : l[t] = e;
-var f = (l, t, e) => jt(l, typeof t != "symbol" ? t + "" : t, e);
-import * as d from "three";
-import { CSS2DObject as Pt, CSS2DRenderer as Kt } from "three/examples/jsm/renderers/CSS2DRenderer.js";
-import { Line2 as Nt } from "three/examples/jsm/lines/Line2.js";
-import { LineGeometry as Vt } from "three/examples/jsm/lines/LineGeometry.js";
-import { LineMaterial as zt } from "three/examples/jsm/lines/LineMaterial.js";
-const G = 1, rt = G;
-function H(l, t, e, n = new d.Vector3()) {
-  const i = d.MathUtils.degToRad(l), o = d.MathUtils.degToRad(t), a = Math.cos(i);
-  return n.set(a * Math.sin(o) * e, Math.sin(i) * e, a * Math.cos(o) * e), n;
+var Jt = Object.defineProperty;
+var $t = (o, t, e) => t in o ? Jt(o, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : o[t] = e;
+var m = (o, t, e) => $t(o, typeof t != "symbol" ? t + "" : t, e);
+import * as h from "three";
+import { CSS2DObject as zt, CSS2DRenderer as Zt } from "three/examples/jsm/renderers/CSS2DRenderer.js";
+import { Line2 as Vt } from "three/examples/jsm/lines/Line2.js";
+import { LineGeometry as Wt } from "three/examples/jsm/lines/LineGeometry.js";
+import { LineMaterial as Ut } from "three/examples/jsm/lines/LineMaterial.js";
+const j = 1, ht = j;
+function K(o, t, e, s = new h.Vector3()) {
+  const i = h.MathUtils.degToRad(o), l = h.MathUtils.degToRad(t), a = Math.cos(i);
+  return s.set(a * Math.sin(l) * e, Math.sin(i) * e, a * Math.cos(l) * e), s;
 }
-function qt(l, t, e, n, i) {
-  const o = 360 / e, a = 180 / n, s = (C) => {
-    let x = Math.round((C + 180) / o);
-    return x = (x % e + e) % e, -180 + x * o;
-  }, c = (C) => -90 + Math.max(1, Math.min(n - 1, Math.round((C + 90) / a))) * a;
-  if (i === "free") return { lat: l, lon: t };
-  if (i === "meridian") return { lat: l, lon: s(t) };
-  if (i === "parallel") return { lat: c(l), lon: t };
+function Qt(o, t, e, s, i) {
+  const l = 360 / e, a = 180 / s, n = (x) => {
+    let E = Math.round((x + 180) / l);
+    return E = (E % e + e) % e, -180 + E * l;
+  }, p = (x) => -90 + Math.max(1, Math.min(s - 1, Math.round((x + 90) / a))) * a;
+  if (i === "free") return { lat: o, lon: t };
+  if (i === "meridian") return { lat: o, lon: n(t) };
+  if (i === "parallel") return { lat: p(o), lon: t };
   if (i === "intersection")
-    return { lat: c(l), lon: s(t) };
-  const h = c(l), m = s(t), v = Math.abs(l - h), b = Math.abs(t - m);
-  return v <= b ? { lat: h, lon: t } : { lat: l, lon: m };
+    return { lat: p(o), lon: n(t) };
+  const r = p(o), f = n(t), y = Math.abs(o - r), S = Math.abs(t - f);
+  return y <= S ? { lat: r, lon: t } : { lat: o, lon: f };
 }
-function Jt(l, t) {
-  const e = G, n = 64, i = [], o = new d.Vector3();
-  for (let a = 0; a < l; a++) {
-    const s = -180 + 360 * a / l, c = new Float32Array((n + 1) * 3);
-    for (let h = 0; h <= n; h++) {
-      const m = -90 + 180 * (h / n);
-      H(m, s, e, o), c[h * 3 + 0] = o.x, c[h * 3 + 1] = o.y, c[h * 3 + 2] = o.z;
+function te(o, t) {
+  const e = j, s = 64, i = [], l = new h.Vector3();
+  for (let a = 0; a < o; a++) {
+    const n = -180 + 360 * a / o, p = new Float32Array((s + 1) * 3);
+    for (let r = 0; r <= s; r++) {
+      const f = -90 + 180 * (r / s);
+      K(f, n, e, l), p[r * 3 + 0] = l.x, p[r * 3 + 1] = l.y, p[r * 3 + 2] = l.z;
     }
-    i.push(c);
+    i.push(p);
   }
   for (let a = 1; a < t; a++) {
-    const s = -90 + 180 * a / t, c = new Float32Array((n + 1) * 3);
-    for (let h = 0; h <= n; h++) {
-      const m = -180 + 360 * (h / n);
-      H(s, m, e, o), c[h * 3 + 0] = o.x, c[h * 3 + 1] = o.y, c[h * 3 + 2] = o.z;
+    const n = -90 + 180 * a / t, p = new Float32Array((s + 1) * 3);
+    for (let r = 0; r <= s; r++) {
+      const f = -180 + 360 * (r / s);
+      K(n, f, e, l), p[r * 3 + 0] = l.x, p[r * 3 + 1] = l.y, p[r * 3 + 2] = l.z;
     }
-    i.push(c);
+    i.push(p);
   }
   return i;
 }
-function xt(l, t, e = 80) {
-  const n = [], i = Math.max(4, Math.round(e * 0.5));
-  for (let s = 0; s <= i; s++) {
-    const c = s / i, h = d.MathUtils.lerp(l.lat, t.lat, c);
-    n.push(H(h, l.lon, rt));
+function It(o, t, e = 80) {
+  const s = [], i = Math.max(4, Math.round(e * 0.5));
+  for (let n = 0; n <= i; n++) {
+    const p = n / i, r = h.MathUtils.lerp(o.lat, t.lat, p);
+    s.push(K(r, o.lon, ht));
   }
-  let o = t.lon - l.lon;
-  o > 180 && (o -= 360), o < -180 && (o += 360);
+  let l = t.lon - o.lon;
+  l > 180 && (l -= 360), l < -180 && (l += 360);
   const a = Math.max(4, Math.round(e * 0.5));
-  for (let s = 1; s <= a; s++) {
-    const c = s / a;
-    n.push(H(t.lat, l.lon + o * c, rt));
+  for (let n = 1; n <= a; n++) {
+    const p = n / a;
+    s.push(K(t.lat, o.lon + l * p, ht));
   }
-  return n;
+  return s;
 }
-function Xt(l, t, e, n) {
-  const i = (a) => 3 * (1 - a) * (1 - a) * a * l + 3 * (1 - a) * a * a * e + a * a * a, o = (a) => 3 * (1 - a) * (1 - a) * a * t + 3 * (1 - a) * a * a * n + a * a * a;
+function ee(o, t, e, s) {
+  const i = (a) => 3 * (1 - a) * (1 - a) * a * o + 3 * (1 - a) * a * a * e + a * a * a, l = (a) => 3 * (1 - a) * (1 - a) * a * t + 3 * (1 - a) * a * a * s + a * a * a;
   return (a) => {
     if (a <= 0) return 0;
     if (a >= 1) return 1;
-    let s = a;
-    for (let c = 0; c < 6; c++) {
-      const h = i(s), m = 3 * (1 - s) * (1 - s) * l + 6 * (1 - s) * s * (e - l) + 3 * s * s * (1 - e);
-      if (Math.abs(m) < 1e-6) break;
-      s -= (h - a) / m, s < 0 && (s = 0), s > 1 && (s = 1);
+    let n = a;
+    for (let p = 0; p < 6; p++) {
+      const r = i(n), f = 3 * (1 - n) * (1 - n) * o + 6 * (1 - n) * n * (e - o) + 3 * n * n * (1 - e);
+      if (Math.abs(f) < 1e-6) break;
+      n -= (r - a) / f, n < 0 && (n = 0), n > 1 && (n = 1);
     }
-    return o(s);
+    return l(n);
   };
 }
-function $t(l, t) {
-  const e = Math.max(0.05, l), n = Math.min(0.99, Math.max(0, t)), i = Math.max(0.05, 1 - n), o = 2 * Math.PI / e;
+function ne(o, t) {
+  const e = Math.max(0.05, o), s = Math.min(0.99, Math.max(0, t)), i = Math.max(0.05, 1 - s), l = 2 * Math.PI / e;
   return (a) => {
     if (a <= 0) return 0;
     if (a >= 1) return 1;
-    const s = a * e;
-    let c;
+    const n = a * e;
+    let p;
     if (i >= 1)
-      c = 1 - (1 + o * s) * Math.exp(-o * s);
+      p = 1 - (1 + l * n) * Math.exp(-l * n);
     else {
-      const h = Math.sqrt(1 - i * i), m = o * h;
-      c = 1 - Math.exp(-i * o * s) * (Math.cos(m * s) + i / h * Math.sin(m * s));
+      const r = Math.sqrt(1 - i * i), f = l * r;
+      p = 1 - Math.exp(-i * l * n) * (Math.cos(f * n) + i / r * Math.sin(f * n));
     }
-    return Math.min(1, Math.max(0, c));
+    return Math.min(1, Math.max(0, p));
   };
 }
-function Zt(l) {
-  return l ? l.type === "easing" && l.ease ? Xt(l.ease[0], l.ease[1], l.ease[2], l.ease[3]) : l.type === "spring" ? $t(l.visualDuration ?? 0.5, l.bounce ?? 0) : (t) => t : (t) => t;
+function se(o) {
+  return o ? o.type === "easing" && o.ease ? ee(o.ease[0], o.ease[1], o.ease[2], o.ease[3]) : o.type === "spring" ? ne(o.visualDuration ?? 0.5, o.bounce ?? 0) : (t) => t : (t) => t;
 }
-function Qt() {
+function ie() {
   const t = document.createElement("canvas");
   t.width = t.height = 64;
   const e = t.getContext("2d");
   e.clearRect(0, 0, 64, 64), e.strokeStyle = "#ffffff", e.lineWidth = 2.5;
-  const n = 64 / 2, i = 64 * 0.32;
-  e.beginPath(), e.moveTo(n - i, n), e.lineTo(n + i, n), e.moveTo(n, n - i), e.lineTo(n, n + i), e.stroke();
-  const o = new d.CanvasTexture(t);
-  return o.minFilter = d.LinearFilter, o.magFilter = d.LinearFilter, o.anisotropy = 4, o;
+  const s = 64 / 2, i = 64 * 0.32;
+  e.beginPath(), e.moveTo(s - i, s), e.lineTo(s + i, s), e.moveTo(s, s - i), e.lineTo(s, s + i), e.stroke();
+  const l = new h.CanvasTexture(t);
+  return l.minFilter = h.LinearFilter, l.magFilter = h.LinearFilter, l.anisotropy = 4, l;
 }
-function te(l, t) {
+function ae(o, t) {
   try {
-    const e = JSON.parse(l);
+    const e = JSON.parse(o);
     if (!Array.isArray(e)) return t;
-    const n = [];
+    const s = [];
     for (const i of e)
-      i && typeof i.name == "string" && typeof i.lat == "number" && typeof i.lon == "number" && n.push({ name: i.name, lat: i.lat, lon: i.lon });
-    return n.length ? n : t;
+      i && typeof i.name == "string" && typeof i.lat == "number" && typeof i.lon == "number" && s.push({ name: i.name, lat: i.lat, lon: i.lon });
+    return s.length ? s : t;
   } catch {
     return t;
   }
 }
-function Ut() {
+function Ft() {
   return typeof window > "u" || !window.matchMedia ? !1 : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
-const Lt = "globe-1-css";
-let It = "", kt = -1, At = NaN;
-function ee(l, t, e) {
-  if (l === It && t === kt && e === At)
+function Lt() {
+  if (typeof window > "u")
+    return {
+      isMobile: !1,
+      isSmall: !1,
+      dprCap: 2,
+      segCap: 1 / 0,
+      lineWidthCap: 1 / 0,
+      labelSizeCap: 1 / 0
+    };
+  const o = window.innerWidth, t = o < 480, e = o < 768;
+  return {
+    isMobile: e,
+    isSmall: t,
+    dprCap: e ? 1.5 : 2,
+    segCap: t ? 18 : e ? 24 : 1 / 0,
+    lineWidthCap: e ? 1.5 : 1 / 0,
+    labelSizeCap: t ? 8 : e ? 9 : 1 / 0
+  };
+}
+const kt = "globe-1-css";
+let At = "", _t = -1, Tt = NaN;
+function oe(o, t, e) {
+  if (o === At && t === _t && e === Tt)
     return;
-  It = l, kt = t, At = e;
-  let n = document.getElementById(Lt);
-  n || (n = document.createElement("style"), n.id = Lt, document.head.appendChild(n)), n.textContent = `
+  At = o, _t = t, Tt = e;
+  let s = document.getElementById(kt);
+  s || (s = document.createElement("style"), s.id = kt, document.head.appendChild(s)), s.textContent = `
     .globe-1-label-root {
       display: inline-block;
       position: relative;
@@ -134,7 +154,7 @@ function ee(l, t, e) {
       font-size: ${t}px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: ${l};
+      color: ${o};
       white-space: nowrap;
       transition: opacity 200ms ease, color 240ms ease;
       text-align: center;
@@ -147,47 +167,47 @@ function ee(l, t, e) {
     }
   `;
 }
-const se = new d.PlaneGeometry(1, 1);
-class ne {
-  constructor(t, e, n) {
-    f(this, "group", new d.Group());
-    f(this, "cross");
-    f(this, "material");
-    f(this, "label");
-    f(this, "labelEl");
-    f(this, "flashUntil", 0);
-    f(this, "basePosition", new d.Vector3());
-    f(this, "surface");
+const le = new h.PlaneGeometry(1, 1);
+class re {
+  constructor(t, e, s) {
+    m(this, "group", new h.Group());
+    m(this, "cross");
+    m(this, "material");
+    m(this, "label");
+    m(this, "labelEl");
+    m(this, "flashUntil", 0);
+    m(this, "basePosition", new h.Vector3());
+    m(this, "surface");
     // Scratch Color objects — reused each flash frame so we don't churn GC.
-    f(this, "_baseCol", new d.Color());
-    f(this, "_accentCol", new d.Color());
-    f(this, "_lerpCol", new d.Color());
-    if (this.surface = n, n) {
-      const o = new d.MeshBasicMaterial({
+    m(this, "_baseCol", new h.Color());
+    m(this, "_accentCol", new h.Color());
+    m(this, "_lerpCol", new h.Color());
+    if (this.surface = s, s) {
+      const l = new h.MeshBasicMaterial({
         map: e,
         color: 16777215,
         transparent: !0,
         depthWrite: !1,
         depthTest: !1,
-        side: d.DoubleSide
+        side: h.DoubleSide
       });
-      this.material = o, this.cross = new d.Mesh(se, o);
+      this.material = l, this.cross = new h.Mesh(le, l);
     } else {
-      const o = new d.SpriteMaterial({
+      const l = new h.SpriteMaterial({
         map: e,
         color: 16777215,
         transparent: !0,
         depthWrite: !1,
         depthTest: !1
       });
-      this.material = o, this.cross = new d.Sprite(o);
+      this.material = l, this.cross = new h.Sprite(l);
     }
     this.cross.scale.set(0.05, 0.05, 1), this.cross.renderOrder = 4;
     const i = document.createElement("div");
-    i.style.pointerEvents = "none", this.labelEl = document.createElement("span"), this.labelEl.className = "globe-1-label-root", this.labelEl.textContent = t.name, i.appendChild(this.labelEl), this.label = new Pt(i), this.group.add(this.cross), this.group.add(this.label);
+    i.style.pointerEvents = "none", this.labelEl = document.createElement("span"), this.labelEl.className = "globe-1-label-root", this.labelEl.textContent = t.name, i.appendChild(this.labelEl), this.label = new zt(i), this.group.add(this.cross), this.group.add(this.label);
   }
   setPosition(t, e) {
-    H(t, e, rt, this.basePosition), this.group.position.copy(this.basePosition), this.surface && this.cross.lookAt(0, 0, 0);
+    K(t, e, ht, this.basePosition), this.group.position.copy(this.basePosition), this.surface && this.cross.lookAt(0, 0, 0);
   }
   setColors(t, e) {
     this.material.color.set(t), this.labelEl.style.color !== e && (this.labelEl.style.color = e);
@@ -207,15 +227,15 @@ class ne {
   flash(t, e) {
     this.flashUntil = t + e, this.labelEl.classList.add("is-flash");
   }
-  updateFlash(t, e, n, i) {
+  updateFlash(t, e, s, i) {
     if (this.flashUntil <= 0) return;
-    const o = this.flashUntil - t;
-    if (o <= 0) {
-      this.flashUntil = 0, this.material.color.set(n), this.labelEl.classList.remove("is-flash");
+    const l = this.flashUntil - t;
+    if (l <= 0) {
+      this.flashUntil = 0, this.material.color.set(s), this.labelEl.classList.remove("is-flash");
       return;
     }
-    const a = o / e;
-    this._baseCol.set(n), this._accentCol.set(i), this._lerpCol.copy(this._baseCol).lerp(this._accentCol, a), this.material.color.copy(this._lerpCol);
+    const a = l / e;
+    this._baseCol.set(s), this._accentCol.set(i), this._lerpCol.copy(this._baseCol).lerp(this._accentCol, a), this.material.color.copy(this._lerpCol);
   }
   // Used by the front/back visibility test in the render loop.
   getSpriteWorldPos(t) {
@@ -225,25 +245,25 @@ class ne {
     this.material.dispose(), this.labelEl.parentElement && this.labelEl.parentElement.removeChild(this.labelEl);
   }
 }
-class ie {
+class ce {
   constructor(t, e) {
-    f(this, "line");
-    f(this, "geom");
-    f(this, "material");
-    f(this, "trailDetail");
+    m(this, "line");
+    m(this, "geom");
+    m(this, "material");
+    m(this, "trailDetail");
     // vertex count along the trail (params.snakeTrailDetail)
-    f(this, "scratch");
+    m(this, "scratch");
     // Hoisted out of update() so we don't allocate every frame.
-    f(this, "colorScratch");
-    f(this, "active", null);
-    f(this, "scheduled", null);
-    f(this, "lastHeadDist", 0);
+    m(this, "colorScratch");
+    m(this, "active", null);
+    m(this, "scheduled", null);
+    m(this, "lastHeadDist", 0);
     // Reusable Vector3s for sampleAt() — mutated rather than allocated.
-    f(this, "_sampleOut", new d.Vector3());
-    f(this, "_sampleA", new d.Vector3());
-    f(this, "_sampleB", new d.Vector3());
-    this.trailDetail = t, this.scratch = new Float32Array(t * 3), this.colorScratch = new Float32Array(t * 3), this.geom = new Vt(), this.geom.setPositions(this.scratch), this.material = new zt({
-      color: new d.Color(e).getHex(),
+    m(this, "_sampleOut", new h.Vector3());
+    m(this, "_sampleA", new h.Vector3());
+    m(this, "_sampleB", new h.Vector3());
+    this.trailDetail = t, this.scratch = new Float32Array(t * 3), this.colorScratch = new Float32Array(t * 3), this.geom = new Wt(), this.geom.setPositions(this.scratch), this.material = new Ut({
+      color: new h.Color(e).getHex(),
       linewidth: 3,
       transparent: !0,
       depthTest: !1,
@@ -252,7 +272,7 @@ class ie {
       vertexColors: !0,
       dashed: !1,
       alphaToCoverage: !0
-    }), this.material.blending = d.AdditiveBlending, this.material.resolution.set(window.innerWidth, window.innerHeight), this.line = new Nt(this.geom, this.material), this.line.computeLineDistances(), this.line.renderOrder = 5, this.line.frustumCulled = !1, this.line.visible = !1;
+    }), this.material.blending = h.AdditiveBlending, this.material.resolution.set(window.innerWidth, window.innerHeight), this.line = new Vt(this.geom, this.material), this.line.computeLineDistances(), this.line.renderOrder = 5, this.line.frustumCulled = !1, this.line.visible = !1;
   }
   setResolution(t, e) {
     this.material.resolution.set(t, e);
@@ -266,27 +286,27 @@ class ie {
   setTrailDetail(t) {
     t !== this.trailDetail && (this.trailDetail = t, this.scratch = new Float32Array(t * 3), this.colorScratch = new Float32Array(t * 3));
   }
-  schedule(t, e, n) {
-    const i = e + Math.random() * Math.max(0, n - e);
+  schedule(t, e, s) {
+    const i = e + Math.random() * Math.max(0, s - e);
     this.scheduled = t + i;
   }
   begin(t, e) {
     if (e.length < 2) return;
-    const n = Math.floor(Math.random() * e.length);
+    const s = Math.floor(Math.random() * e.length);
     let i = Math.floor(Math.random() * e.length);
-    i === n && (i = (i + 1) % e.length);
-    const o = xt(e[n], e[i]), a = [0];
-    let s = 0;
-    for (let c = 1; c < o.length; c++)
-      s += o[c].distanceTo(o[c - 1]), a.push(s);
+    i === s && (i = (i + 1) % e.length);
+    const l = It(e[s], e[i]), a = [0];
+    let n = 0;
+    for (let p = 1; p < l.length; p++)
+      n += l[p].distanceTo(l[p - 1]), a.push(n);
     this.active = {
       endIdx: i,
       endCountry: e[i],
-      path: o,
+      path: l,
       cumulative: a,
-      totalDistance: s,
+      totalDistance: n,
       legStartDist: 0,
-      legEndDist: s,
+      legEndDist: n,
       legStartTime: t,
       flashed: !1,
       phase: "travel",
@@ -297,18 +317,18 @@ class ie {
   }
   appendLeg(t, e) {
     if (!this.active) return;
-    const n = this.active;
+    const s = this.active;
     if (e.length < 2) {
       this.enterWindup(t);
       return;
     }
     let i = Math.floor(Math.random() * e.length);
-    e[n.endIdx] === n.endCountry && i === n.endIdx && (i = (i + 1) % e.length);
-    const o = n.endCountry, a = e[i], s = xt(o, a);
-    let c = n.totalDistance;
-    for (let h = 1; h < s.length; h++)
-      c += s[h].distanceTo(s[h - 1]), n.path.push(s[h]), n.cumulative.push(c);
-    n.legStartDist = n.totalDistance, n.legEndDist = c, n.totalDistance = c, n.endIdx = i, n.endCountry = a, n.legStartTime = t, n.flashed = !1, n.phase = "travel";
+    e[s.endIdx] === s.endCountry && i === s.endIdx && (i = (i + 1) % e.length);
+    const l = s.endCountry, a = e[i], n = It(l, a);
+    let p = s.totalDistance;
+    for (let r = 1; r < n.length; r++)
+      p += n[r].distanceTo(n[r - 1]), s.path.push(n[r]), s.cumulative.push(p);
+    s.legStartDist = s.totalDistance, s.legEndDist = p, s.totalDistance = p, s.endIdx = i, s.endCountry = a, s.legStartTime = t, s.flashed = !1, s.phase = "travel";
   }
   // After many legs in continuous mode, trim the front of the path
   // since only the trail-window worth of points behind tail is needed.
@@ -318,9 +338,9 @@ class ie {
     if (!this.active) return;
     const e = this.active;
     if (e.path.length < 600) return;
-    const n = Math.max(0, e.tailDist - t);
+    const s = Math.max(0, e.tailDist - t);
     let i = 0;
-    for (; i < e.cumulative.length - 1 && e.cumulative[i + 1] < n; )
+    for (; i < e.cumulative.length - 1 && e.cumulative[i + 1] < s; )
       i++;
     i < 1 || (e.path.splice(0, i), e.cumulative.splice(0, i));
   }
@@ -329,69 +349,69 @@ class ie {
   }
   // Updates geometry. Returns destination index when an arrival event
   // fires (so the render loop can flash that country's marker).
-  update(t, e, n, i, o, a) {
+  update(t, e, s, i, l, a) {
     if (!this.active)
       return this.line.visible = !1, -1;
-    const s = this.active;
-    let c = -1, h;
-    if (s.phase === "travel") {
-      const w = s.legEndDist - s.legStartDist, y = Math.max(
+    const n = this.active;
+    let p = -1, r;
+    if (n.phase === "travel") {
+      const w = n.legEndDist - n.legStartDist, I = Math.max(
         a.legMinDuration,
-        w / Math.max(0.01, n)
-      ), I = t - s.legStartTime;
-      if (I < y)
-        h = s.legStartDist + o(I / y) * w;
-      else if (h = s.legEndDist, s.flashed || (s.flashed = !0, c = s.endIdx), a.continuous) {
-        const _ = a.pauseMin + Math.random() * Math.max(0, a.pauseMax - a.pauseMin);
-        s.phase = "pause", s.pauseUntil = t + _;
+        w / Math.max(0.01, s)
+      ), A = t - n.legStartTime;
+      if (A < I)
+        r = n.legStartDist + l(A / I) * w;
+      else if (r = n.legEndDist, n.flashed || (n.flashed = !0, p = n.endIdx), a.continuous) {
+        const C = a.pauseMin + Math.random() * Math.max(0, a.pauseMax - a.pauseMin);
+        n.phase = "pause", n.pauseUntil = t + C;
       } else
         this.enterWindup(t);
-    } else s.phase === "pause" ? (h = s.legEndDist, a.continuous ? t >= s.pauseUntil && (this.appendLeg(t, a.countries), h = s.legStartDist) : this.enterWindup(t)) : h = s.legEndDist;
-    const m = Math.max(1e-3, a.trailMin), v = Math.max(m + 1e-3, a.trailLength), b = 10 + a.trailFollow * 200, C = 0.7 * 2 * Math.sqrt(b), x = s.phase === "wind-up" ? h : h - m, k = 4, P = Math.max(1e-4, e / k);
+    } else n.phase === "pause" ? (r = n.legEndDist, a.continuous ? t >= n.pauseUntil && (this.appendLeg(t, a.countries), r = n.legStartDist) : this.enterWindup(t)) : r = n.legEndDist;
+    const f = Math.max(1e-3, a.trailMin), y = Math.max(f + 1e-3, a.trailLength), S = 10 + a.trailFollow * 200, x = 0.7 * 2 * Math.sqrt(S), E = n.phase === "wind-up" ? r : r - f, k = 4, W = Math.max(1e-4, e / k);
     for (let w = 0; w < k; w++) {
-      const y = x - s.tailDist, I = b * y - C * s.tailVel;
-      s.tailVel += I * P, s.tailDist += s.tailVel * P;
+      const I = E - n.tailDist, A = S * I - x * n.tailVel;
+      n.tailVel += A * W, n.tailDist += n.tailVel * W;
     }
-    s.phase === "wind-up" ? s.tailDist > h && (s.tailDist = h, s.tailVel > 0 && (s.tailVel = 0)) : (s.tailDist > h - m && (s.tailDist = h - m, s.tailVel > 0 && (s.tailVel = 0)), s.tailDist < h - v && (s.tailDist = h - v, s.tailVel < 0 && (s.tailVel = 0))), s.tailDist < 0 && (s.tailDist = 0, s.tailVel < 0 && (s.tailVel = 0));
-    const B = this.trailDetail, A = this.scratch, T = this.colorScratch, N = this.material.color, L = this._sampleOut;
-    for (let w = 0; w < B; w++) {
-      const y = w / (B - 1), I = d.MathUtils.lerp(s.tailDist, h, y);
-      this.sampleAt(I, L), A[w * 3 + 0] = L.x, A[w * 3 + 1] = L.y, A[w * 3 + 2] = L.z;
-      const _ = Math.pow(y, 1.4);
-      T[w * 3 + 0] = N.r * i * (0.25 + 1.5 * _), T[w * 3 + 1] = N.g * i * (0.25 + 1.5 * _), T[w * 3 + 2] = N.b * i * (0.25 + 1.5 * _);
+    n.phase === "wind-up" ? n.tailDist > r && (n.tailDist = r, n.tailVel > 0 && (n.tailVel = 0)) : (n.tailDist > r - f && (n.tailDist = r - f, n.tailVel > 0 && (n.tailVel = 0)), n.tailDist < r - y && (n.tailDist = r - y, n.tailVel < 0 && (n.tailVel = 0))), n.tailDist < 0 && (n.tailDist = 0, n.tailVel < 0 && (n.tailVel = 0));
+    const U = this.trailDetail, _ = this.scratch, R = this.colorScratch, O = this.material.color, P = this._sampleOut;
+    for (let w = 0; w < U; w++) {
+      const I = w / (U - 1), A = h.MathUtils.lerp(n.tailDist, r, I);
+      this.sampleAt(A, P), _[w * 3 + 0] = P.x, _[w * 3 + 1] = P.y, _[w * 3 + 2] = P.z;
+      const C = Math.pow(I, 1.4);
+      R[w * 3 + 0] = O.r * i * (0.25 + 1.5 * C), R[w * 3 + 1] = O.g * i * (0.25 + 1.5 * C), R[w * 3 + 2] = O.b * i * (0.25 + 1.5 * C);
     }
-    return this.geom.setPositions(A), this.geom.setColors(T), this.line.computeLineDistances(), this.lastHeadDist = h, s.phase === "wind-up" && s.tailDist >= s.legEndDist - 1e-3 && (this.active = null, this.line.visible = !1), c;
+    return this.geom.setPositions(_), this.geom.setColors(R), this.line.computeLineDistances(), this.lastHeadDist = r, n.phase === "wind-up" && n.tailDist >= n.legEndDist - 1e-3 && (this.active = null, this.line.visible = !1), p;
   }
   // Sample head + tangent. Mutates the supplied vectors.
   sampleHeadAndTangent(t, e) {
     if (!this.active) return !1;
-    const n = this.active.totalDistance, i = Math.min(0.04, n * 0.05), o = Math.min(n, Math.max(0, this.lastHeadDist));
-    this.sampleAt(o, t);
-    let a, s;
-    return o < i ? (a = o, s = Math.min(n, o + i)) : (a = Math.max(0, o - i), s = o), s - a < 1e-5 ? (e.set(0, 0, 0), !0) : (this.sampleAt(a, this._sampleA), this.sampleAt(s, this._sampleB), e.copy(this._sampleB).sub(this._sampleA), !0);
+    const s = this.active.totalDistance, i = Math.min(0.04, s * 0.05), l = Math.min(s, Math.max(0, this.lastHeadDist));
+    this.sampleAt(l, t);
+    let a, n;
+    return l < i ? (a = l, n = Math.min(s, l + i)) : (a = Math.max(0, l - i), n = l), n - a < 1e-5 ? (e.set(0, 0, 0), !0) : (this.sampleAt(a, this._sampleA), this.sampleAt(n, this._sampleB), e.copy(this._sampleB).sub(this._sampleA), !0);
   }
   // Mutates `out`; never allocates.
   sampleAt(t, e) {
-    const n = this.active, i = n.cumulative;
-    if (t <= 0) return e.copy(n.path[0]);
-    if (t >= i[i.length - 1]) return e.copy(n.path[n.path.length - 1]);
-    let o = 0, a = i.length - 1;
-    for (; o < a - 1; ) {
-      const h = o + a >> 1;
-      i[h] <= t ? o = h : a = h;
+    const s = this.active, i = s.cumulative;
+    if (t <= 0) return e.copy(s.path[0]);
+    if (t >= i[i.length - 1]) return e.copy(s.path[s.path.length - 1]);
+    let l = 0, a = i.length - 1;
+    for (; l < a - 1; ) {
+      const r = l + a >> 1;
+      i[r] <= t ? l = r : a = r;
     }
-    const s = i[a] - i[o] || 1, c = (t - i[o]) / s;
-    return e.copy(n.path[o]).lerp(n.path[a], c);
+    const n = i[a] - i[l] || 1, p = (t - i[l]) / n;
+    return e.copy(s.path[l]).lerp(s.path[a], p);
   }
   dispose() {
     this.geom.dispose(), this.material.dispose();
   }
 }
-const _t = "globe-1-snake-icon-css", ae = "M443.537,3.805c-3.84-3.84-9.686-4.893-14.625-2.613L7.553,195.239c-4.827,2.215-7.807,7.153-7.535,12.459c0.254,5.305,3.727,9.908,8.762,11.63l129.476,44.289c21.349,7.314,38.125,24.089,45.438,45.438l44.321,129.509c1.72,5.018,6.325,8.491,11.63,8.762c5.306,0.271,10.244-2.725,12.458-7.535L446.15,18.429C448.428,13.491,447.377,7.644,443.537,3.805z";
-function oe() {
-  if (document.getElementById(_t)) return;
-  const l = document.createElement("style");
-  l.id = _t, l.textContent = `
+const Rt = "globe-1-snake-icon-css", he = "M443.537,3.805c-3.84-3.84-9.686-4.893-14.625-2.613L7.553,195.239c-4.827,2.215-7.807,7.153-7.535,12.459c0.254,5.305,3.727,9.908,8.762,11.63l129.476,44.289c21.349,7.314,38.125,24.089,45.438,45.438l44.321,129.509c1.72,5.018,6.325,8.491,11.63,8.762c5.306,0.271,10.244-2.725,12.458-7.535L446.15,18.429C448.428,13.491,447.377,7.644,443.537,3.805z";
+function de() {
+  if (document.getElementById(Rt)) return;
+  const o = document.createElement("style");
+  o.id = Rt, o.textContent = `
     .globe-1-snake-icon {
       pointer-events: none;
       will-change: opacity;
@@ -406,26 +426,26 @@ function oe() {
       display: block;
       overflow: visible;
     }
-  `, document.head.appendChild(l);
+  `, document.head.appendChild(o);
 }
-class le {
+class pe {
   constructor() {
-    f(this, "el");
-    f(this, "rotor");
-    f(this, "svgEl");
-    f(this, "pathEl");
-    f(this, "obj");
-    f(this, "size", 22);
-    f(this, "rotationOffsetDeg", 0);
-    f(this, "lastHeadingDeg", 0);
-    f(this, "_lastColor", "");
-    oe();
+    m(this, "el");
+    m(this, "rotor");
+    m(this, "svgEl");
+    m(this, "pathEl");
+    m(this, "obj");
+    m(this, "size", 22);
+    m(this, "rotationOffsetDeg", 0);
+    m(this, "lastHeadingDeg", 0);
+    m(this, "_lastColor", "");
+    de();
     const t = document.createElement("div");
     t.className = "globe-1-snake-icon", this.rotor = document.createElement("div"), this.rotor.className = "globe-1-snake-icon-rotor";
     const e = "http://www.w3.org/2000/svg";
     this.svgEl = document.createElementNS(e, "svg"), this.svgEl.setAttribute("viewBox", "0 0 447.342 447.342"), this.svgEl.setAttribute("class", "globe-1-snake-icon-svg"), this.svgEl.setAttribute("xmlns", e);
-    const n = document.createElementNS(e, "g");
-    n.setAttribute("transform", "rotate(-45 223.671 223.671)"), this.pathEl = document.createElementNS(e, "path"), this.pathEl.setAttribute("d", ae), this.pathEl.setAttribute("fill", "currentColor"), n.appendChild(this.pathEl), this.svgEl.appendChild(n), this.rotor.appendChild(this.svgEl), t.appendChild(this.rotor), this.el = t, this.obj = new Pt(t), this.applySize();
+    const s = document.createElementNS(e, "g");
+    s.setAttribute("transform", "rotate(-45 223.671 223.671)"), this.pathEl = document.createElementNS(e, "path"), this.pathEl.setAttribute("d", he), this.pathEl.setAttribute("fill", "currentColor"), s.appendChild(this.pathEl), this.svgEl.appendChild(s), this.rotor.appendChild(this.svgEl), t.appendChild(this.rotor), this.el = t, this.obj = new zt(t), this.applySize();
   }
   setSize(t) {
     t !== this.size && (this.size = t, this.applySize());
@@ -458,39 +478,39 @@ class le {
     this.el.parentElement && this.el.parentElement.removeChild(this.el);
   }
 }
-function re(l) {
-  let t = 0, e = 0, n = !1, i = !0;
-  const o = Ut(), a = () => {
+function ue(o) {
+  let t = 0, e = 0, s = !1, i = !0;
+  const l = Ft(), a = () => {
     i = !0;
   };
-  function s() {
-    n || (window.addEventListener("scroll", a, { passive: !0 }), window.addEventListener("resize", a, { passive: !0 }), n = !0, i = !0);
+  function n() {
+    s || (window.addEventListener("scroll", a, { passive: !0 }), window.addEventListener("resize", a, { passive: !0 }), s = !0, i = !0);
   }
-  function c() {
-    n && (window.removeEventListener("scroll", a), window.removeEventListener("resize", a), n = !1);
+  function p() {
+    s && (window.removeEventListener("scroll", a), window.removeEventListener("resize", a), s = !1);
   }
-  function h(m) {
-    const v = l.getBoundingClientRect(), b = window.innerHeight || 1, C = (b - v.top) / Math.max(1, b + v.height), x = Math.max(0, Math.min(1, C)), k = d.MathUtils.degToRad(m);
-    t = (x - 0.5) * k;
+  function r(f) {
+    const y = o.getBoundingClientRect(), S = window.innerHeight || 1, x = (S - y.top) / Math.max(1, S + y.height), E = Math.max(0, Math.min(1, x)), k = h.MathUtils.degToRad(f);
+    t = (E - 0.5) * k;
   }
   return {
     get currentPitch() {
       return e;
     },
-    set currentPitch(m) {
-      e = m;
+    set currentPitch(f) {
+      e = f;
     },
-    update(m, v) {
-      !v.enabled || o ? (t = 0, n && c()) : (n || s(), i && (h(v.rangeDeg), i = !1));
-      const b = Math.max(0.1, v.smoothing), C = 1 - Math.exp(-m * b);
-      e += (t - e) * C;
+    update(f, y) {
+      !y.enabled || l ? (t = 0, s && p()) : (s || n(), i && (r(y.rangeDeg), i = !1));
+      const S = Math.max(0.1, y.smoothing), x = 1 - Math.exp(-f * S);
+      e += (t - e) * x;
     },
     dispose() {
-      c();
+      p();
     }
   };
 }
-const ct = [
+const dt = [
   { name: "NORWEGEN", lat: 60, lon: 5 },
   { name: "SCHWEDEN", lat: 60, lon: 20 },
   { name: "FINNLAND", lat: 60, lon: 37 },
@@ -517,16 +537,16 @@ const ct = [
   { name: "PORTUGAL", lat: 0, lon: -40 },
   { name: "SPANIEN", lat: 0, lon: -22 },
   { name: "ITALIEN", lat: -5, lon: -8 }
-], ce = {
+], fe = {
   type: "spring",
   stiffness: 110,
   damping: 18,
   mass: 1
-}, he = {
+}, me = {
   type: "easing",
   duration: 0.3,
   ease: [0.34, 0.45, 0.5, 1]
-}, de = {
+}, ge = {
   defaults: {
     bgColor: "#000000",
     lineColor: "#5a5a52",
@@ -556,7 +576,7 @@ const ct = [
     labelOffsetY: 18,
     // Interaction
     dragSensitivity: 0.26,
-    dragSpring: ce,
+    dragSpring: fe,
     autoSpin: !1,
     autoSpinSpeed: 0.15,
     autoSpinAxis: "Y (yaw)",
@@ -573,7 +593,7 @@ const ct = [
     snakeWidth: 1,
     snakeFlashDuration: 2.2,
     snakeIntensity: 0.1,
-    snakeEase: he,
+    snakeEase: me,
     // When true, a finished route doesn't wind up + restart. Instead the
     // head pauses at the destination, then a new destination is appended
     // to the SAME path so the trail and head icon stay continuous.
@@ -606,31 +626,31 @@ const ct = [
     scrollPitchRangeDeg: 30,
     scrollPitchSmoothing: 8,
     // Country list (JSON)
-    countriesJson: JSON.stringify(ct, null, 2)
+    countriesJson: JSON.stringify(dt, null, 2)
   },
   dialConfig: {
     Countries: {
       countriesJson: {
-        default: JSON.stringify(ct, null, 2)
+        default: JSON.stringify(dt, null, 2)
       }
     }
   }
 };
-var Tt = {};
-const Rt = { ...de.defaults }, Ot = typeof window < "u" && window.__GLOBE_1_CONFIG__ ? { ...window.__GLOBE_1_CONFIG__ } : {}, r = typeof Tt < "u" ? { ...Rt, ...Tt, ...Ot } : { ...Rt, ...Ot };
-function pe(l) {
-  const t = l.querySelector("canvas");
+var Ot = {};
+const Pt = { ...ge.defaults }, Nt = typeof window < "u" && window.__GLOBE_1_CONFIG__ ? { ...window.__GLOBE_1_CONFIG__ } : {}, c = typeof Ot < "u" ? { ...Pt, ...Ot, ...Nt } : { ...Pt, ...Nt };
+function we(o) {
+  const t = o.querySelector("canvas");
   if (!t) return;
-  const e = t, n = Ut();
-  ee(
-    r.labelColor,
-    r.labelSize,
-    r.labelOffsetY
+  const e = t, s = Ft(), i = Lt(), l = Math.min(c.labelSize, i.labelSizeCap);
+  oe(
+    c.labelColor,
+    l,
+    c.labelOffsetY
   );
-  const i = new d.WebGLRenderer({ canvas: e, antialias: !0, alpha: !1 });
-  i.setClearColor(r.bgColor, 1);
-  const o = new Kt();
-  Object.assign(o.domElement.style, {
+  const a = new h.WebGLRenderer({ canvas: e, antialias: !0, alpha: !1 });
+  a.setClearColor(c.bgColor, 1);
+  const n = new Zt();
+  Object.assign(n.domElement.style, {
     position: "absolute",
     top: "0",
     left: "0",
@@ -638,16 +658,16 @@ function pe(l) {
     height: "100%",
     pointerEvents: "none",
     userSelect: "none"
-  }), l.appendChild(o.domElement);
-  const a = new d.Scene(), s = new d.PerspectiveCamera(r.fov, 1, 0.01, 20);
-  s.position.set(0, 0, 4.5 / Math.max(0.01, r.zoom));
-  const c = new d.Group();
-  a.add(c);
-  const h = new d.SphereGeometry(G * 0.998, 64, 32), m = new d.MeshBasicMaterial({ color: r.bgColor }), v = new d.Mesh(h, m);
-  c.add(v);
-  const b = new zt({
-    color: new d.Color(r.lineColor).getHex(),
-    linewidth: r.lineWidth ?? 2,
+  }), o.appendChild(n.domElement);
+  const p = new h.Scene(), r = new h.PerspectiveCamera(c.fov, 1, 0.01, 20);
+  r.position.set(0, 0, 4.5 / Math.max(0.01, c.zoom));
+  const f = new h.Group();
+  p.add(f);
+  const y = new h.SphereGeometry(j * 0.998, 64, 32), S = new h.MeshBasicMaterial({ color: c.bgColor }), x = new h.Mesh(y, S);
+  f.add(x);
+  const E = new Ut({
+    color: new h.Color(c.lineColor).getHex(),
+    linewidth: Math.min(c.lineWidth ?? 2, i.lineWidthCap),
     transparent: !1,
     worldUnits: !1,
     depthTest: !0,
@@ -655,193 +675,206 @@ function pe(l) {
     dashed: !1,
     alphaToCoverage: !0
   });
-  b.onBeforeCompile = (u) => {
-    u.fragmentShader = u.fragmentShader.replace(
+  E.onBeforeCompile = (d) => {
+    d.fragmentShader = d.fragmentShader.replace(
       /\bvoid main\(\)\s*\{/,
       `void main() {
   if (abs(vUv.y) > 1.0) discard;`
     );
-  }, b.resolution.set(window.innerWidth, window.innerHeight);
-  const C = new d.Group(), x = [];
-  c.add(C);
-  const k = Math.max(3, Math.round(r.lonSegments)), P = Math.max(2, Math.round(r.latSegments)), B = Jt(k, P);
-  for (const u of B) {
-    const p = new Vt();
-    p.setPositions(Array.from(u));
-    const g = new Nt(p, b);
-    g.frustumCulled = !1, C.add(g), x.push(g);
+  }, E.resolution.set(window.innerWidth, window.innerHeight);
+  const k = new h.Group(), W = [];
+  f.add(k);
+  const U = Math.min(
+    Math.max(3, Math.round(c.lonSegments)),
+    i.segCap
+  ), _ = Math.min(
+    Math.max(2, Math.round(c.latSegments)),
+    i.segCap
+  ), R = te(U, _);
+  for (const d of R) {
+    const u = new Wt();
+    u.setPositions(Array.from(d));
+    const g = new Vt(u, E);
+    g.frustumCulled = !1, k.add(g), W.push(g);
   }
-  C.visible = r.showLines !== !1;
+  k.visible = c.showLines !== !1;
   {
-    const u = new d.Color(r.lineColor), p = d.MathUtils.clamp(r.lineOpacity, 0, 1);
-    b.color.setRGB(
-      u.r * p,
-      u.g * p,
-      u.b * p
+    const d = new h.Color(c.lineColor), u = h.MathUtils.clamp(c.lineOpacity, 0, 1);
+    E.color.setRGB(
+      d.r * u,
+      d.g * u,
+      d.b * u
     );
   }
-  const A = Qt();
-  let T = te(
-    r.countriesJson,
-    ct
+  const O = ie();
+  let P = ae(
+    c.countriesJson,
+    dt
   );
-  const N = r.snapMode ?? "nearest line", L = T.map((u) => ({
-    name: u.name,
-    ...qt(u.lat, u.lon, k, P, N)
-  })), w = !!r.crossOnSurface, y = [], I = r.showCountries !== !1, _ = r.showLabels !== !1;
-  for (const u of L) {
-    const p = new ne(u, A, w);
-    p.setPosition(u.lat, u.lon), p.setColors(r.crossColor, r.labelColor), p.setSize(r.crossSize), p.group.visible = I, _ || (p.labelEl.style.display = "none"), c.add(p.group), y.push(p);
+  const w = c.snapMode ?? "nearest line", I = P.map((d) => ({
+    name: d.name,
+    ...Qt(d.lat, d.lon, U, _, w)
+  })), A = !!c.crossOnSurface, C = [], Ht = c.showCountries !== !1, Gt = c.showLabels !== !1;
+  for (const d of I) {
+    const u = new re(d, O, A);
+    u.setPosition(d.lat, d.lon), u.setColors(c.crossColor, c.labelColor), u.setSize(c.crossSize), u.group.visible = Ht, Gt || (u.labelEl.style.display = "none"), f.add(u.group), C.push(u);
   }
-  const M = new ie(
-    Math.max(4, Math.round(r.snakeTrailDetail ?? 31)),
-    r.accentColor
+  const b = new ce(
+    Math.max(4, Math.round(c.snakeTrailDetail ?? 31)),
+    c.accentColor
   );
-  M.setWidth(r.snakeWidth), c.add(M.line);
-  const D = new le();
-  D.setColor(r.snakeIconColor), D.setSize(r.snakeIconSize), D.setRotationOffset(r.snakeIconRotationOffset), D.setVisible(!1), c.add(D.obj);
-  let V = !1, Y = null;
-  const R = { x: 0, y: 0 };
-  let j = 0, O = 0, K = 0, q = 0, Q = 0, tt = 0;
-  const ht = (u) => {
-    var p;
-    V = !0, Y = u.pointerId, R.x = u.clientX, R.y = u.clientY, K = 0, q = 0, (p = e.setPointerCapture) == null || p.call(e, u.pointerId), e.style.cursor = "grabbing";
-  }, dt = (u) => {
-    if (!V || u.pointerId !== Y) return;
-    const p = u.clientX - R.x, g = u.clientY - R.y;
-    R.x = u.clientX, R.y = u.clientY;
-    const z = r.dragSensitivity * 5e-3;
-    j += p * z, O += g * z, O = d.MathUtils.clamp(O, -Math.PI * 0.55, Math.PI * 0.55);
-  }, J = (u) => {
-    var p;
-    if (u.pointerId === Y) {
-      V = !1, Y = null, e.style.cursor = "grab";
+  b.setWidth(c.snakeWidth), f.add(b.line);
+  const D = new pe();
+  D.setColor(c.snakeIconColor), D.setSize(c.snakeIconSize), D.setRotationOffset(c.snakeIconRotationOffset), D.setVisible(!1), f.add(D.obj);
+  const Bt = 8;
+  let N = !1, L = null, q = null;
+  const z = { x: 0, y: 0 };
+  let X = 0, V = 0, J = 0, $ = 0, nt = 0, st = 0;
+  const pt = (d) => {
+    L = { id: d.pointerId, x: d.clientX, y: d.clientY }, N = !1, J = 0, $ = 0;
+  }, ut = (d) => {
+    var F;
+    if (N) {
+      if (d.pointerId !== q) return;
+      const H = d.clientX - z.x, T = d.clientY - z.y;
+      z.x = d.clientX, z.y = d.clientY;
+      const G = c.dragSensitivity * 5e-3;
+      X += H * G, V += T * G, V = h.MathUtils.clamp(V, -Math.PI * 0.55, Math.PI * 0.55);
+      return;
+    }
+    if (!L || d.pointerId !== L.id) return;
+    const u = d.clientX - L.x, g = d.clientY - L.y;
+    Math.hypot(u, g) < Bt || (Math.abs(u) > Math.abs(g) ? (N = !0, q = L.id, z.x = d.clientX, z.y = d.clientY, L = null, (F = e.setPointerCapture) == null || F.call(e, d.pointerId), e.style.cursor = "grabbing") : L = null);
+  }, Z = (d) => {
+    var u;
+    if (L = null, d.pointerId === q) {
+      N = !1, q = null, e.style.cursor = "grab";
       try {
-        (p = e.releasePointerCapture) == null || p.call(e, u.pointerId);
+        (u = e.releasePointerCapture) == null || u.call(e, d.pointerId);
       } catch {
       }
     }
   };
-  e.style.cursor = "grab", e.addEventListener("pointerdown", ht), e.addEventListener("pointermove", dt), e.addEventListener("pointerup", J), e.addEventListener("pointercancel", J);
-  const et = re(l);
-  function pt() {
-    const u = Math.min(window.devicePixelRatio || 1, 2), p = e.getBoundingClientRect();
-    p.width < 1 || p.height < 1 || (i.setPixelRatio(u), i.setSize(p.width, p.height, !1), s.aspect = p.width / Math.max(1, p.height), s.updateProjectionMatrix(), o.setSize(p.width, p.height), b.resolution.set(p.width * u, p.height * u), M.setResolution(p.width * u, p.height * u));
+  e.style.cursor = "grab", e.addEventListener("pointerdown", pt), e.addEventListener("pointermove", ut), e.addEventListener("pointerup", Z), e.addEventListener("pointercancel", Z);
+  const it = ue(o);
+  function ft() {
+    const d = Lt(), u = Math.min(window.devicePixelRatio || 1, d.dprCap), g = e.getBoundingClientRect();
+    g.width < 1 || g.height < 1 || (a.setPixelRatio(u), a.setSize(g.width, g.height, !1), r.aspect = g.width / Math.max(1, g.height), r.updateProjectionMatrix(), n.setSize(g.width, g.height), E.resolution.set(g.width * u, g.height * u), b.setResolution(g.width * u, g.height * u));
   }
-  const ut = new ResizeObserver(pt);
-  ut.observe(e), pt();
-  let ft = !0;
-  const mt = new IntersectionObserver(
-    (u) => {
-      for (const p of u) ft = p.isIntersecting;
+  const mt = new ResizeObserver(ft);
+  mt.observe(e), ft();
+  let gt = !0;
+  const wt = new IntersectionObserver(
+    (d) => {
+      for (const u of d) gt = u.isIntersecting;
     },
     { rootMargin: "100px", threshold: 0 }
   );
-  mt.observe(l);
-  const gt = new d.Vector3(), X = new d.Vector3(), wt = new d.Vector3(), st = new d.Vector3(), bt = new d.Vector3(), nt = new d.Vector3(), it = new d.Vector3(), Mt = new d.Vector3(), Et = new d.Vector3(), Wt = new d.Vector3();
-  function Ft() {
-    s.updateMatrixWorld();
-    const u = s.matrixWorldInverse, p = Wt.set(0, 0, 0).applyMatrix4(u).z;
-    for (const g of y) {
-      g.getSpriteWorldPos(gt);
-      const lt = (gt.applyMatrix4(u).z - p) / G, U = d.MathUtils.smoothstep(lt, 0.05, 0.35);
-      g.setOpacity(U), g.setVisible(U > 0.02), g.setLabelVisible(U > 0.05);
+  wt.observe(o);
+  const bt = new h.Vector3(), Q = new h.Vector3(), Mt = new h.Vector3(), at = new h.Vector3(), yt = new h.Vector3(), ot = new h.Vector3(), lt = new h.Vector3(), Et = new h.Vector3(), vt = new h.Vector3(), Yt = new h.Vector3();
+  function jt() {
+    r.updateMatrixWorld();
+    const d = r.matrixWorldInverse, u = Yt.set(0, 0, 0).applyMatrix4(d).z;
+    for (const g of C) {
+      g.getSpriteWorldPos(bt);
+      const H = (bt.applyMatrix4(d).z - u) / j, T = h.MathUtils.smoothstep(H, 0.05, 0.35);
+      g.setOpacity(T), g.setVisible(T > 0.02), g.setLabelVisible(T > 0.05);
     }
   }
-  const Gt = Zt(r.snakeEase);
-  let at = -1, yt = !1, vt = 0, ot = 0;
-  function St(u) {
-    if (ot = requestAnimationFrame(St), !ft || i.domElement.width < 1 || i.domElement.height < 1) return;
-    const p = u / 1e3, g = at < 0 ? 1 / 60 : Math.min(p - at, 0.1);
-    at = p;
-    const z = r.pauseSpinOnDrag !== !1 && V;
-    if (!n && r.autoSpin && !z) {
-      const E = r.autoSpinSpeed, S = r.autoSpinAxis;
-      S === "X (pitch)" ? tt += E * g : S === "Both" ? (Q += E * g, tt += E * g * 0.4) : Q += E * g;
+  const Kt = se(c.snakeEase);
+  let rt = -1, Ct = !1, St = 0, ct = 0;
+  function Dt(d) {
+    if (ct = requestAnimationFrame(Dt), !gt || a.domElement.width < 1 || a.domElement.height < 1) return;
+    const u = d / 1e3, g = rt < 0 ? 1 / 60 : Math.min(u - rt, 0.1);
+    rt = u;
+    const F = c.pauseSpinOnDrag !== !1 && N;
+    if (!s && c.autoSpin && !F) {
+      const M = c.autoSpinSpeed, v = c.autoSpinAxis;
+      v === "X (pitch)" ? st += M * g : v === "Both" ? (nt += M * g, st += M * g * 0.4) : nt += M * g;
     }
-    if (!V) {
-      const E = r.dragSpring ?? {}, S = E.stiffness ?? 110, W = E.damping ?? 18, $ = Math.max(0.05, E.mass ?? 1), F = 4, Z = g / F;
-      for (let Dt = 0; Dt < F; Dt++) {
-        const Ht = (-S * j - W * K) / $, Bt = (-S * O - W * q) / $;
-        K += Ht * Z, q += Bt * Z, j += K * Z, O += q * Z;
+    if (!N) {
+      const M = c.dragSpring ?? {}, v = M.stiffness ?? 110, B = M.damping ?? 18, tt = Math.max(0.05, M.mass ?? 1), Y = 4, et = g / Y;
+      for (let xt = 0; xt < Y; xt++) {
+        const qt = (-v * X - B * J) / tt, Xt = (-v * V - B * $) / tt;
+        J += qt * et, $ += Xt * et, X += J * et, V += $ * et;
       }
     }
-    et.update(g, {
-      enabled: r.scrollPitchEnabled === !0,
-      rangeDeg: r.scrollPitchRangeDeg ?? 30,
-      smoothing: r.scrollPitchSmoothing ?? 8
+    it.update(g, {
+      enabled: c.scrollPitchEnabled === !0,
+      rangeDeg: c.scrollPitchRangeDeg ?? 30,
+      smoothing: c.scrollPitchSmoothing ?? 8
     });
-    const lt = d.MathUtils.degToRad(r.basePitchDeg), U = d.MathUtils.degToRad(r.baseYawDeg);
-    if (c.rotation.set(
-      lt + O + tt + et.currentPitch,
-      U + j + Q,
+    const H = h.MathUtils.degToRad(c.basePitchDeg), T = h.MathUtils.degToRad(c.baseYawDeg);
+    if (f.rotation.set(
+      H + V + st + it.currentPitch,
+      T + X + nt,
       0
-    ), r.showSnake !== !1) {
-      M.active || (yt ? M.scheduled !== null && p >= M.scheduled && (M.scheduled = null, M.begin(p, L)) : (M.schedule(
-        p,
-        r.snakeIntervalMin,
-        r.snakeIntervalMax
-      ), yt = !0));
-      const E = r.snakeContinuous === !0, S = M.update(
-        p,
+    ), c.showSnake !== !1) {
+      b.active || (Ct ? b.scheduled !== null && u >= b.scheduled && (b.scheduled = null, b.begin(u, I)) : (b.schedule(
+        u,
+        c.snakeIntervalMin,
+        c.snakeIntervalMax
+      ), Ct = !0));
+      const M = c.snakeContinuous === !0, v = b.update(
+        u,
         g,
-        r.snakeSpeed,
-        r.snakeIntensity,
-        Gt,
+        c.snakeSpeed,
+        c.snakeIntensity,
+        Kt,
         {
-          continuous: E,
-          pauseMin: r.snakeIntervalMin,
-          pauseMax: r.snakeIntervalMax,
-          countries: L,
-          trailMin: r.snakeTrailMin,
-          trailLength: r.snakeTrailLength,
-          trailFollow: r.snakeTrailFollow,
-          legMinDuration: r.snakeLegMinDuration ?? 0
+          continuous: M,
+          pauseMin: c.snakeIntervalMin,
+          pauseMax: c.snakeIntervalMax,
+          countries: I,
+          trailMin: c.snakeTrailMin,
+          trailLength: c.snakeTrailLength,
+          trailFollow: c.snakeTrailFollow,
+          legMinDuration: c.snakeLegMinDuration ?? 0
         }
       );
-      S >= 0 && S < y.length && (y[S].flash(p, r.snakeFlashDuration), E || M.schedule(
-        p,
-        r.snakeIntervalMin,
-        r.snakeIntervalMax
-      )), p - vt > 30 && (M.prunePath(), vt = p);
+      v >= 0 && v < C.length && (C[v].flash(u, c.snakeFlashDuration), M || b.schedule(
+        u,
+        c.snakeIntervalMin,
+        c.snakeIntervalMax
+      )), u - St > 30 && (b.prunePath(), St = u);
     }
-    let Ct = !1;
-    for (const E of y)
-      if (E.flashUntil > 0) {
-        Ct = !0;
+    let G = !1;
+    for (const M of C)
+      if (M.flashUntil > 0) {
+        G = !0;
         break;
       }
-    if (Ct) {
-      const E = r.snakeFlashDuration;
-      for (const S of y)
-        S.updateFlash(p, E, r.crossColor, r.accentColor);
+    if (G) {
+      const M = c.snakeFlashDuration;
+      for (const v of C)
+        v.updateFlash(u, M, c.crossColor, c.accentColor);
     }
-    if (s.updateMatrixWorld(), c.updateMatrixWorld(), Ft(), r.showSnake !== !1 && r.showSnakeIcon !== !1 && !!M.active && M.active)
-      if (M.sampleHeadAndTangent(X, wt)) {
-        D.setLocalPosition(X), st.copy(X).applyMatrix4(c.matrixWorld), bt.copy(X).add(wt).applyMatrix4(c.matrixWorld), nt.copy(st).project(s), it.copy(bt).project(s);
-        const S = it.x - nt.x, W = it.y - nt.y;
-        Math.hypot(S, W) > 1e-5 && D.setHeading(Math.atan2(S, W) * 180 / Math.PI), Mt.copy(st).applyMatrix4(s.matrixWorldInverse), Et.set(0, 0, 0).applyMatrix4(c.matrixWorld).applyMatrix4(s.matrixWorldInverse);
-        const $ = (Mt.z - Et.z) / G, F = d.MathUtils.smoothstep($, 0.05, 0.35) * r.snakeIconOpacity;
-        D.setOpacity(F), D.setVisible(F > 0.02);
+    if (r.updateMatrixWorld(), f.updateMatrixWorld(), jt(), c.showSnake !== !1 && c.showSnakeIcon !== !1 && !!b.active && b.active)
+      if (b.sampleHeadAndTangent(Q, Mt)) {
+        D.setLocalPosition(Q), at.copy(Q).applyMatrix4(f.matrixWorld), yt.copy(Q).add(Mt).applyMatrix4(f.matrixWorld), ot.copy(at).project(r), lt.copy(yt).project(r);
+        const v = lt.x - ot.x, B = lt.y - ot.y;
+        Math.hypot(v, B) > 1e-5 && D.setHeading(Math.atan2(v, B) * 180 / Math.PI), Et.copy(at).applyMatrix4(r.matrixWorldInverse), vt.set(0, 0, 0).applyMatrix4(f.matrixWorld).applyMatrix4(r.matrixWorldInverse);
+        const tt = (Et.z - vt.z) / j, Y = h.MathUtils.smoothstep(tt, 0.05, 0.35) * c.snakeIconOpacity;
+        D.setOpacity(Y), D.setVisible(Y > 0.02);
       } else
         D.setVisible(!1);
     else
       D.setVisible(!1);
-    i.render(a, s), o.render(a, s);
+    a.render(p, r), n.render(p, r);
   }
-  ot = requestAnimationFrame(St), l.__dispose = () => {
-    cancelAnimationFrame(ot), ut.disconnect(), mt.disconnect(), e.removeEventListener("pointerdown", ht), e.removeEventListener("pointermove", dt), e.removeEventListener("pointerup", J), e.removeEventListener("pointercancel", J), et.dispose();
-    for (const u of y) u.dispose();
-    D.dispose(), M.dispose();
-    for (const u of x) u.geometry.dispose();
-    b.dispose(), h.dispose(), m.dispose(), A.dispose(), o.domElement.parentElement && o.domElement.parentElement.removeChild(o.domElement), i.dispose();
+  ct = requestAnimationFrame(Dt), o.__dispose = () => {
+    cancelAnimationFrame(ct), mt.disconnect(), wt.disconnect(), e.removeEventListener("pointerdown", pt), e.removeEventListener("pointermove", ut), e.removeEventListener("pointerup", Z), e.removeEventListener("pointercancel", Z), it.dispose();
+    for (const d of C) d.dispose();
+    D.dispose(), b.dispose();
+    for (const d of W) d.geometry.dispose();
+    E.dispose(), y.dispose(), S.dispose(), O.dispose(), n.domElement.parentElement && n.domElement.parentElement.removeChild(n.domElement), a.dispose();
   };
 }
 (function() {
-  const l = /* @__PURE__ */ new Set();
-  document.querySelectorAll('[data-webgl-experiment="globe-1"]').forEach((t) => l.add(t)), document.querySelectorAll("canvas[data-flow-globe-1]").forEach((t) => {
-    t.parentElement && l.add(t.parentElement);
+  const o = /* @__PURE__ */ new Set();
+  document.querySelectorAll('[data-webgl-experiment="globe-1"]').forEach((t) => o.add(t)), document.querySelectorAll("canvas[data-flow-globe-1]").forEach((t) => {
+    t.parentElement && o.add(t.parentElement);
   });
-  for (const t of l)
-    pe(t);
+  for (const t of o)
+    we(t);
 })();

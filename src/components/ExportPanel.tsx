@@ -2,14 +2,16 @@
 // ExportPanel — Tabbed export modal (Webflow JSON / HTML / MCP)
 // ============================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Experiment } from '../core/Experiment.ts';
 import type { Version } from '../lib/versions.ts';
+import type { PromptMode, PromptVariant } from '../core/promptVariant.ts';
 import { generateExportHTML, getBundleUrl } from '../lib/webflow-export.ts';
 import { buildExportPlan, generateMCPInstructions } from '../lib/webflow-mcp.ts';
 import { generateWebflowJSON } from '../lib/webflow-json.ts';
 
-type ExportTab = 'webflow-json' | 'html-embed' | 'mcp';
+type ExportTab = 'webflow-json' | 'html-embed' | 'mcp' | 'prompt';
+type PromptFormat = 'markdown' | 'json';
 
 interface ExportPanelProps {
   slug: string;
@@ -20,6 +22,19 @@ interface ExportPanelProps {
   onClose: () => void;
   /** Optional: generate inline IIFE for Webflow JSON tab */
   generateInlineScript?: (params: Record<string, unknown>) => string;
+  /**
+   * Optional: build the entire @webflow/XscpData JSON payload for this
+   * experiment. When provided, this takes precedence over the standard
+   * canvas-shaped wrapper used by `generateInlineScript`. Use it for
+   * non-canvas experiments (e.g. DOM-based components) that need a
+   * different node tree.
+   */
+  generateFullWebflowJSON?: (
+    params: Record<string, unknown>,
+    options: { sizing: 'responsive' | 'fixed'; fixedWidth: number; fixedHeight: number },
+  ) => string;
+  /** Optional: portable prompt variants for the Prompt tab */
+  promptVariants?: PromptVariant[];
 }
 
 export function ExportPanel({
@@ -30,8 +45,16 @@ export function ExportPanel({
   activeVersionId,
   onClose,
   generateInlineScript,
+  generateFullWebflowJSON,
+  promptVariants,
 }: ExportPanelProps) {
+  const hasPromptVariants = !!promptVariants && promptVariants.length > 0;
   const [activeTab, setActiveTab] = useState<ExportTab>('webflow-json');
+  const [promptVariantId, setPromptVariantId] = useState<string>(
+    () => promptVariants?.[0]?.id ?? '',
+  );
+  const [promptMode, setPromptMode] = useState<PromptMode>('current');
+  const [promptFormat, setPromptFormat] = useState<PromptFormat>('markdown');
   const [sizing, setSizing] = useState<'responsive' | 'fixed'>('responsive');
   const [fixedWidth, setFixedWidth] = useState(800);
   const [fixedHeight, setFixedHeight] = useState(600);
@@ -64,6 +87,11 @@ export function ExportPanel({
    * (params is a stable mutable ref — useMemo would never recompute.)
    */
   const buildWebflowJSON = useCallback((): string | null => {
+    // Per-experiment full JSON generator wins (for DOM-based experiments
+    // that need a non-canvas node tree).
+    if (generateFullWebflowJSON) {
+      return generateFullWebflowJSON({ ...params }, { sizing, fixedWidth, fixedHeight });
+    }
     if (!generateInlineScript) return null;
     // Spread to snapshot the current mutable values
     const inlineScript = generateInlineScript({ ...params });
@@ -74,7 +102,7 @@ export function ExportPanel({
       fixedWidth,
       fixedHeight,
     });
-  }, [generateInlineScript, params, slug, sizing, fixedWidth, fixedHeight]);
+  }, [generateInlineScript, generateFullWebflowJSON, params, slug, sizing, fixedWidth, fixedHeight]);
 
   const copyToClipboard = useCallback(
     async (text: string, label: string) => {
@@ -113,7 +141,30 @@ export function ExportPanel({
     { id: 'webflow-json', label: 'Webflow JSON' },
     { id: 'html-embed', label: 'HTML Embed' },
     { id: 'mcp', label: 'MCP' },
+    ...(hasPromptVariants ? [{ id: 'prompt' as const, label: 'Prompt' }] : []),
   ];
+
+  // Build prompt output for the active variant, mode, and format.
+  // Snapshot params at render time so toggling Defaults/Current is fresh.
+  const activeVariant = useMemo(
+    () => promptVariants?.find((v) => v.id === promptVariantId),
+    [promptVariants, promptVariantId],
+  );
+  const promptOutput = useMemo(() => {
+    if (!activeVariant) return null;
+    const values =
+      promptMode === 'defaults'
+        ? experiment.controls.defaults
+        : { ...params };
+    return activeVariant.build(values, promptMode);
+  }, [activeVariant, promptMode, params, experiment.controls.defaults]);
+
+  const promptText =
+    promptOutput == null
+      ? ''
+      : promptFormat === 'markdown'
+      ? promptOutput.markdown
+      : JSON.stringify(promptOutput.json, null, 2);
 
   return (
     <div className="export-backdrop" onClick={onClose}>
@@ -213,7 +264,7 @@ export function ExportPanel({
             {/* Tab 1: Webflow JSON */}
             {activeTab === 'webflow-json' && (
               <>
-                {generateInlineScript ? (
+                {generateInlineScript || generateFullWebflowJSON ? (
                   <>
                     <p className="export-hint">
                       Click the button below, then paste directly into Webflow Designer (Ctrl/Cmd+V on the canvas). Creates a ready-to-go component with canvas + inline script.
@@ -276,6 +327,88 @@ export function ExportPanel({
                   onClick={() => copyToClipboard(mcpInstructions, 'mcp')}
                 >
                   {copied === 'mcp' ? 'Copied!' : 'Copy MCP Instructions'}
+                </button>
+              </>
+            )}
+
+            {/* Tab 4: Prompt */}
+            {activeTab === 'prompt' && hasPromptVariants && promptOutput && (
+              <>
+                <p className="export-hint">
+                  Copy a portable prompt for rebuilding this experiment outside the project — paste into Claude, Webflow AI, or any code-gen tool.
+                </p>
+
+                {promptVariants!.length > 1 && (
+                  <div className="export-section">
+                    <label className="export-label">Variant</label>
+                    <select
+                      className="export-select"
+                      value={promptVariantId}
+                      onChange={(e) => setPromptVariantId(e.target.value)}
+                    >
+                      {promptVariants!.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="export-section">
+                  <label className="export-label">Values</label>
+                  <div className="export-radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name="prompt-mode"
+                        checked={promptMode === 'defaults'}
+                        onChange={() => setPromptMode('defaults')}
+                      />
+                      Defaults
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="prompt-mode"
+                        checked={promptMode === 'current'}
+                        onChange={() => setPromptMode('current')}
+                      />
+                      Current settings
+                    </label>
+                  </div>
+                </div>
+
+                <div className="export-section">
+                  <label className="export-label">Format</label>
+                  <div className="export-radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name="prompt-format"
+                        checked={promptFormat === 'markdown'}
+                        onChange={() => setPromptFormat('markdown')}
+                      />
+                      Markdown
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="prompt-format"
+                        checked={promptFormat === 'json'}
+                        onChange={() => setPromptFormat('json')}
+                      />
+                      JSON values
+                    </label>
+                  </div>
+                </div>
+
+                <pre className="export-code">{promptText}</pre>
+                <button
+                  className="export-btn"
+                  onClick={() => copyToClipboard(promptText, 'prompt')}
+                >
+                  {copied === 'prompt' ? 'Copied!' : 'Copy Prompt'}
                 </button>
               </>
             )}

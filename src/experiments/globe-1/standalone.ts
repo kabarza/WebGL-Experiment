@@ -14,6 +14,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import {
   GLOBE_RADIUS,
   buildGridPolylines,
+  getMobileCaps,
   makeCrossTexture,
   makeEaseFn,
   parseCountries,
@@ -54,10 +55,16 @@ function bootInstance(wrapper: HTMLElement) {
   const canvas: HTMLCanvasElement = canvasMaybe;
 
   const reducedMotion = prefersReducedMotion();
+  const caps = getMobileCaps();
+
+  // Cap visual-density params for mobile so the embed stays smooth on
+  // weaker GPUs. We never RAISE values — only lower them. This keeps
+  // designer-set values respected on desktop.
+  const labelSize = Math.min(BP.labelSize as number, caps.labelSizeCap);
 
   ensureLabelStyles(
     BP.labelColor as string,
-    BP.labelSize as number,
+    labelSize,
     BP.labelOffsetY as number,
   );
 
@@ -92,7 +99,7 @@ function bootInstance(wrapper: HTMLElement) {
   // Wireframe — same Line2-per-polyline approach as the gallery.
   const lineMat = new LineMaterial({
     color: new THREE.Color(BP.lineColor as string).getHex(),
-    linewidth: (BP.lineWidth as number) ?? 2,
+    linewidth: Math.min((BP.lineWidth as number) ?? 2, caps.lineWidthCap),
     transparent: false,
     worldUnits: false,
     depthTest: true,
@@ -118,8 +125,14 @@ function bootInstance(wrapper: HTMLElement) {
   const wireframe = new THREE.Group();
   const wireframeLines: Line2[] = [];
   world.add(wireframe);
-  const lonSeg = Math.max(3, Math.round(BP.lonSegments as number));
-  const latSeg = Math.max(2, Math.round(BP.latSegments as number));
+  const lonSeg = Math.min(
+    Math.max(3, Math.round(BP.lonSegments as number)),
+    caps.segCap,
+  );
+  const latSeg = Math.min(
+    Math.max(2, Math.round(BP.latSegments as number)),
+    caps.segCap,
+  );
   const polylines = buildGridPolylines(lonSeg, latSeg);
   for (const pts of polylines) {
     const geom = new LineGeometry();
@@ -185,9 +198,16 @@ function bootInstance(wrapper: HTMLElement) {
   snakeIcon.setVisible(false);
   world.add(snakeIcon.obj);
 
-  // ── Drag interaction (pointer-id scoped, not window-global, so
-  //    multiple embeds on one page don't cross-fire) ──
+  // ── Drag interaction ──
+  // Apple-Maps-style threshold: on pointerdown we don't capture
+  // immediately; we wait for the pointer to move > DRAG_THRESHOLD px.
+  // If the dominant direction is horizontal we take over (capture +
+  // rotate). If it's vertical we abandon — letting the page scroll
+  // through (critical on mobile, where a thumb landing on the canvas
+  // mid-scroll shouldn't trap the gesture).
+  const DRAG_THRESHOLD = 8; // CSS pixels
   let isDragging = false;
+  let pendingPointer: { id: number; x: number; y: number } | null = null;
   let activePointerId: number | null = null;
   const lastPointer = { x: 0, y: 0 };
   let yawOffset = 0;
@@ -198,27 +218,45 @@ function bootInstance(wrapper: HTMLElement) {
   let autoPitch = 0;
 
   const onPointerDown = (e: PointerEvent) => {
-    isDragging = true;
-    activePointerId = e.pointerId;
-    lastPointer.x = e.clientX;
-    lastPointer.y = e.clientY;
+    pendingPointer = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    isDragging = false;
     yawVel = 0;
     pitchVel = 0;
-    canvas.setPointerCapture?.(e.pointerId);
-    canvas.style.cursor = 'grabbing';
+    // Don't setPointerCapture or change cursor yet — wait for threshold.
   };
   const onPointerMove = (e: PointerEvent) => {
-    if (!isDragging || e.pointerId !== activePointerId) return;
-    const dx = e.clientX - lastPointer.x;
-    const dy = e.clientY - lastPointer.y;
-    lastPointer.x = e.clientX;
-    lastPointer.y = e.clientY;
-    const sens = (BP.dragSensitivity as number) * 0.005;
-    yawOffset += dx * sens;
-    pitchOffset += dy * sens;
-    pitchOffset = THREE.MathUtils.clamp(pitchOffset, -Math.PI * 0.55, Math.PI * 0.55);
+    if (isDragging) {
+      if (e.pointerId !== activePointerId) return;
+      const dx = e.clientX - lastPointer.x;
+      const dy = e.clientY - lastPointer.y;
+      lastPointer.x = e.clientX;
+      lastPointer.y = e.clientY;
+      const sens = (BP.dragSensitivity as number) * 0.005;
+      yawOffset += dx * sens;
+      pitchOffset += dy * sens;
+      pitchOffset = THREE.MathUtils.clamp(pitchOffset, -Math.PI * 0.55, Math.PI * 0.55);
+      return;
+    }
+    if (!pendingPointer || e.pointerId !== pendingPointer.id) return;
+    const totalDx = e.clientX - pendingPointer.x;
+    const totalDy = e.clientY - pendingPointer.y;
+    if (Math.hypot(totalDx, totalDy) < DRAG_THRESHOLD) return;
+    if (Math.abs(totalDx) > Math.abs(totalDy)) {
+      // Horizontal-dominant: commit to rotating.
+      isDragging = true;
+      activePointerId = pendingPointer.id;
+      lastPointer.x = e.clientX;
+      lastPointer.y = e.clientY;
+      pendingPointer = null;
+      canvas.setPointerCapture?.(e.pointerId);
+      canvas.style.cursor = 'grabbing';
+    } else {
+      // Vertical-dominant: hand off to the browser (page scroll).
+      pendingPointer = null;
+    }
   };
   const onPointerUp = (e: PointerEvent) => {
+    pendingPointer = null;
     if (e.pointerId !== activePointerId) return;
     isDragging = false;
     activePointerId = null;
@@ -240,9 +278,12 @@ function bootInstance(wrapper: HTMLElement) {
   // Scroll-pitch tracker
   const scrollTracker = createScrollPitchTracker(wrapper);
 
-  // Resize (zero-size guarded)
+  // Resize (zero-size guarded). DPR cap is mobile-aware so phones
+  // don't render at the full native ratio, which is wasted GPU on a
+  // small screen.
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const caps = getMobileCaps();
+    const dpr = Math.min(window.devicePixelRatio || 1, caps.dprCap);
     const rect = canvas.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return;
     renderer.setPixelRatio(dpr);

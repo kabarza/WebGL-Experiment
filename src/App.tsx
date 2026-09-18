@@ -2,7 +2,7 @@
 // App — Root component with History API routing
 // ============================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { DialRoot } from 'dialkit';
 import { Gallery } from './components/Gallery.tsx';
@@ -20,8 +20,13 @@ import { ControlTuner } from './components/ControlTuner.tsx';
 import { VisionView } from './vision/components/VisionView.tsx';
 import { findVisionExperiment } from './vision/registry.ts';
 
+// Brand tool is code-split: it ships its own DialKit (1.4.x) + CSS.
+const BrandToolView = lazy(() =>
+  import('./brand/BrandToolView.tsx').then((m) => ({ default: m.BrandToolView })),
+);
+
 export interface Route {
-  type: 'gallery' | 'experiment' | 'article' | 'tuner' | 'vision';
+  type: 'gallery' | 'experiment' | 'article' | 'tuner' | 'vision' | 'brand';
   slug?: string;
   params?: string; // base64 encoded params from share URL
 }
@@ -37,6 +42,11 @@ function parseRoute(): Route {
 
   if (path === '/tuner') {
     return { type: 'tuner' };
+  }
+
+  const brandMatch = path.match(/^\/brand(?:\/([^/?]+))?\/?$/);
+  if (brandMatch) {
+    return { type: 'brand', slug: brandMatch[1] };
   }
 
   const visionMatch = path.match(/^\/vision\/([^?]+)$/);
@@ -89,6 +99,11 @@ export function App() {
     setRoute({ type: isVision ? 'vision' : 'experiment', slug });
   }, []);
 
+  const navigateToBrand = useCallback((slug?: string) => {
+    history.pushState(null, '', slug ? `/brand/${slug}` : '/brand');
+    setRoute({ type: 'brand', slug });
+  }, []);
+
   const navigateToArticle = useCallback((slug: string) => {
     history.pushState(null, '', `/experiment/${slug}/article`);
     setRoute({ type: 'article', slug });
@@ -101,14 +116,23 @@ export function App() {
         onBack={navigateToGallery}
         onNavigateExperiment={navigateToExperiment}
         onNavigateArticle={navigateToArticle}
+        onNavigateBrand={navigateToBrand}
         overlayVisible={overlayVisible}
         setExportOpen={setExportOpen}
       />
       <AnimatePresence mode="wait">
         {route.type === 'tuner' ? (
           <ControlTuner key="tuner" />
+        ) : route.type === 'brand' ? (
+          <Suspense key="brand" fallback={<div className="loading-screen"><p>Loading brand tool…</p></div>}>
+            <BrandToolView
+              key={`brand-${route.slug ?? 'default'}`}
+              slug={route.slug}
+              onBack={navigateToGallery}
+            />
+          </Suspense>
         ) : route.type === 'gallery' ? (
-          <Gallery key="gallery" />
+          <Gallery key="gallery" onOpenBrand={() => navigateToBrand()} />
         ) : route.type === 'vision' && route.slug ? (
           <VisionView
             key={`vision-${route.slug}`}

@@ -660,7 +660,7 @@ The `hex2rgb` helper in the IIFE strips `#` if present, so both formats work at 
 
 These are decisions that can be finalized during implementation:
 
-1. **Canvas class naming** — Currently `"Canvas"` in the Webflow JSON. Should it be more specific (e.g. `"Flow Tempo Canvas"`) to avoid collisions with existing Webflow classes?
+1. **Canvas class naming** — Currently `"Canvas"` in the Webflow JSON. Should it be more specific (e.g. `"WebGL Experiment Canvas"`) to avoid collisions with existing Webflow classes?
 
 2. **Multiple experiments on one page** — The current selector is `[data-flow-tempo]` which would match all instances. Should we use `[data-flow-tempo="flow-field"]` (with the slug as the value) to support multiple different experiments on the same page?
 

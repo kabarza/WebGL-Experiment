@@ -1,0 +1,412 @@
+/* ============================================================
+   Brand Tool — Figma-style board: flat canvas, bottom tool bar,
+   right design panel. Shares the app's dock language.
+   ============================================================ */
+
+.brand-tool {
+  position: fixed;
+  inset: 0;
+  background: #1e1e1e;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  --bt-accent: #0d99ff;
+  --bt-side-w: 300px;
+  --bt-border: rgba(255, 255, 255, 0.08);
+  --bt-glass: #212121;
+}
+
+/* ── Stage ──────────────────────────────────────────────── */
+
+.bt-stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: var(--bt-side-w);
+  overflow: hidden;
+  background: #1e1e1e;
+  touch-action: none;
+  user-select: none;
+}
+.brand-tool.space-held .bt-stage,
+.brand-tool.space-held .bt-stage * { cursor: grab !important; }
+.bt-stage.panning,
+.bt-stage.panning * { cursor: grabbing !important; }
+.bt-stage[data-tool='frame'],
+.bt-stage[data-tool='frame'] * { cursor: crosshair; }
+.bt-stage[data-tool='select'] .bt-frame { cursor: move; }
+.bt-stage[data-tool='select'] .bt-frame.selected .bt-canvas { cursor: crosshair; }
+.bt-frame-label { pointer-events: auto; cursor: move; }
+.bt-stage.drag-over { box-shadow: inset 0 0 0 2px var(--bt-accent); }
+
+.bt-world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+
+.bt-frame {
+  position: absolute;
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: 0;
+}
+.bt-frame.selected { outline-color: var(--bt-accent); }
+
+.bt-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.bt-frame-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 100%;
+  font-size: 11px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  padding: 2px 4px 4px 0;
+}
+.bt-frame.selected .bt-frame-label { color: var(--bt-accent); }
+
+.bt-handle {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--bt-accent);
+  box-sizing: border-box;
+  z-index: 2;
+}
+.bt-handle--nw { left: 0; top: 0; cursor: nwse-resize; }
+.bt-handle--se { right: 0; bottom: 0; cursor: nwse-resize; }
+.bt-handle--ne { right: 0; top: 0; cursor: nesw-resize; }
+.bt-handle--sw { left: 0; bottom: 0; cursor: nesw-resize; }
+
+.bt-ghost {
+  position: absolute;
+  border: 1px dashed var(--bt-accent);
+  background: rgba(13, 153, 255, 0.08);
+  pointer-events: none;
+}
+
+.bt-drop-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.bt-empty-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.bt-error {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 560px;
+  background: rgba(20, 8, 8, 0.94);
+  border: 1px solid #5a2020;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-size: 12px;
+  z-index: 5;
+}
+.bt-error pre { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; white-space: pre-wrap; color: #ffb4b4; }
+
+/* ── Bottom toolbar ─────────────────────────────────────── */
+
+.bt-toolbar-wrap {
+  position: fixed;
+  left: calc((100vw - var(--bt-side-w)) / 2);
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 300;
+}
+.bt-toolbar { overflow: visible; }
+
+.dock-btn--on {
+  background: var(--bt-accent);
+  color: #fff;
+}
+.dock-btn--on:hover { background: #1a9fff; color: #fff; }
+.dock-btn:disabled { opacity: 0.35; cursor: default; }
+.dock-btn:disabled:hover { background: transparent; color: rgba(255, 255, 255, 0.6); }
+
+.bt-split {
+  display: flex;
+  align-items: center;
+}
+.bt-toolbar .dock-btn { flex: none; line-height: 0; }
+.bt-toolbar .dock-btn svg { display: block; }
+.bt-split .dock-btn:first-child { border-radius: 100px 0 0 100px; width: 30px; padding-left: 2px; }
+.bt-split-arrow {
+  width: 18px !important;
+  border-radius: 0 100px 100px 0 !important;
+}
+.bt-split .dock-btn--on + .bt-split-arrow:not(.dock-btn--on) { background: rgba(13, 153, 255, 0.35); color: #fff; }
+
+/* Dropdowns */
+.bt-dd { position: relative; display: flex; }
+.bt-dd-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  min-width: 160px;
+  padding: 6px;
+  background: var(--bt-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 400;
+}
+.bt-dd-menu--center { left: 50%; transform: translateX(-50%); }
+.bt-dd-menu--left { left: 0; }
+.bt-dd-menu--right { right: 0; }
+
+.bt-dd-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 6px 8px 8px;
+}
+.bt-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.bt-dd-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.bt-dd-item > span:first-of-type { flex: 1; }
+.bt-dd-item svg { flex: none; opacity: 0.8; }
+.bt-dd-item kbd,
+.bt-dd-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.bt-dd-sep { height: 1px; background: rgba(255, 255, 255, 0.08); margin: 4px 2px; }
+
+/* Export menu */
+.bt-export-menu { display: flex; flex-direction: column; gap: 8px; padding: 2px; }
+.bt-field {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0 6px;
+}
+.bt-field select,
+.bt-field input[type='range'] { width: 100%; }
+.bt-field select {
+  height: 26px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--bt-border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 11.5px;
+  padding: 0 6px;
+}
+.bt-field input[type='range'] { accent-color: var(--bt-accent); }
+.bt-field-hint { font-size: 10.5px; color: var(--text-muted); padding: 0 6px; margin-top: -4px; }
+.bt-seg {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+.bt-seg button {
+  flex: 1;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  cursor: pointer;
+}
+.bt-seg button.on { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.bt-primary {
+  margin: 4px 6px 2px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: var(--bt-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bt-primary:hover { background: #1a9fff; }
+.bt-primary:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Sidebar ────────────────────────────────────────────── */
+
+.bt-sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--bt-side-w);
+  display: flex;
+  flex-direction: column;
+  background: #2c2c2c;
+  border-left: 1px solid rgba(0, 0, 0, 0.4);
+  z-index: 200;
+}
+
+.bt-side-section {
+  flex: none;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--bt-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bt-row { display: flex; align-items: center; gap: 6px; }
+.bt-row--grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.bt-row--chips { flex-wrap: wrap; gap: 4px; }
+
+.bt-name {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 8px;
+  outline: none;
+}
+.bt-name:hover { border-color: var(--bt-border); }
+.bt-name:focus { border-color: var(--bt-accent); background: rgba(0, 0, 0, 0.2); }
+
+.bt-side-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+.bt-side-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.bt-num {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0 8px;
+  gap: 8px;
+}
+.bt-num:focus-within { border-color: var(--bt-accent); }
+.bt-num span { font-size: 11px; color: rgba(255, 255, 255, 0.4); width: 10px; }
+.bt-num input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.bt-chip {
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  cursor: pointer;
+}
+.bt-chip:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.bt-chip.active { background: var(--bt-accent); color: #fff; }
+
+.bt-side-hint {
+  flex: none;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 10px 14px;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--bt-border);
+}
+
+/* DialKit fills the rest and scrolls internally */
+.bt-side-panel {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.bt-panel-root,
+.bt-side-panel .dialkit-root[data-mode='inline'],
+.bt-side-panel .dialkit-panel[data-mode='inline'],
+.bt-side-panel .dialkit-panel[data-mode='inline'] .dialkit-panel-wrapper,
+.bt-side-panel .dialkit-panel-inline {
+  height: 100%;
+  max-height: 100%;
+}
+.bt-side-panel .dialkit-panel-inline { overflow-y: auto; padding-bottom: 16px; box-sizing: border-box; }
+
+/* ── Toast ──────────────────────────────────────────────── */
+
+.bt-toast {
+  position: fixed;
+  left: calc((100vw - var(--bt-side-w)) / 2);
+  bottom: 72px;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* Changed-value dots sit on the row corner — let folder contents bleed a
+   little upward so the first row's dot isn't clipped (DialKit sets an
+   inline clip-path of inset(0 -20px) for its height animation). */
+.bt-panel-root .dialkit-folder-content { clip-path: inset(-6px -20px 0 -20px) !important; }
+.bt-panel-root .dialkit-folder-inner { padding-right: 2px; }

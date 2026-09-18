@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export Architecture — Webflow Integration</title>
+<style>
+  :root {
+    --ivory:  #FAF9F5;
+    --paper:  #FFFFFF;
+    --slate:  #141413;
+    --clay:   #D97757;
+    --clay-d: #B85C3E;
+    --oat:    #E3DACC;
+    --olive:  #788C5D;
+    --plum:   #6B4C7A;
+    --g100:   #F0EEE6;
+    --g200:   #E6E3DA;
+    --g300:   #D1CFC5;
+    --g500:   #87867F;
+    --g700:   #3D3D3A;
+    --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--ivory);
+    color: var(--slate);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px 140px; }
+
+  ::selection { background: var(--oat); color: var(--slate); }
+
+  /* ── masthead ─────────────────────────── */
+
+  header.masthead {
+    padding: 80px 0 56px;
+    border-bottom: 1.5px solid var(--g300);
+    margin-bottom: 12px;
+    position: relative;
+    overflow: visible;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--g500);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 24px; height: 1.5px;
+    background: var(--clay);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(38px, 5.4vw, 62px);
+    line-height: 1.06;
+    letter-spacing: -0.018em;
+    margin: 0 0 8px;
+    max-width: 17ch;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--clay);
+  }
+  .intro {
+    font-size: 16.5px;
+    color: var(--g700);
+    margin: 22px 0 0;
+    max-width: 620px;
+  }
+  .intro code {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: var(--g100);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--g200);
+  }
+  .intro a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+  .intro a:hover { text-decoration-color: var(--clay); }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+
+  /* hero figure — tool → webflow */
+  .hero-fig {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-fig { max-width: 400px; margin-top: 28px; } }
+  .hero-fig .pane {
+    border-radius: 10px;
+    border: 1.5px solid var(--g300);
+    background: var(--paper);
+    padding: 14px;
+    aspect-ratio: 4/5;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    position: relative;
+  }
+  .hero-fig .pane.tool {
+    background: var(--g100);
+    transform: rotate(-2.5deg) translateY(6px);
+  }
+  .hero-fig .pane.flow {
+    transform: rotate(1.5deg);
+    border-color: var(--slate);
+    box-shadow: 0 12px 32px rgba(20,20,19,.10);
+  }
+  .hero-fig .tag {
+    position: absolute;
+    top: -10px; left: 12px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--ivory);
+    padding: 2px 7px;
+    border: 1.5px solid var(--g300);
+    border-radius: 6px;
+    color: var(--g500);
+  }
+  .hero-fig .pane.flow .tag { border-color: var(--slate); color: var(--slate); }
+  .hero-fig .l { height: 6px; border-radius: 3px; background: var(--g300); }
+  .hero-fig .l.w90 { width: 90%; } .hero-fig .l.w75 { width: 75%; }
+  .hero-fig .l.w60 { width: 60%; } .hero-fig .l.w82 { width: 82%; }
+  .hero-fig .l.w70 { width: 70%; } .hero-fig .l.w50 { width: 50%; }
+  .hero-fig .pane.tool .canv {
+    flex: 1;
+    border-radius: 5px;
+    background: radial-gradient(ellipse at 30% 40%, var(--plum), var(--clay-d) 55%, var(--slate));
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-fig .pane.tool .canv::after {
+    content: "";
+    position: absolute;
+    inset: 18% 14% 22% 22%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #E8B8D6, transparent 60%);
+    filter: blur(4px);
+  }
+  .hero-fig .pane.tool .dial {
+    height: 14px; border-radius: 7px;
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    position: relative;
+  }
+  .hero-fig .pane.tool .dial::after {
+    content: "";
+    position: absolute;
+    left: 60%; top: 50%; transform: translate(-50%, -50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--clay);
+  }
+  .hero-fig .pane.flow .l { background: var(--g200); }
+  .hero-fig .pane.flow .blk {
+    border-radius: 5px;
+    flex: 1;
+    background: linear-gradient(135deg, var(--oat), #ECE1CF);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-fig .pane.flow .blk::after {
+    content: "{ }";
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-family: var(--mono);
+    font-size: 36px;
+    color: var(--clay);
+    opacity: .8;
+  }
+  .hero-fig .pane.flow .row {
+    display: flex; gap: 6px; align-items: flex-end;
+  }
+  .hero-fig .pane.flow .bar { flex: 1; border-radius: 3px 3px 0 0; }
+  .hero-fig .pane.flow .bar.b1 { height: 12px; background: var(--olive); }
+  .hero-fig .pane.flow .bar.b2 { height: 22px; background: var(--clay); }
+  .hero-fig .pane.flow .bar.b3 { height: 16px; background: var(--oat); }
+  .hero-fig .pane.flow .bar.b4 { height: 28px; background: var(--slate); }
+
+  /* ── toc pills ────────────────────────── */
+
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 26px 0 0;
+  }
+  nav.toc a {
+    font-size: 12.5px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--g300);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--g700);
+    background: var(--paper);
+    transition: border-color 120ms, color 120ms, background 120ms;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  nav.toc a .n {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--g500);
+  }
+  nav.toc a:hover { border-color: var(--slate); color: var(--slate); }
+  nav.toc a:hover .n { color: var(--clay); }
+
+  /* ── section ──────────────────────────── */
+
+  section {
+    margin-top: 72px;
+    scroll-margin-top: 28px;
+  }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .sec-head .idx {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--clay);
+    font-weight: 600;
+    width: 34px;
+    flex-shrink: 0;
+  }
+  .sec-head h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 27px;
+    margin: 0;
+    letter-spacing: -0.012em;
+  }
+  .sec-head .count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--g500);
+    background: var(--g100);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .sec-intro {
+    font-size: 14.5px;
+    color: var(--g700);
+    max-width: 700px;
+    margin: 0 0 24px 50px;
+  }
+  .sec-body { margin-left: 50px; }
+  @media (max-width: 640px) {
+    .sec-intro { margin-left: 0; }
+    .sec-body { margin-left: 0; }
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 19px;
+    letter-spacing: -0.008em;
+    margin: 32px 0 10px;
+  }
+  h3 .pin {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--clay);
+    margin-right: 8px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 14px; color: var(--g700); font-size: 14.5px; }
+  p strong { color: var(--slate); }
+  p code, li code, td code {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--g100);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--g200);
+    color: var(--slate);
+  }
+
+  ul, ol { margin: 0 0 16px; padding-left: 22px; color: var(--g700); font-size: 14.5px; }
+  ul li, ol li { margin-bottom: 6px; }
+  ul li::marker { color: var(--clay); }
+  ol li::marker { color: var(--clay); font-family: var(--mono); font-size: 12px; }
+
+  /* ── table ────────────────────────────── */
+
+  .tbl-wrap {
+    border: 1.5px solid var(--g300);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--paper);
+    margin: 18px 0 22px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--g200);
+    color: var(--g700);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--g500);
+    background: var(--g100);
+    font-weight: 500;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--ivory); }
+  td strong { color: var(--slate); font-weight: 600; }
+
+  /* ── code ─────────────────────────────── */
+
+  pre {
+    background: var(--g100);
+    border: 1.5px solid var(--g200);
+    border-radius: 10px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--g700);
+    margin: 16px 0 22px;
+    position: relative;
+  }
+  pre.ascii {
+    background: var(--paper);
+    border-color: var(--g300);
+    color: var(--slate);
+    white-space: pre;
+  }
+  pre .lang {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--g500);
+  }
+  pre .c { color: var(--g500); font-style: italic; }
+  pre .k { color: var(--plum); }
+  pre .s { color: var(--olive); }
+  pre .n { color: var(--clay-d); }
+  pre .p { color: var(--slate); font-weight: 600; }
+  pre .t { color: var(--clay); }
+
+  /* ── cards ────────────────────────────── */
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    margin: 20px 0 24px;
+  }
+  .card {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(20,20,19,.08);
+    border-color: var(--slate);
+  }
+  .card .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--clay);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .card h4 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 18px;
+    margin: 0 0 8px;
+    letter-spacing: -0.008em;
+    color: var(--slate);
+  }
+  .card p { font-size: 13.5px; margin: 0; color: var(--g700); }
+
+  /* tab mock — used in section 02 */
+  .tab-mock {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 14px;
+    padding: 22px;
+    margin: 18px 0 22px;
+  }
+  .tab-mock .head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 14px; border-bottom: 1px solid var(--g200);
+    margin-bottom: 14px;
+  }
+  .tab-mock .head .ttl {
+    font-family: var(--serif); font-size: 18px; font-weight: 500;
+  }
+  .tab-mock .head .x {
+    font-family: var(--mono); color: var(--g500); font-size: 14px;
+  }
+  .tab-mock .row {
+    display: flex; gap: 16px; align-items: center; padding: 8px 0;
+    font-size: 13.5px; color: var(--g700);
+  }
+  .tab-mock .row .lbl {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--g500); min-width: 130px;
+  }
+  .tab-mock .select {
+    padding: 5px 12px; border: 1.5px solid var(--g300);
+    border-radius: 6px; background: var(--paper); font-size: 13px;
+  }
+  .tab-mock .radios { display: flex; gap: 14px; }
+  .tab-mock .radio {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+  }
+  .tab-mock .radio .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1.5px solid var(--g300);
+  }
+  .tab-mock .radio.on .dot {
+    border-color: var(--clay);
+    background: radial-gradient(circle, var(--clay) 40%, var(--paper) 45%);
+  }
+  .tab-mock .tabs {
+    display: flex; gap: 4px;
+    border-bottom: 1.5px solid var(--g200);
+    margin: 14px 0;
+  }
+  .tab-mock .tab {
+    padding: 9px 16px;
+    font-size: 13px;
+    font-family: var(--sans);
+    color: var(--g500);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    cursor: default;
+  }
+  .tab-mock .tab.on {
+    color: var(--slate);
+    border-bottom-color: var(--clay);
+    font-weight: 500;
+  }
+  .tab-mock .content {
+    height: 120px;
+    border: 1px dashed var(--g300);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--g500); font-size: 13px; font-style: italic;
+  }
+  .tab-mock .btn {
+    display: inline-block;
+    padding: 8px 18px;
+    background: var(--slate);
+    color: var(--ivory);
+    border-radius: 7px;
+    font-size: 13px;
+    margin-top: 14px;
+  }
+
+  /* priority pyramid */
+  .pyramid {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; margin: 22px auto; max-width: 480px;
+  }
+  .pyramid .lvl {
+    width: 100%;
+    border: 1.5px solid var(--g300);
+    border-radius: 10px;
+    padding: 14px 18px;
+    background: var(--paper);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .pyramid .lvl .label { font-family: var(--mono); font-size: 12.5px; color: var(--slate); }
+  .pyramid .lvl .tag {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--g500);
+  }
+  .pyramid .lvl.l1 { border-color: var(--clay); width: 100%; }
+  .pyramid .lvl.l2 { width: 78%; background: var(--g100); }
+  .pyramid .lvl.l3 { width: 56%; background: var(--g100); }
+  .pyramid .arrow {
+    color: var(--clay); font-family: var(--mono); font-size: 14px;
+  }
+
+  /* badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--g100);
+    color: var(--g700);
+    border: 1px solid var(--g200);
+  }
+  .badge.clay { background: rgba(217,119,87,0.10); color: var(--clay-d); border-color: rgba(217,119,87,0.25); }
+  .badge.olive { background: rgba(120,140,93,0.12); color: var(--olive); border-color: rgba(120,140,93,0.3); }
+  .badge.plum { background: rgba(107,76,122,0.12); color: var(--plum); border-color: rgba(107,76,122,0.3); }
+
+  /* callout */
+  .callout {
+    border-left: 3px solid var(--clay);
+    background: var(--paper);
+    border-radius: 4px 10px 10px 4px;
+    padding: 14px 18px;
+    margin: 18px 0 22px;
+    font-size: 14px;
+    color: var(--g700);
+  }
+  .callout .label {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--clay); margin-bottom: 4px; display: block;
+  }
+
+  /* phase blocks */
+  .phase {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 14px;
+    padding: 24px 26px;
+    margin-bottom: 16px;
+  }
+  .phase .pnum {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--clay);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .phase h4 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 20px;
+    margin: 4px 0 6px;
+    letter-spacing: -0.008em;
+  }
+  .phase .sub {
+    color: var(--g500); font-size: 13.5px; font-style: italic;
+    margin-bottom: 14px;
+  }
+  .phase .checklist { list-style: none; padding: 0; margin: 0; }
+  .phase .checklist li {
+    display: flex; gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--g200);
+    font-size: 14px;
+    color: var(--g700);
+  }
+  .phase .checklist li:first-child { border-top: none; padding-top: 4px; }
+  .phase .checklist .box {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--g300);
+    border-radius: 4px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .phase .checklist strong { color: var(--slate); font-weight: 600; }
+
+  /* footer */
+  footer {
+    margin-top: 120px;
+    border-top: 1.5px solid var(--g300);
+    padding-top: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--g500);
+  }
+  footer .k { font-family: var(--serif); font-style: italic; color: var(--g700); font-size: 15px; }
+  footer a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+
+  /* helpers */
+  .lead {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--g700);
+    line-height: 1.55;
+    margin: 0 0 22px;
+    max-width: 720px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 18px 0 22px;
+  }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .panel h5 {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--clay);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .panel .ttl {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .panel p { margin: 0; font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============================== masthead ============================== -->
+  <header class="masthead">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Architecture Plan · Webflow Integration</div>
+        <h1>Export <em>architecture</em> for the Webflow pipeline</h1>
+        <p class="intro">
+          Three export paths — a <code>@webflow/XscpData</code> JSON paste, a hosted HTML embed,
+          and MCP instructions for Claude-assisted builds — backed by an inline IIFE, a
+          <code>data-flow-ft-*</code> attribute convention, and DialKit running inside
+          Webflow for live tweaking.
+        </p>
+      </div>
+      <div class="hero-fig" aria-hidden="true">
+        <div class="pane tool">
+          <span class="tag">tool</span>
+          <div class="canv"></div>
+          <div class="dial"></div>
+          <span class="l w75"></span><span class="l w60"></span>
+        </div>
+        <div class="pane flow">
+          <span class="tag">webflow</span>
+          <span class="l w60"></span>
+          <span class="blk"></span>
+          <span class="row"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span><span class="bar b4"></span></span>
+          <span class="l w82"></span><span class="l w50"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================== 01 overview ============================== -->
+  <section id="overview">
+    <div class="sec-head"><span class="idx">01</span><h2>Overview</h2><span class="count">3 methods · 4 paths</span></div>
+    <p class="sec-intro">
+      The export system lets designers take a tweaked WebGL effect from our tool and drop it into
+      Webflow with zero friction. Three export methods serve three workflows; once the effect is
+      live, four customization paths cover everything from a one-line code edit to a full
+      DialKit-in-Webflow session.
+    </p>
+    <div class="sec-body">
+      <h3><span class="pin">A</span>Three export methods</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>Who it's for</th><th>How it works</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Webflow JSON</strong> <span class="badge clay">Primary</span></td>
+              <td>Most users</td>
+              <td>Copy JSON, paste in Webflow — creates a ready-to-go component.</td>
+            </tr>
+            <tr>
+              <td><strong>HTML Embed</strong></td>
+              <td>Manual users</td>
+              <td>Copy HTML snippet, paste into a Webflow custom code block.</td>
+            </tr>
+            <tr>
+              <td><strong>MCP Instructions</strong> <span class="badge plum">AI</span></td>
+              <td>AI-assisted</td>
+              <td>Claude reads instructions and builds the component via Webflow MCP tools.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="pin">B</span>Four customization paths</h3>
+      <div class="grid">
+        <div class="card">
+          <span class="num">01</span>
+          <h4>Edit CONFIG directly</h4>
+          <p>Open the HtmlEmbed in Webflow Designer, find the CONFIG block at the top, change values.</p>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h4>Bind data attributes</h4>
+          <p>Wire <code>data-flow-ft-*</code> attributes to Webflow Component Properties for native no-code editing.</p>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h4>Re-export from tool</h4>
+          <p>Tweak in our DialKit, click <em>Copy Config</em>, paste over the old CONFIG block.</p>
+        </div>
+        <div class="card">
+          <span class="num">04</span>
+          <h4>DialKit in Webflow</h4>
+          <p>Toggle <code>dialKit: true</code>, tweak live on the published page, then Copy Config.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 02 export panel ============================== -->
+  <section id="panel">
+    <div class="sec-head"><span class="idx">02</span><h2>Export Panel UI</h2><span class="count">3 tabs</span></div>
+    <p class="sec-intro">
+      The export modal uses three tabs instead of the current stacked layout. Version selector and
+      sizing options sit at the top, shared across all tabs.
+    </p>
+    <div class="sec-body">
+      <div class="tab-mock">
+        <div class="head">
+          <div class="ttl">Export to Webflow</div>
+          <div class="x">×</div>
+        </div>
+        <div class="row">
+          <div class="lbl">Experiment</div>
+          <div>Flow Field</div>
+        </div>
+        <div class="row">
+          <div class="lbl">Version</div>
+          <div class="select">v1 — Emerald Flow ▾</div>
+        </div>
+        <div class="row">
+          <div class="lbl">Canvas Sizing</div>
+          <div class="radios">
+            <span class="radio on"><span class="dot"></span>Responsive</span>
+            <span class="radio"><span class="dot"></span>Fixed</span>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab on">Webflow JSON</div>
+          <div class="tab">HTML Embed</div>
+          <div class="tab">MCP</div>
+        </div>
+        <div class="content">tab content</div>
+        <div class="btn">Copy JSON</div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h5>Tab 1</h5>
+          <div class="ttl">Webflow JSON</div>
+          <p>Generates the <code>@webflow/XscpData</code> clipboard JSON. Paste in Webflow, get a full component. The primary export path.</p>
+        </div>
+        <div class="panel">
+          <h5>Tab 2</h5>
+          <div class="ttl">HTML Embed</div>
+          <p>The current <code>&lt;div&gt;&lt;canvas&gt;&lt;script src="…"&gt;</code> snippet pointing to the hosted bundle. Good for manual custom code blocks or non-Webflow platforms.</p>
+        </div>
+        <div class="panel">
+          <h5>Tab 3</h5>
+          <div class="ttl">MCP Instructions</div>
+          <p>AI-readable step-by-step instructions for creating styles, elements, and components via Webflow MCP tools. For Claude-assisted workflows.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 03 webflow json ============================== -->
+  <section id="json">
+    <div class="sec-head"><span class="idx">03</span><h2>Webflow JSON Structure</h2><span class="count">paste format</span></div>
+    <p class="sec-intro">
+      When pasted into Webflow, the JSON creates a wrapper Div containing a Canvas and an
+      HtmlEmbed with the full inline IIFE. Node IDs are fresh UUIDs each copy; Webflow remaps
+      them on paste.
+    </p>
+    <div class="sec-body">
+
+      <h3><span class="pin">A</span>Component shape</h3>
+<pre class="ascii">Div Block (wrapper)
+  ├── Canvas (100% × 100%, data-flow-tempo attribute)
+  └── HtmlEmbed (&lt;script&gt; with full inline IIFE)</pre>
+
+      <h3><span class="pin">B</span>Paste format</h3>
+      <p>The paste format is <code>@webflow/XscpData</code>. The structure is roughly:</p>
+<pre><span class="lang">json</span><span class="p">{</span>
+  <span class="s">"type"</span>: <span class="s">"@webflow/XscpData"</span>,
+  <span class="s">"payload"</span>: <span class="p">{</span>
+    <span class="s">"nodes"</span>: [
+      <span class="p">{</span> <span class="s">"_id"</span>: <span class="s">"&lt;wrapper-uuid&gt;"</span>,
+        <span class="s">"type"</span>: <span class="s">"Block"</span>, <span class="s">"tag"</span>: <span class="s">"div"</span>,
+        <span class="s">"children"</span>: [<span class="s">"&lt;canvas-uuid&gt;"</span>, <span class="s">"&lt;embed-uuid&gt;"</span>] <span class="p">}</span>,
+      <span class="p">{</span> <span class="s">"_id"</span>: <span class="s">"&lt;canvas-uuid&gt;"</span>,
+        <span class="s">"type"</span>: <span class="s">"DOM"</span>, <span class="s">"tag"</span>: <span class="s">"div"</span>,
+        <span class="s">"data"</span>: <span class="p">{</span>
+          <span class="s">"tag"</span>: <span class="s">"canvas"</span>,
+          <span class="s">"attributes"</span>: [<span class="p">{</span> <span class="s">"name"</span>: <span class="s">"data-flow-tempo"</span>, <span class="s">"value"</span>: <span class="s">""</span> <span class="p">}</span>]
+        <span class="p">}</span> <span class="p">}</span>,
+      <span class="p">{</span> <span class="s">"_id"</span>: <span class="s">"&lt;embed-uuid&gt;"</span>,
+        <span class="s">"type"</span>: <span class="s">"HtmlEmbed"</span>,
+        <span class="s">"v"</span>: <span class="s">"&lt;script&gt;…full inline IIFE…&lt;/script&gt;"</span> <span class="p">}</span>
+    ],
+    <span class="s">"styles"</span>: [
+      <span class="p">{</span> <span class="s">"_id"</span>: <span class="s">"&lt;canvas-style-uuid&gt;"</span>,
+        <span class="s">"type"</span>: <span class="s">"class"</span>, <span class="s">"name"</span>: <span class="s">"Canvas"</span>,
+        <span class="s">"styleLess"</span>: <span class="s">"width: 100%; height: 100%;"</span> <span class="p">}</span>
+    ],
+    <span class="s">"assets"</span>: [], <span class="s">"ix1"</span>: [], <span class="s">"ix2"</span>: <span class="p">{ … }</span>
+  <span class="p">}</span>,
+  <span class="s">"meta"</span>: <span class="p">{</span> <span class="c">/* zeroed counters */</span> <span class="p">}</span>
+<span class="p">}</span></pre>
+
+      <h3><span class="pin">C</span>Responsive vs fixed sizing</h3>
+      <div class="two-col">
+        <div class="panel">
+          <h5>Responsive</h5>
+          <div class="ttl">Fills the parent</div>
+          <p>Canvas style is <code>width: 100%; height: 100%;</code>. Wrapper sizing is up to the Webflow layout.</p>
+        </div>
+        <div class="panel">
+          <h5>Fixed</h5>
+          <div class="ttl">Explicit dimensions</div>
+          <p>Canvas style adds explicit pixel sizes, e.g. <code>width: 800px; height: 600px;</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 04 inline iife ============================== -->
+  <section id="iife">
+    <div class="sec-head"><span class="idx">04</span><h2>Inline IIFE Structure</h2><span class="count">self-contained</span></div>
+    <p class="sec-intro">
+      The JavaScript inside the Webflow JSON's HtmlEmbed is a fully self-contained IIFE. No
+      external dependencies. CONFIG at the top, DIAL_CONFIG below, then the WebGL2 boot.
+    </p>
+    <div class="sec-body">
+
+<pre><span class="lang">javascript</span><span class="c">// =============================================
+// Flowing — Flow Field v1
+// =============================================
+// Edit these values to customize the effect.
+// Connect Webflow component properties to
+// data-flow-ft-* attributes on the wrapper div.
+// Set dialKit to true to load the visual editor.
+// =============================================</span>
+
+<span class="k">const</span> <span class="n">CONFIG</span> = <span class="p">{</span>
+  <span class="c">// Colors (hex without #)</span>
+  <span class="t">bgColor</span>: <span class="s">"0d0d10"</span>,
+  <span class="t">color1</span>: <span class="s">"492d7b"</span>,
+  <span class="t">color2</span>: <span class="s">"8c5a1c"</span>,
+  <span class="t">highlightColor</span>: <span class="s">"d4a0e8"</span>,
+
+  <span class="c">// Noise</span>
+  <span class="t">noiseScale</span>: <span class="n">0.55</span>,
+  <span class="t">noiseSpeed</span>: <span class="n">0.037</span>,
+
+  <span class="c">// Flow Field</span>
+  <span class="t">warpStrength</span>: <span class="n">1.86</span>,
+  <span class="t">warpScale</span>: <span class="n">0.58</span>,
+
+  <span class="c">// … ~25 params total</span>
+  <span class="t">dialKit</span>: <span class="k">false</span>,
+<span class="p">}</span>;
+
+<span class="k">const</span> <span class="n">DIAL_CONFIG</span> = <span class="p">{</span>
+  <span class="s">"Noise Fill"</span>: <span class="p">{</span>
+    <span class="t">noiseScale</span>:  [<span class="n">0.55</span>, <span class="n">0.01</span>, <span class="n">5</span>, <span class="n">0.01</span>],
+    <span class="t">noiseSpeed</span>:  [<span class="n">0.037</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0.001</span>],
+  <span class="p">}</span>,
+  <span class="c">// … one folder per group</span>
+<span class="p">}</span>;
+
+(<span class="k">function</span> () <span class="p">{</span>
+  <span class="k">var</span> wrapper = document.querySelector(<span class="s">"[data-flow-tempo]"</span>);
+  <span class="k">if</span> (!wrapper) <span class="k">return</span>;
+  <span class="k">var</span> canvas = wrapper.querySelector(<span class="s">"canvas"</span>);
+
+  <span class="c">// ── Params: data attributes override CONFIG ──</span>
+  <span class="k">var</span> P = <span class="p">{}</span>;
+  <span class="k">for</span> (<span class="k">var</span> key <span class="k">in</span> CONFIG) <span class="p">{</span>
+    P[key] = CONFIG[key];
+    <span class="k">var</span> kebab = key.replace(<span class="s">/([A-Z])/g</span>, <span class="s">"-$1"</span>).toLowerCase();
+    <span class="k">var</span> attr = wrapper.getAttribute(<span class="s">"data-flow-ft-"</span> + kebab);
+    <span class="k">if</span> (attr !== <span class="k">null</span>) <span class="p">{</span>
+      P[key] = <span class="k">typeof</span> CONFIG[key] === <span class="s">"number"</span> ? Number(attr) : attr;
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="c">// ── Optional DialKit loading ──</span>
+  <span class="k">if</span> (P.dialKit === <span class="k">true</span>) <span class="p">{</span>
+    <span class="k">var</span> s = document.createElement(<span class="s">"script"</span>);
+    s.src = <span class="s">"https://webgl-experiments.vercel.app/exports/dialkit-standalone.js"</span>;
+    s.onload = <span class="k">function</span> () <span class="p">{</span>
+      window.FlowDialKit.create(P, DIAL_CONFIG, <span class="k">function</span> (updated) <span class="p">{</span>
+        <span class="k">for</span> (<span class="k">var</span> k <span class="k">in</span> updated) P[k] = updated[k];
+      <span class="p">}</span>);
+    <span class="p">}</span>;
+    document.head.appendChild(s);
+  <span class="p">}</span>
+
+  <span class="c">// WebGL2 init, shader compile, ResizeObserver,
+  // pointermove, render loop reading from P every frame…</span>
+<span class="p">}</span>)();</pre>
+
+      <h3><span class="pin">▸</span>Param priority</h3>
+      <p>When the standalone script initializes, params resolve top-down:</p>
+
+      <div class="pyramid">
+        <div class="lvl l1">
+          <span class="label">data-flow-ft-* attributes</span>
+          <span class="tag">highest</span>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="lvl l2">
+          <span class="label">CONFIG block</span>
+          <span class="tag">editable</span>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="lvl l3">
+          <span class="label">Baked defaults</span>
+          <span class="tag">fallback</span>
+        </div>
+      </div>
+
+      <p>This gives users three levels of control without any conflicts. Webflow Component
+      Properties win, the visible CONFIG block is the daily edit surface, and the IIFE always
+      has a working fallback if something is missing.</p>
+    </div>
+  </section>
+
+  <!-- ============================== 05 data attributes ============================== -->
+  <section id="attrs">
+    <div class="sec-head"><span class="idx">05</span><h2>Data Attribute Convention</h2><span class="count">~25 params</span></div>
+    <p class="sec-intro">
+      All customizable params can be set via data attributes on the wrapper div. The standalone
+      JS reads these at init time and overrides CONFIG values. Auto-derived from the
+      experiment's <code>params.ts</code> — no manual mapping needed.
+    </p>
+    <div class="sec-body">
+
+      <h3><span class="pin">A</span>Naming rules</h3>
+      <div class="two-col">
+        <div class="panel">
+          <h5>Prefix</h5>
+          <div class="ttl"><code>data-flow-ft-</code></div>
+          <p>Same prefix everywhere, regardless of experiment.</p>
+        </div>
+        <div class="panel">
+          <h5>Format</h5>
+          <div class="ttl">kebab-case</div>
+          <p>Derived from the camelCase param name. <code>warpStrength</code> → <code>warp-strength</code>.</p>
+        </div>
+        <div class="panel">
+          <h5>Colors</h5>
+          <div class="ttl">hex, no #</div>
+          <p>e.g. <code>"492d7b"</code>. The <code>hex2rgb</code> helper accepts both forms at runtime.</p>
+        </div>
+        <div class="panel">
+          <h5>Numbers / booleans</h5>
+          <div class="ttl">string form</div>
+          <p>Parsed via <code>Number()</code> for numbers; <code>"true"</code>/<code>"false"</code> for booleans.</p>
+        </div>
+      </div>
+
+      <h3><span class="pin">B</span>Full attribute map</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Param</th><th>Attribute</th><th>Type</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>bgColor</code></td><td><code>data-flow-ft-bg-color</code></td><td><span class="badge">hex</span></td><td>"0d0d10"</td></tr>
+            <tr><td><code>color1</code></td><td><code>data-flow-ft-color1</code></td><td><span class="badge">hex</span></td><td>"492d7b"</td></tr>
+            <tr><td><code>color2</code></td><td><code>data-flow-ft-color2</code></td><td><span class="badge">hex</span></td><td>"8c5a1c"</td></tr>
+            <tr><td><code>color3</code></td><td><code>data-flow-ft-color3</code></td><td><span class="badge">hex</span></td><td>"381630"</td></tr>
+            <tr><td><code>color4</code></td><td><code>data-flow-ft-color4</code></td><td><span class="badge">hex</span></td><td>"7b4cc0"</td></tr>
+            <tr><td><code>highlightColor</code></td><td><code>data-flow-ft-highlight-color</code></td><td><span class="badge">hex</span></td><td>"d4a0e8"</td></tr>
+            <tr><td><code>noiseScale</code></td><td><code>data-flow-ft-noise-scale</code></td><td><span class="badge olive">num</span></td><td>"0.55"</td></tr>
+            <tr><td><code>noiseSpeed</code></td><td><code>data-flow-ft-noise-speed</code></td><td><span class="badge olive">num</span></td><td>"0.037"</td></tr>
+            <tr><td><code>noiseOctaves</code></td><td><code>data-flow-ft-noise-octaves</code></td><td><span class="badge olive">num</span></td><td>"1"</td></tr>
+            <tr><td><code>warpStrength</code></td><td><code>data-flow-ft-warp-strength</code></td><td><span class="badge olive">num</span></td><td>"1.86"</td></tr>
+            <tr><td><code>warpScale</code></td><td><code>data-flow-ft-warp-scale</code></td><td><span class="badge olive">num</span></td><td>"0.58"</td></tr>
+            <tr><td><code>warpSpeed</code></td><td><code>data-flow-ft-warp-speed</code></td><td><span class="badge olive">num</span></td><td>"0.454"</td></tr>
+            <tr><td><code>warpDepth</code></td><td><code>data-flow-ft-warp-depth</code></td><td><span class="badge olive">num</span></td><td>"2"</td></tr>
+            <tr><td><code>vignetteRadius</code></td><td><code>data-flow-ft-vignette-radius</code></td><td><span class="badge olive">num</span></td><td>"0.7"</td></tr>
+            <tr><td><code>vignetteSoftness</code></td><td><code>data-flow-ft-vignette-softness</code></td><td><span class="badge olive">num</span></td><td>"0.4"</td></tr>
+            <tr><td><code>vignetteRoundness</code></td><td><code>data-flow-ft-vignette-roundness</code></td><td><span class="badge olive">num</span></td><td>"2.0"</td></tr>
+            <tr><td><code>rotation</code></td><td><code>data-flow-ft-rotation</code></td><td><span class="badge olive">num</span></td><td>"-0.17"</td></tr>
+            <tr><td><code>zoom</code></td><td><code>data-flow-ft-zoom</code></td><td><span class="badge olive">num</span></td><td>"0.55"</td></tr>
+            <tr><td><code>blendWidth</code></td><td><code>data-flow-ft-blend-width</code></td><td><span class="badge olive">num</span></td><td>"0.55"</td></tr>
+            <tr><td><code>colorShift</code></td><td><code>data-flow-ft-color-shift</code></td><td><span class="badge olive">num</span></td><td>"0.82"</td></tr>
+            <tr><td><code>saturation</code></td><td><code>data-flow-ft-saturation</code></td><td><span class="badge olive">num</span></td><td>"1.3"</td></tr>
+            <tr><td><code>brightness</code></td><td><code>data-flow-ft-brightness</code></td><td><span class="badge olive">num</span></td><td>"1.0"</td></tr>
+            <tr><td><code>contrast</code></td><td><code>data-flow-ft-contrast</code></td><td><span class="badge olive">num</span></td><td>"1.0"</td></tr>
+            <tr><td><code>highlightStr</code></td><td><code>data-flow-ft-highlight-str</code></td><td><span class="badge olive">num</span></td><td>"0.25"</td></tr>
+            <tr><td><code>grainAmount</code></td><td><code>data-flow-ft-grain-amount</code></td><td><span class="badge olive">num</span></td><td>"0.089"</td></tr>
+            <tr><td><code>grainScale</code></td><td><code>data-flow-ft-grain-scale</code></td><td><span class="badge olive">num</span></td><td>"10"</td></tr>
+            <tr><td><code>grainSpeed</code></td><td><code>data-flow-ft-grain-speed</code></td><td><span class="badge olive">num</span></td><td>"60"</td></tr>
+            <tr><td><code>mouseStrength</code></td><td><code>data-flow-ft-mouse-strength</code></td><td><span class="badge olive">num</span></td><td>"0.22"</td></tr>
+            <tr><td><code>dialKit</code></td><td><code>data-flow-ft-dial-kit</code></td><td><span class="badge plum">bool</span></td><td>"true"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <span class="label">Webflow Component Properties</span>
+        Users can bind these data attributes to Webflow Component Properties (number input,
+        text input, color picker) for a native no-code editing experience. The wrapper div
+        already carries the <code>data-flow-tempo</code> identifier; users add
+        <code>data-flow-ft-*</code> attributes through Webflow's attribute panel.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 06 dialkit ============================== -->
+  <section id="dialkit">
+    <div class="sec-head"><span class="idx">06</span><h2>DialKit in Webflow</h2><span class="count">live tweaking</span></div>
+    <p class="sec-intro">
+      DialKit can be loaded inside a Webflow site for live parameter tweaking. Off by default —
+      the designer enables it by setting <code>dialKit: true</code> in CONFIG or
+      <code>data-flow-ft-dial-kit="true"</code> on the wrapper div.
+    </p>
+    <div class="sec-body">
+
+      <h3><span class="pin">A</span>How it works</h3>
+      <ol>
+        <li>The standalone script detects <code>dialKit === true</code>.</li>
+        <li>It dynamically loads <code>dialkit-standalone.js</code> from the CDN.</li>
+        <li>The bundle contains React + ReactDOM + DialKit pre-packaged with a vanilla JS API.</li>
+        <li>It creates the floating DialKit panel with all controls from <code>DIAL_CONFIG</code>.</li>
+        <li>Param changes update the live <code>P</code> object — the render loop picks them up immediately.</li>
+        <li>A <strong>Copy Config</strong> button copies the current values as a formatted CONFIG block.</li>
+        <li>The designer pastes the new CONFIG over the old one in the HtmlEmbed to persist changes.</li>
+      </ol>
+
+      <h3><span class="pin">B</span>Standalone bundle</h3>
+      <p>A pre-built bundle hosted at <code>https://webgl-experiments.vercel.app/exports/dialkit-standalone.js</code>.</p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h5>Contents</h5>
+          <div class="ttl">~120–150 KB gzipped</div>
+          <p>React + ReactDOM (production) · DialKit library + styles · vanilla JS API wrapper. Acceptable size — loads only when explicitly enabled, cached after first load.</p>
+        </div>
+        <div class="panel">
+          <h5>Exposed API</h5>
+          <div class="ttl"><code>window.FlowDialKit</code></div>
+          <p><code>create(params, config, onChange)</code> — mounts the panel, mutates <code>params</code> in place, calls <code>onChange</code> on every change.</p>
+        </div>
+      </div>
+
+<pre><span class="lang">javascript</span>window.FlowDialKit = <span class="p">{</span>
+  <span class="c">/**
+   * Create a DialKit panel connected to the experiment params.
+   * @param params    - Live params object (mutated in place by DialKit)
+   * @param config    - DialKit folder config with ranges
+   * @param onChange  - Called whenever a param value changes
+   */</span>
+  <span class="n">create</span>(params, config, onChange) <span class="p">{</span> <span class="c">/* … */</span> <span class="p">}</span>
+<span class="p">}</span>;</pre>
+
+      <p><strong>Build script:</strong> <code>scripts/build-dialkit-standalone.ts</code> — uses Vite library mode to bundle React + DialKit into a single IIFE with the <code>window.FlowDialKit</code> global.</p>
+
+      <h3><span class="pin">C</span>Copy Config button</h3>
+      <p>The Copy Config button appears in the DialKit panel footer. When clicked, it copies the current params formatted as a drop-in CONFIG block:</p>
+
+<pre><span class="lang">javascript</span><span class="k">const</span> <span class="n">CONFIG</span> = <span class="p">{</span>
+  <span class="t">bgColor</span>: <span class="s">"0d0d10"</span>,
+  <span class="t">color1</span>: <span class="s">"492d7b"</span>,
+  <span class="t">color2</span>: <span class="s">"8c5a1c"</span>,
+  <span class="c">// … all params with current values</span>
+  <span class="t">dialKit</span>: <span class="k">false</span>,
+<span class="p">}</span>;</pre>
+
+      <div class="callout">
+        <span class="label">Note</span>
+        <code>dialKit</code> is always set to <code>false</code> in the copied CONFIG. The designer
+        re-enables it manually if they need to tweak again. This prevents DialKit from loading
+        on the published site.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 07 customization paths ============================== -->
+  <section id="paths">
+    <div class="sec-head"><span class="idx">07</span><h2>Post-Export Customization Paths</h2><span class="count">4 paths</span></div>
+    <p class="sec-intro">
+      After export, designers can customize the effect four different ways depending on the
+      team and the task — from a one-line CONFIG edit to a full live-tweak DialKit session
+      running inside the Webflow page itself.
+    </p>
+    <div class="sec-body">
+      <div class="grid">
+        <div class="card">
+          <span class="num">Path 1</span>
+          <h4>Edit CONFIG directly</h4>
+          <p>Open the HtmlEmbed code in Webflow Designer, find the CONFIG block at the top, change values. Simple and immediate.</p>
+        </div>
+        <div class="card">
+          <span class="num">Path 2</span>
+          <h4>Webflow Component Properties</h4>
+          <p>Bind <code>data-flow-ft-*</code> attributes to Component Properties. Webflow's property panel then shows named inputs that non-technical team members can adjust without touching code.</p>
+        </div>
+        <div class="card">
+          <span class="num">Path 3</span>
+          <h4>Re-export from our tool</h4>
+          <p>Return to our tool, tweak in DialKit, click <em>Copy Config</em> to grab updated values. Paste into the Webflow HtmlEmbed.</p>
+        </div>
+        <div class="card">
+          <span class="num">Path 4</span>
+          <h4>DialKit in Webflow</h4>
+          <p>Set <code>dialKit: true</code>. The floating control panel appears on the page. Tweak params live, then click <em>Copy Config</em> to persist. Set <code>dialKit: false</code> when done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 08 file structure ============================== -->
+  <section id="files">
+    <div class="sec-head"><span class="idx">08</span><h2>File Structure &amp; Generators</h2><span class="count">new + modified</span></div>
+    <p class="sec-intro">
+      Each experiment owns a <code>generateExport.ts</code> that produces the full inline IIFE
+      string. A shared <code>webflow-json.ts</code> wraps that string in the
+      <code>@webflow/XscpData</code> structure. A bundler script builds the DialKit
+      standalone.
+    </p>
+    <div class="sec-body">
+
+      <div class="two-col">
+        <div class="panel">
+          <h5>New files</h5>
+<pre style="margin:0; background: var(--g100); border: none; padding: 12px 14px; font-size: 12px;">src/
+  experiments/
+    flow-field/
+      generateExport.ts
+  lib/
+    webflow-json.ts
+scripts/
+  build-dialkit-standalone.ts</pre>
+        </div>
+        <div class="panel">
+          <h5>Modified files</h5>
+<pre style="margin:0; background: var(--g100); border: none; padding: 12px 14px; font-size: 12px;">src/
+  components/
+    ExportPanel.tsx
+  lib/
+    webflow-export.ts
+  experiments/
+    flow-field/
+      standalone.ts</pre>
+        </div>
+      </div>
+
+      <h3><span class="pin">A</span>Per-experiment export generator</h3>
+      <p><code>src/experiments/flow-field/generateExport.ts</code> imports the experiment's shaders (Vite inlines them as raw strings at build time) and constructs the complete self-contained script.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Responsibility</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Shader imports</strong></td><td>Vertex + fragment as raw strings.</td></tr>
+            <tr><td><strong>Inputs</strong></td><td>Current params (from DialKit) + dial config (from <code>params.ts</code>).</td></tr>
+            <tr><td><strong>Output</strong></td><td>A complete <code>&lt;script&gt;…&lt;/script&gt;</code> string with header, CONFIG, DIAL_CONFIG, attr reading, DialKit loader, WebGL2 boot, render loop.</td></tr>
+            <tr><td><strong>Color handling</strong></td><td>Strips <code>#</code> prefix before embedding.</td></tr>
+            <tr><td><strong>Composition</strong></td><td>Template literals; shaders embedded verbatim; CONFIG comes from current DialKit state at export time.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The existing <code>standalone.ts</code> remains as the entry point for
+      <code>build-export.ts</code> (hosted bundle builds). <code>generateExport.ts</code> is
+      specifically for the inline Webflow JSON export path.</p>
+
+      <h3><span class="pin">B</span>Webflow JSON generator</h3>
+      <p><code>src/lib/webflow-json.ts</code> accepts the inline script string and sizing options, generates fresh UUIDs, and constructs the full <code>@webflow/XscpData</code> JSON.</p>
+
+      <ul>
+        <li><strong>UUID generation:</strong> <code>crypto.randomUUID()</code> with a fallback to a simple random hex generator for older browsers.</li>
+        <li><strong>Script escaping:</strong> The inline script inside the <code>v</code> field and <code>meta.html</code> field needs proper escaping for JSON embedding — <code>JSON.stringify</code> handles this when building the outer JSON.</li>
+        <li><strong>Returns:</strong> JSON as a string ready for the clipboard.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================== 09 phases ============================== -->
+  <section id="phases">
+    <div class="sec-head"><span class="idx">09</span><h2>Implementation Phases</h2><span class="count">3 phases</span></div>
+    <p class="sec-intro">
+      Phase 1 gets the Webflow JSON paste working end to end. Phase 2 adds the live
+      tweaking experience. Phase 3 scales the system to every experiment.
+    </p>
+    <div class="sec-body">
+
+      <div class="phase">
+        <div class="pnum">Phase 01</div>
+        <h4>Core Export</h4>
+        <div class="sub">The foundation. Gets the Webflow JSON paste working end to end.</div>
+        <ul class="checklist">
+          <li><span class="box"></span><div><strong>Tabbed ExportPanel</strong> — Refactor from stacked sections to 3 tabs (Webflow JSON / HTML Embed / MCP). Shared version selector + sizing at top.</div></li>
+          <li><span class="box"></span><div><strong><code>webflow-json.ts</code></strong> — New module generating the <code>@webflow/XscpData</code> JSON. Takes inline script + sizing, returns clipboard-ready string.</div></li>
+          <li><span class="box"></span><div><strong><code>generateExport.ts</code> for flow-field</strong> — New file that imports shaders and returns the full inline IIFE string.</div></li>
+          <li><span class="box"></span><div><strong>CONFIG block generation</strong> — IIFE starts with a CONFIG block populated from current DialKit values. Colors stripped of <code>#</code>.</div></li>
+          <li><span class="box"></span><div><strong>Data attribute reading</strong> — IIFE reads <code>data-flow-ft-*</code> attributes and overrides CONFIG. Auto-derives kebab-case from camelCase.</div></li>
+          <li><span class="box"></span><div><strong><code>hex2rgb</code> update</strong> — Support both <code>#rrggbb</code> and <code>rrggbb</code> formats.</div></li>
+          <li><span class="box"></span><div><strong>Wire it up</strong> — ExportPanel's Webflow JSON tab calls <code>generateExport()</code> → <code>generateWebflowJSON()</code> → clipboard.</div></li>
+          <li><span class="box"></span><div><strong>Update <code>standalone.ts</code></strong> — Add data attribute reading so the hosted bundle (HTML Embed tab) also supports <code>data-flow-ft-*</code> overrides.</div></li>
+        </ul>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">Phase 02</div>
+        <h4>DialKit in Webflow</h4>
+        <div class="sub">The live tweaking experience inside Webflow.</div>
+        <ul class="checklist">
+          <li><span class="box"></span><div><strong><code>build-dialkit-standalone.ts</code></strong> — Bundles React + ReactDOM + DialKit + CSS + vanilla API wrapper into a single IIFE. Output: <code>dist/exports/dialkit-standalone.js</code>.</div></li>
+          <li><span class="box"></span><div><strong>Vanilla API wrapper</strong> — <code>window.FlowDialKit.create(params, config, onChange)</code>. Creates a React root, renders DialKit panel, wires up param syncing and Copy Config.</div></li>
+          <li><span class="box"></span><div><strong>DialKit loading in IIFE</strong> — Inline script checks <code>CONFIG.dialKit</code> / <code>data-flow-ft-dial-kit</code> and dynamically loads the standalone bundle if true.</div></li>
+          <li><span class="box"></span><div><strong>DIAL_CONFIG embedding</strong> — <code>generateExport.ts</code> includes the full dial config (folder structure with ranges) in the IIFE.</div></li>
+          <li><span class="box"></span><div><strong>Copy Config (Webflow DialKit)</strong> — Button in panel footer. Copies current params as a formatted CONFIG block; always sets <code>dialKit: false</code>.</div></li>
+          <li><span class="box"></span><div><strong>Copy Config (our tool)</strong> — Same button in our tool's DialKit panel. Same format, same behavior. Supports the "tweak in tool, paste in Webflow" workflow.</div></li>
+          <li><span class="box"></span><div><strong>Host the bundle</strong> — Deploy <code>dialkit-standalone.js</code> alongside experiment bundles at <code>/exports/dialkit-standalone.js</code>. Add to Vercel config with appropriate cache headers.</div></li>
+        </ul>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">Phase 03</div>
+        <h4>Template &amp; Multi-Experiment Support</h4>
+        <div class="sub">Scale the system to all experiments.</div>
+        <ul class="checklist">
+          <li><span class="box"></span><div><strong>Export template</strong> — Add <code>generateExport.ts</code> to the experiment template. New experiments get export support out of the box.</div></li>
+          <li><span class="box"></span><div><strong>Update <code>new-experiment.ts</code></strong> — Scaffold script generates <code>generateExport.ts</code> with placeholder shader imports and WebGL setup.</div></li>
+          <li><span class="box"></span><div><strong>Shared export utilities</strong> — Extract common patterns (attr reading, DialKit loading, hex2rgb, ResizeObserver, mouse tracking) into helper strings that <code>generateExport.ts</code> files can compose from.</div></li>
+          <li><span class="box"></span><div><strong>Update <code>create-experiment.md</code></strong> — Document that new experiments need a <code>generateExport.ts</code> and what it should contain.</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 10 open questions ============================== -->
+  <section id="questions">
+    <div class="sec-head"><span class="idx">10</span><h2>Color Format &amp; Open Questions</h2><span class="count">decide later</span></div>
+    <p class="sec-intro">
+      Colors use hex without the <code>#</code> prefix throughout the export system. A handful
+      of decisions can be finalized during implementation.
+    </p>
+    <div class="sec-body">
+
+      <h3><span class="pin">A</span>Color format</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Context</th><th>Format</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>CONFIG block</td><td><code>"492d7b"</code></td><td><code>color1: "492d7b"</code></td></tr>
+            <tr><td>Data attributes</td><td><code>"492d7b"</code></td><td><code>data-flow-ft-color1="492d7b"</code></td></tr>
+            <tr><td>Copy Config output</td><td><code>"492d7b"</code></td><td>Same as CONFIG</td></tr>
+            <tr><td>Internal processing</td><td>Both accepted</td><td><code>hex2rgb</code> handles with/without <code>#</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <code>hex2rgb</code> helper in the IIFE strips <code>#</code> if present, so both
+      formats work at runtime. This is for backward compatibility with existing hosted bundles
+      that use <code>#</code>-prefixed colors in BAKED_PARAMS.</p>
+
+      <h3><span class="pin">B</span>Open questions</h3>
+      <div class="grid">
+        <div class="card">
+          <span class="num">Q1</span>
+          <h4>Canvas class naming</h4>
+          <p>Currently <code>"Canvas"</code> in the Webflow JSON. Should it be more specific (e.g. <code>"WebGL Experiment Canvas"</code>) to avoid collisions with existing Webflow classes?</p>
+        </div>
+        <div class="card">
+          <span class="num">Q2</span>
+          <h4>Multiple experiments per page</h4>
+          <p>Current selector is <code>[data-flow-tempo]</code>. Should we use <code>[data-flow-tempo="flow-field"]</code> (slug as value) to support multiple different experiments on the same page?</p>
+        </div>
+        <div class="card">
+          <span class="num">Q3</span>
+          <h4>Wrapper sizing — class or inline?</h4>
+          <p>Should the wrapper div carry a class with sizing styles, or just inline styles? A class is cleaner for Webflow users to override; inline guarantees sizing works without class conflicts.</p>
+        </div>
+        <div class="card">
+          <span class="num">Q4</span>
+          <h4>DIAL_CONFIG size</h4>
+          <p>For experiments with many controls, DIAL_CONFIG could be large. Include it only when <code>dialKit</code> is enabled? Means users who later enable DialKit must re-export.</p>
+        </div>
+        <div class="card">
+          <span class="num">Q5</span>
+          <h4>Script minification</h4>
+          <p>Should the inline IIFE be minified? Smaller payload but harder to read/edit CONFIG. Could offer both — <em>Copy JSON (readable)</em> and <em>Copy JSON (minified)</em>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== footer ============================== -->
+  <footer>
+    <div>
+      <span style="color: var(--g500);">Rendered from <code style="font-family: var(--mono); font-size: 12px; background: var(--g100); padding: 1px 6px; border-radius: 4px;">docs/export-architecture.md</code></span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

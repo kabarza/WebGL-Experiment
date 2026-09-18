@@ -10,9 +10,10 @@ import { FpsCounter } from './FpsCounter.tsx';
 import { buildShareUrl } from '../lib/sharing.ts';
 import { findExperiment } from '../experiments/registry.ts';
 import { findVisionExperiment } from '../vision/registry.ts';
+import { isBrandToolSlug } from '../brand/registry.ts';
 
 interface Route {
-  type: 'gallery' | 'experiment' | 'article' | 'tuner' | 'vision';
+  type: 'gallery' | 'experiment' | 'article' | 'tuner' | 'vision' | 'brand';
   slug?: string;
 }
 
@@ -21,6 +22,7 @@ interface ChromeDockProps {
   onBack: () => void;
   onNavigateExperiment: (slug: string) => void;
   onNavigateArticle: (slug: string) => void;
+  onNavigateBrand: (slug: string) => void;
   overlayVisible: boolean;
   setExportOpen: (open: boolean) => void;
 }
@@ -30,6 +32,7 @@ export function ChromeDock({
   onBack,
   onNavigateExperiment,
   onNavigateArticle,
+  onNavigateBrand,
   overlayVisible,
   setExportOpen,
 }: ChromeDockProps) {
@@ -49,6 +52,7 @@ export function ChromeDock({
   const isExperiment = route.type === 'experiment';
   const isArticle = route.type === 'article';
   const isVision = route.type === 'vision';
+  const isBrand = route.type === 'brand';
   const experiment = slug ? findExperiment(slug) : undefined;
   const visionExperiment = slug ? findVisionExperiment(slug) : undefined;
   const currentMeta = experiment?.meta ?? visionExperiment?.meta;
@@ -95,7 +99,8 @@ export function ChromeDock({
 
   const showArticle = (isExperiment || isVision) && hasArticle;
   const showExport = isExperiment;
-  const showFps = isExperiment || isVision;
+  const showFps = isExperiment || isVision || isBrand;
+  const showPrimaryDivider = showArticle || showExport || isArticle || isBrand;
 
   return (
     <>
@@ -108,28 +113,32 @@ export function ChromeDock({
           </svg>
         </button>
 
-        {/* Share / Copy */}
+        {/* Share / Copy URL */}
         <button
           className={`dock-btn${copied ? ' dock-btn--active' : ''}`}
           onClick={handleShare}
-          title={copied ? 'Copied!' : 'Copy shareable link'}
+          title={copied ? 'Copied!' : 'Copy link'}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            {copied ? (
+          {copied ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 8.5l2.5 2.5L12 5" />
-            ) : (
-              <>
-                <rect x="6" y="6" width="7" height="7" rx="1.5" />
-                <path d="M10 6V4.5A1.5 1.5 0 008.5 3h-5A1.5 1.5 0 002 4.5v5A1.5 1.5 0 004.5 11H6" />
-              </>
-            )}
-          </svg>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6.5 9.5l3-3" />
+              <path d="M7 5.5L8.5 4a2.5 2.5 0 113.5 3.5L10.5 9" />
+              <path d="M5.5 7L4 8.5a2.5 2.5 0 103.5 3.5L9 10.5" />
+            </svg>
+          )}
         </button>
 
-        {/* Article button */}
+        {/* Divider — separates navigation from page-context actions */}
+        {showPrimaryDivider && <div className="dock-divider" />}
+
+        {/* Article button (on experiment view) */}
         {showArticle && (
           <button
-            className="dock-btn"
+            className="dock-btn dock-btn--labeled"
             onClick={() => onNavigateArticle(slug)}
             title="How it works"
           >
@@ -137,13 +146,14 @@ export function ChromeDock({
               <path d="M3 2h10v12H3z" />
               <path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" />
             </svg>
+            <span>Article</span>
           </button>
         )}
 
         {/* Experiment: Export */}
         {showExport && (
           <button
-            className="dock-btn"
+            className="dock-btn dock-btn--labeled"
             onClick={() => setExportOpen(true)}
             title="Export"
           >
@@ -151,13 +161,44 @@ export function ChromeDock({
               <path d="M8 10V2M5 5l3-3 3 3" />
               <path d="M3 11v2h10v-2" />
             </svg>
+            <span>Export</span>
           </button>
         )}
 
-        {/* Article: Diamond / View experiment */}
+        {/* Coral experiments: open the full brand tool */}
+        {isExperiment && isBrandToolSlug(slug) && (
+          <button
+            className="dock-btn dock-btn--labeled"
+            onClick={() => onNavigateBrand(slug)}
+            title="Open in Brand Tool"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="12" height="12" rx="2" />
+              <path d="M2 6h12M6 6v8" />
+            </svg>
+            <span>Brand Tool</span>
+          </button>
+        )}
+
+        {/* Brand tool: back to the experiment view */}
+        {isBrand && (
+          <button
+            className="dock-btn dock-btn--labeled"
+            onClick={() => onNavigateExperiment(slug || 'coral-1')}
+            title="Open experiment view"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="12" height="10" rx="2" />
+              <path d="M6 6.5l4 1.5-4 1.5z" />
+            </svg>
+            <span>Experiment</span>
+          </button>
+        )}
+
+        {/* Article view: switch back to the experiment */}
         {isArticle && (
           <button
-            className="dock-btn"
+            className="dock-btn dock-btn--labeled"
             onClick={() => onNavigateExperiment(slug)}
             title="View experiment"
           >
@@ -165,6 +206,7 @@ export function ChromeDock({
               <path d="M4 6l4-4 4 4-4 8z" />
               <path d="M4 6h8" />
             </svg>
+            <span>Experiment</span>
           </button>
         )}
 
