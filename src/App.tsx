@@ -12,6 +12,7 @@ import { CelestialFlareArticle } from './components/CelestialFlareArticle.tsx';
 import { Globe1Article } from './components/Globe1Article.tsx';
 import { AuroraDriftArticle } from './components/AuroraDriftArticle.tsx';
 import { ClapLensArticle } from './components/ClapLensArticle.tsx';
+import { AngrySlider1Article } from './components/AngrySlider1Article.tsx';
 import { ArticlePage } from './components/ArticlePage.tsx';
 import { isArticleVisible } from './experiments/registry.ts';
 import { ChromeProvider } from './components/ChromeContext.tsx';
@@ -150,6 +151,8 @@ export function App() {
             <ClapLensArticle key="article-lens" />
           ) : route.slug === 'globe-1' ? (
             <Globe1Article key="article-globe-1" />
+          ) : route.slug === 'angry-slider-1' ? (
+            <AngrySlider1Article key="article-angry-slider-1" />
           ) : (
             <ArticlePage key={`article-${route.slug}`} slug={route.slug} />
           )
