@@ -8,6 +8,119 @@ import { useChrome } from './ChromeContext.tsx';
 
 /* ── SVG Diagrams ──────────────────────────────────── */
 
+function HeroScene() {
+  // The panel mid-action: a sling stretched at the top with its
+  // trajectory arcing away, a bent rope below, letters tumbling and a
+  // smoke puff by the ground line.
+  const arcDots = Array.from({ length: 9 }, (_, i) => {
+    const t = i / 8;
+    const x = 380 + t * 470;
+    const y = 40 - Math.sin(t * Math.PI) * 52 + t * t * 150;
+    return { x, y, a: 0.85 - t * 0.55 };
+  });
+  return (
+    <svg viewBox="0 0 1000 400" fill="none" role="img" aria-label="The panel in action: slingshot stretched, rope bent, letters tumbling" style={{ maxWidth: 1100 }}>
+      {/* ── sling row ── */}
+      <text x="60" y="42" fill="rgba(255,255,255,0.75)" fontSize="15" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>Exposure</text>
+      <rect x="152" y="28" width="52" height="19" rx="4" fill="rgba(226,64,47,0.18)" stroke="rgba(226,64,47,0.45)" strokeWidth="1" />
+      <text x="178" y="41" textAnchor="middle" fill="#ff8a80" fontSize="9" fontWeight="700" letterSpacing="1.2" style={{ fontFamily: 'var(--font-mono)' }}>SLING</text>
+      <text x="940" y="42" textAnchor="end" fill="rgba(255,255,255,0.85)" fontSize="15" style={{ fontFamily: 'var(--font-body)' }}>+0.4 EV</text>
+      {/* track + fill */}
+      <rect x="60" y="62" width="820" height="12" rx="6" fill="rgba(90,90,100,0.55)" stroke="rgba(0,0,0,0.6)" strokeWidth="1" />
+      <rect x="60" y="62" width="288" height="12" rx="6" fill="rgba(226,64,47,0.85)" stroke="rgba(110,19,12,0.9)" strokeWidth="1" />
+      {/* fork dots at the fill tip */}
+      <circle cx="348" cy="68" r="4.5" fill="#e2402f" />
+      <circle cx="366" cy="68" r="4.5" fill="#e2402f" />
+      {/* stretch bands to the drawn knob */}
+      <line x1="348" y1="68" x2="205" y2="152" stroke="rgba(226,64,47,0.85)" strokeWidth="2" />
+      <line x1="366" y1="68" x2="205" y2="152" stroke="rgba(226,64,47,0.85)" strokeWidth="2" />
+      {/* drawn knob */}
+      <circle cx="205" cy="152" r="12" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.45)" strokeWidth="1" />
+      {/* trajectory dots */}
+      {arcDots.map((d, i) => (
+        <circle key={i} cx={d.x} cy={d.y} r={3.4 - i * 0.18} fill="#e2402f" opacity={d.a} />
+      ))}
+      {/* flying knob with trail */}
+      <circle cx="884" cy="152" r="4" fill="#e2402f" opacity="0.35" />
+      <circle cx="903" cy="146" r="5" fill="#e2402f" opacity="0.55" />
+      <circle cx="920" cy="141" r="8" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.45)" strokeWidth="1" />
+
+      {/* ── rope row ── */}
+      <text x="60" y="212" fill="rgba(255,255,255,0.75)" fontSize="15" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>position</text>
+      <rect x="148" y="198" width="52" height="19" rx="4" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <text x="174" y="211" textAnchor="middle" fill="#c4c4cf" fontSize="9" fontWeight="700" letterSpacing="1.2" style={{ fontFamily: 'var(--font-mono)' }}>ROPE</text>
+      <text x="940" y="212" textAnchor="end" fill="rgba(255,255,255,0.85)" fontSize="15" style={{ fontFamily: 'var(--font-body)' }}>33%</text>
+      {/* bent rope: red progress to the knob, gray slack through the bend */}
+      <line x1="60" y1="240" x2="350" y2="286" stroke="#d2392c" strokeWidth="4" strokeLinecap="round" />
+      <polyline points="350,286 610,352 880,240" stroke="#4a4a54" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* rope knob */}
+      <circle cx="350" cy="286" r="12" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.45)" strokeWidth="1" />
+
+      {/* ── fallout ── */}
+      {/* tumbling letters */}
+      <text x="500" y="316" fill="rgba(255,255,255,0.85)" fontSize="26" fontWeight="600" transform="rotate(-24 500 316)" style={{ fontFamily: 'var(--font-body)' }}>a</text>
+      <text x="540" y="336" fill="#e2402f" fontSize="24" fontWeight="600" transform="rotate(18 540 336)" style={{ fontFamily: 'var(--font-body)' }}>s</text>
+      {/* ground + piled letters */}
+      <line x1="60" y1="368" x2="940" y2="368" stroke="rgba(255,255,255,0.16)" strokeWidth="1.5" />
+      <text x="620" y="362" fill="rgba(255,255,255,0.55)" fontSize="20" transform="rotate(40 620 362)" style={{ fontFamily: 'var(--font-body)' }}>E</text>
+      <text x="648" y="364" fill="rgba(255,255,255,0.4)" fontSize="18" transform="rotate(-15 648 364)" style={{ fontFamily: 'var(--font-body)' }}>v</text>
+      {/* smoke puff */}
+      <circle cx="760" cy="340" r="14" fill="rgba(152,152,162,0.28)" />
+      <circle cx="782" cy="330" r="10" fill="rgba(152,152,162,0.2)" />
+      <circle cx="744" cy="330" r="9" fill="rgba(152,152,162,0.16)" />
+    </svg>
+  );
+}
+
+function PanelMapDiagram() {
+  const miniRow = (y: number, fillPct: number, kind: 'SLING' | 'ROPE') => {
+    const tagFill = kind === 'SLING' ? 'rgba(226,64,47,0.85)' : 'rgba(255,255,255,0.85)';
+    return (
+      <g>
+        <rect x="40" y={y} width="300" height="8" rx="4" fill="rgba(90,90,100,0.55)" />
+        <rect x="40" y={y} width={300 * fillPct} height="8" rx="4" fill={tagFill} />
+        <circle cx={40 + 300 * fillPct} cy={y + 4} r="6" fill="#f4f4f6" stroke="rgba(0,0,0,0.4)" strokeWidth="0.8" />
+      </g>
+    );
+  };
+  return (
+    <svg viewBox="0 0 860 320" fill="none" role="img" aria-label="The four sliders and their behaviors" style={{ maxWidth: 900 }}>
+      {/* sling group */}
+      <text x="40" y="30" fill="#ff8a80" fontSize="11" fontWeight="700" letterSpacing="1.5" style={{ fontFamily: 'var(--font-mono)' }}>SLING × 2</text>
+      {miniRow(44, 0.4, 'SLING')}
+      {miniRow(78, 0.25, 'SLING')}
+      {/* rope group */}
+      <text x="40" y="168" fill="#c4c4cf" fontSize="11" fontWeight="700" letterSpacing="1.5" style={{ fontFamily: 'var(--font-mono)' }}>ROPE × 2</text>
+      {miniRow(182, 0.33, 'ROPE')}
+      {miniRow(216, 0.12, 'ROPE')}
+      {/* group divider */}
+      <line x1="40" y1="132" x2="360" y2="132" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="4 4" />
+
+      {/* sling annotation */}
+      <g>
+        <path d="M 480 66 Q 540 20 600 56" stroke="rgba(226,64,47,0.7)" strokeWidth="1.5" fill="none" strokeDasharray="4 4" />
+        <circle cx="480" cy="66" r="5" fill="rgba(255,255,255,0.85)" />
+        <circle cx="600" cy="56" r="5" fill="#e2402f" />
+        <text x="620" y="40" fill="rgba(255,255,255,0.75)" fontSize="12.5" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>grab the handle,</text>
+        <text x="620" y="58" fill="rgba(255,255,255,0.75)" fontSize="12.5" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>stretch, release = launch</text>
+        <text x="620" y="76" fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>dots preview the landing value</text>
+      </g>
+      {/* rope annotation */}
+      <g>
+        <polyline points="480,196 545,232 610,188" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" fill="none" />
+        <circle cx="480" cy="196" r="5" fill="rgba(255,255,255,0.85)" />
+        <text x="620" y="196" fill="rgba(255,255,255,0.75)" fontSize="12.5" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>grab the line anywhere,</text>
+        <text x="620" y="214" fill="rgba(255,255,255,0.75)" fontSize="12.5" fontWeight="600" style={{ fontFamily: 'var(--font-body)' }}>bend, fling the knob</text>
+        <text x="620" y="232" fill="rgba(255,255,255,0.4)" fontSize="10" style={{ fontFamily: 'var(--font-mono)' }}>the bend is the aiming device</text>
+      </g>
+      {/* shared footer */}
+      <text x="40" y="290" fill="rgba(255,255,255,0.45)" fontSize="10.5" style={{ fontFamily: 'var(--font-mono)' }}>
+        same style, same physics, same truth — only the grab differs
+      </text>
+    </svg>
+  );
+}
+
 function RowAnatomyDiagram() {
   // One slider row, drawn to the same proportions as the real DOM:
   // label + tag + value on the head, the track capsule below, and the
@@ -747,6 +860,17 @@ export function AngrySlider1Article() {
           knock the labels over, bounce through smoke — and land exactly where
           the preview promised. All DOM, one 2D canvas, zero physics libraries.
         </p>
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <HeroScene />
+            <p className="article-diagram-caption">
+              One frozen moment of the panel: the Exposure sling stretched and
+              armed with its trajectory arcing away, a launched knob still in
+              flight, the position rope bent under a grab, letters on their way
+              down and smoke settling by the ground line.
+            </p>
+          </div>
+        </div>
       </header>
 
       <aside className="article-toc">
@@ -788,6 +912,18 @@ export function AngrySlider1Article() {
           lands. And everything — creaks, whooshes, thuds, the explosion — is
           synthesized in WebAudio, with not a single audio file.
         </p>
+
+        <div className="article-breakout">
+          <div className="article-diagram">
+            <PanelMapDiagram />
+            <p className="article-diagram-caption">
+              The whole cast: four sliders, two behaviors, one visual language.
+              The tag is the only tell — what changes between the groups is
+              where you grab and what your pull becomes.
+            </p>
+          </div>
+        </div>
+
         <div className="article-callout">
           <p>
             <strong>The governing idea:</strong> a physics toy stops being fun
